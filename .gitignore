@@ -1,6 +1,7 @@
 out/*
 scripts/*.asm
 *.gb
+*.pyc
 
 rgbasm.exe
 rgbfix.exe

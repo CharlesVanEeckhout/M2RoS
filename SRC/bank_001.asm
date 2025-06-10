@@ -593,7 +593,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
         ld b, $02 ; Left
     .endIf_C:
 
-    ; Check if cutsence is active (e.g. a metroid is transforming)
+    ; Check if cutscene is active (e.g. a metroid is transforming)
     ld a, [cutsceneActive]
     and a
     jr z, .else_D
