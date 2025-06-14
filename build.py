@@ -1,6 +1,8 @@
 import os
 import subprocess
 import hashlib
+from scripts import enemy_csv2asm
+from scripts import samus_csv2asm
 
 def run_or_exit(args, err):
     completed_process = subprocess.run(args, shell=True)
@@ -11,22 +13,22 @@ def run_or_exit(args, err):
 
 if not os.path.exists('out/'):
     os.mkdir('out/')
-    
+
 print('Running scripts')
-run_or_exit("python ./scripts/enemy_csv2asm.py -i ./SRC/data/enemies.csv -o ./SRC/data", "Script Error.")
-run_or_exit("python ./scripts/samus_csv2asm.py -i ./SRC/samus/samus.csv -o ./SRC/samus", "Script Error.")
+enemy_csv2asm.csv2asm("./SRC/data/enemies.csv", "./SRC/data")
+samus_csv2asm.csv2asm("./SRC/samus/samus.csv", "./SRC/samus")
 print('Success\n')
 
 completed_process = subprocess.run("rgbasm -V", shell=True)
 if completed_process.returncode != 0:
     print("RGBDS not detected. Downloading...")
-    run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v0.9.0/rgbds-0.9.0-win32.zip\"", "Failed to download.")
-    run_or_exit("tar -xvf rgbds-0.9.0-win32.zip", "Failed to extract RGBDS archive.")
+    run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v0.9.1/rgbds-0.9.1-win32.zip\"", "Failed to download.")
+    run_or_exit("tar -xvf rgbds-0.9.1-win32.zip", "Failed to extract RGBDS archive.")
     run_or_exit("rgbasm -V", "Unable to use downloaded RGBDS.")
 
 print('RGBDS detected')
 print('Assembling .asm files')
-run_or_exit("rgbasm -o out/game.o -I SRC/ SRC/game.asm", "Assembler Error.")
+run_or_exit("rgbasm -o out/game.o -Weverything -I SRC/ SRC/game.asm", "Assembler Error.")
 print('Success\n')
 
 print('Linking .o files')
