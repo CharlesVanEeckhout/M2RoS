@@ -2109,7 +2109,7 @@ poseFunc_outStomach: ;{ 00:0D8B - $1C - Escaping Queen's mouth
         ; Set pose to escape Queen
         ld a, pose_exitQueen ; $1D
         ld [samusPose], a
-        ret 
+        ret
 ;}
 
 poseFunc_toStomach: ;{ 00:0DBE - $1A - Being swallowed by Metroid Queen
@@ -10607,7 +10607,7 @@ unusedDeathAnimation_copy: ;{ 00:3F07
             ld a, l
             and $f0
         jr nz, .eraseLoop
-        ; Iterate to next row of pixels to clear        
+        ; Iterate to next row of pixels to clear
         ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
