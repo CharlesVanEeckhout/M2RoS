@@ -5901,7 +5901,7 @@ executeDoorScript: ;{ 00:239C
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call waitOneFrame
     call OAM_DMA
-	
+
 ; From the door index, get the pointer and load the script
     switchBank doorPointerTable
     ; Get index to door script pointer
@@ -5925,7 +5925,7 @@ executeDoorScript: ;{ 00:239C
     ld de, doorScriptBuffer
     .loadDoor:
         ld a, [hl+]
-	    ld [de], a
+        ld [de], a
         inc de
         dec b
     jr nz, .loadDoor
@@ -6628,7 +6628,7 @@ beginGraphicsTransfer: ;{ 00:27BA
     ld [vramTransferFlag], a
 
     .loop:
-        ; Skip some common routines during the Varia animation
+        ; Run some common routines during the Varia animation
         ld a, [variaAnimationFlag]
         and a
         jr z, .endIf

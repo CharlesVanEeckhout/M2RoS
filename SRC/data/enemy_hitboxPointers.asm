@@ -1,8 +1,8 @@
 ; This file was automatically generated from enemies.csv. Please do not edit this directly.
-    dw hitbox_block ; Tsumari
-    dw hitbox_block ; Tsumari
-    dw hitbox_block ; Tsumari
-    dw hitbox_block ; Tsumari
+    dw hitbox_block ; Tsumuri
+    dw hitbox_block ; Tsumuri
+    dw hitbox_block ; Tsumuri
+    dw hitbox_block ; Tsumuri
     dw hitbox6A6F ; Skreek
     dw hitbox6A6F ; Skreek
     dw hitbox6A6F ; Skreek

@@ -23,8 +23,8 @@ gfx_spinScrewBottom:: incbin "gfx/samus/spinScrewBottom.chr"
 
 gfx_spinSpaceScrewTop:: incbin "gfx/samus/spinSpaceScrewTop.chr"
 gfx_spinSpaceScrewBottom:: incbin "gfx/samus/spinSpaceScrewBottom.chr"
-	
-gfx_springBallTop::	incbin "gfx/samus/springBallTop.chr"
+
+gfx_springBallTop:: incbin "gfx/samus/springBallTop.chr"
 gfx_springBallBottom:: incbin "gfx/samus/springBallBottom.chr"
 
 ; 06:4320 - Power suit and common sprite graphics

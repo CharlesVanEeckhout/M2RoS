@@ -1,7 +1,7 @@
-enSprite_tsumuriHori_frame1,enHead_crawlerRight,hitbox_block,$08,,,Tsumari,$00
-enSprite_tsumuriHori_frame2,enHead_crawlerLeft,hitbox_block,$08,,,Tsumari,$01
-enSprite_tsumuriVert_frame1,enHead_NULL,hitbox_block,$08,,,Tsumari,$02
-enSprite_tsumuriVert_frame2,enHead_NULL,hitbox_block,$08,,,Tsumari,$03
+enSprite_tsumuriHori_frame1,enHead_crawlerRight,hitbox_block,$08,,,Tsumuri,$00
+enSprite_tsumuriHori_frame2,enHead_crawlerLeft,hitbox_block,$08,,,Tsumuri,$01
+enSprite_tsumuriVert_frame1,enHead_NULL,hitbox_block,$08,,,Tsumuri,$02
+enSprite_tsumuriVert_frame2,enHead_NULL,hitbox_block,$08,,,Tsumuri,$03
 enSprite_skreek_frame1,enHead_skreek,hitbox6A6F,$10,SPRITE_SKREEK_1,,Skreek,$04
 enSprite_skreek_frame2,enHead_NULL,hitbox6A6F,$10,,,Skreek,$05
 enSprite_skreek_frame3,enHead_NULL,hitbox6A6F,$10,SPRITE_SKREEK_3,,Skreek,$06
