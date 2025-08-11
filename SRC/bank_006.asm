@@ -48,7 +48,7 @@ creditsText: include "data/credits.asm"
 
 spiderBallOrientationTable:: ;{ 06:7E03
 ; Given an input and a collision state, this produces a rotational direction for the spider ball
-; - Note that this only considers cardinal directions. Perhaps, by adding 
+; - Note that this only considers cardinal directions. Perhaps, by adding
 ;  data for diagonal directions, the controls of the spider ball could be improved
 ;
 ; Values

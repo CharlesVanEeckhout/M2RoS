@@ -3954,21 +3954,21 @@ noiseSfx_playback_B:
         jr z, setPolynomialCounter27
     cp $68
         jr z, setPolynomialCounter35
-    cp $64                        
+    cp $64
         jr z, setPolynomialCounter37
-    cp $60                        
+    cp $60
         jr z, setPolynomialCounter45
-    cp $5c                        
+    cp $5c
         jr z, setPolynomialCounter47
-    cp $58                        
+    cp $58
         jr z, setPolynomialCounter55
-    cp $54                        
+    cp $54
         jr z, setPolynomialCounter57
-    cp $50                        
+    cp $50
         jr z, setPolynomialCounter65
-    cp $4c                        
+    cp $4c
         jr z, setPolynomialCounter66
-    cp $48                        
+    cp $48
         jr z, setPolynomialCounter67
     cp $40
         jr z, setOptionSetSamusKilled_3
@@ -4090,15 +4090,15 @@ noiseSfx_playback_D:
     call decrementChannelSoundEffectTimer_noise
     cp $30
         jr z, setPolynomialCounter57
-    cp $2c                        
+    cp $2c
         jr z, setPolynomialCounter35
-    cp $27                        
+    cp $27
         jr z, setPolynomialCounter37
-    cp $23                        
+    cp $23
         jr z, setPolynomialCounter55
-    cp $20                        
+    cp $20
         jr z, setPolynomialCounter47
-    cp $1d                        
+    cp $1d
         jr z, setPolynomialCounter45
     cp $1a
         jr z, .set1
@@ -4121,23 +4121,23 @@ noiseSfx_playback_E:
     call decrementChannelSoundEffectTimer_noise
     cp $4d
         jr z, setPolynomialCounter65
-    cp $4a                        
+    cp $4a
         jp z, setPolynomialCounter57
-    cp $47                        
+    cp $47
         jp z, setPolynomialCounter55
-    cp $44                        
+    cp $44
         jp z, setPolynomialCounter47
-    cp $41                        
+    cp $41
         jp z, setPolynomialCounter65
-    cp $3e                        
+    cp $3e
         jp z, setPolynomialCounter57
-    cp $3b                        
+    cp $3b
         jp z, setPolynomialCounter55
-    cp $39                        
+    cp $39
         jp z, setPolynomialCounter47
-    cp $36                        
+    cp $36
         jp z, setPolynomialCounter45
-    cp $33                        
+    cp $33
         jp z, setPolynomialCounter37
     cp $30
         jr z, .set1
@@ -4160,23 +4160,23 @@ noiseSfx_playback_F:
     call decrementChannelSoundEffectTimer_noise
     cp $6d
         jp z, setPolynomialCounter67
-    cp $6a                        
+    cp $6a
         jp z, setPolynomialCounter66
-    cp $67                        
+    cp $67
         jp z, setPolynomialCounter65
-    cp $64                        
+    cp $64
         jp z, setPolynomialCounter57
-    cp $61                        
+    cp $61
         jp z, setPolynomialCounter55
-    cp $5e                        
+    cp $5e
         jp z, setPolynomialCounter47
-    cp $5b                        
+    cp $5b
         jp z, setPolynomialCounter45
-    cp $59                        
+    cp $59
         jp z, setPolynomialCounter37
-    cp $56                        
+    cp $56
         jp z, setPolynomialCounter35
-    cp $53                        
+    cp $53
         jp z, setPolynomialCounter27
     cp $50
         jr z, .set1

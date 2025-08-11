@@ -1,5 +1,5 @@
 ; Enemy headers {
-;                                         v--- Working address in HRAM 
+;                                         v--- Working address in HRAM
 ;        ______________________________ $FFE4 - Base sprite attributes - not modified during runtime (apparently)
 ;       |    ___________________________ $FFE5 - Sprite attributes (flipping, etc.) - modified during runtime
 ;       |   |    ________________________ $FFE6 - Stun counter? (dummy value in header)
@@ -12,7 +12,7 @@
 ;       |   |   |   |   |   |   |   |   |    ___ AI pointer (bank 2)
 ;       |   |   |   |   |   |   |   |   |   |
 enHead_NULL: ; Default - 03:64FE
-    db $00,$00,$00,$00,$00,$00,$00,$00,$00 
+    db $00,$00,$00,$00,$00,$00,$00,$00,$00
     dw enAI_NULL
 enHead_crawlerRight: ; Enemy 0/20h (tsumari / needler facing right)
     db $00,$20,$00,$00,$00,$FF,$00,$00,$01

@@ -47,7 +47,7 @@ ds 2 ; $C217..$C218 - Unused
 
 ; LCD control mirror. Only set by death routine.
 ; This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
-gameOver_LCDC_copy: ds 1 ;{ $C219 
+gameOver_LCDC_copy: ds 1 ;{ $C219
 ;    v = emwdMsob
 ;
 ;    e: Enable LCD
@@ -85,7 +85,7 @@ def queen_wallOAM = queen_objectOAM + 4*$0C ; $C338
 def queen_wallOAM_body = queen_wallOAM ; $C338 - Queen Wall OAM (body portion) - 7 slots
 def queen_wallOAM_head = queen_wallOAM + 4*$07 ; $C354 - Queen Wall OAM (head portion) - 5 slots
 
-; Queen OAM overwrites this 
+; Queen OAM overwrites this
 hitboxC360: ds 4 ; $C360..$C363 - Blob Thrower hitbox
 
 section "Special Enemy Variables", wram0[$C380]
@@ -189,7 +189,7 @@ queen_bodyPalette: ds 1 ; $C3D2 - LCD interrupt handler background palette. Pale
 queen_health: ds 1 ; $C3D3 - Metroid Queen health
 
 queen_deathArrayIndex: ds 1 ; $C3D4 - Queen death related (disintegration index?)
-queen_deathAnimCounter: ds 1 ; $C3D5 - Counts down each time the 
+queen_deathAnimCounter: ds 1 ; $C3D5 - Counts down each time a batch of disintegration is completed
 queen_deathArray: ds 8 ; $C3D6..$C3DD - Queen table of disintegration bitmasks for death animation
 queen_pDeathChrLow:  ds 1 ; $C3DE - VRAM pointer for Queen's disintegration animation
 queen_pDeathChrHigh: ds 1 ; $C3DF -  "" high byte
@@ -413,19 +413,19 @@ section "WRAM Bank 0 - Enemy Spawn Flags", wram0[$C500] ;{
 enemySpawnFlags:
 .unsaved: ds $40 ; $C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map
 .saved:   ds $40 ; $C540..7F: Working copy of $C900 data for room bank. Apparently item/Metroid data bytes for current map
-;def enemySaveFlags  = $C540 
+;def enemySaveFlags  = $C540
 ;{
 ;    For metroid:
 ;        1: Hatching
 ;        2: Dead
 ;        4: Alive
 ;        FFh: Not active
-;    
+;
 ;    For missile door:
 ;        1: Active
 ;        2: Destroyed
 ;        FFh: Not active
-;        
+;
 ;    For item:
 ;        1: Active
 ;        2: Collected
@@ -434,15 +434,15 @@ enemySpawnFlags:
 ;    $1:7A6C:
 ;        Copies 40h bytes to $C900 + ([$C459] - 9) * 40h from $C540, only 02 and FEh are written, with 04 translated to FEh
 ;        Then writes out all of $C900..CABF to SRAM
-;    
+;
 ;    $2:418C:
 ;        If [$C459] != 0:
 ;            Copies 40h bytes to $C540 from $C900 + ([$C459] - 9) * 40h, only 02 and FEh are written, with 04/05 translated to FEh
 ;        Then copies 40h bytes to $C900 + ([$C459] - 9) * 40h from $C540
-;    
+;
 ;    $2:412F:
 ;        Copies 40h bytes to $C540 from $C900 + ([$C459] - 9) * 40h (verbatim)
-;    
+;
 ;    Read at $3:4205 (metroid checking if it should spawn?)
 ;}
 
@@ -470,9 +470,9 @@ enemyDataSlots: ; $C600;..C7FF ; Enemy data. 20h byte slots
 ;
 ;        + Ch: Health
 ;    }
-;    
+;
 ;    + 11h: Initial health
-;    
+;
 ;    + 1Ch: Copy of enemy's $C500 byte
 ;    + 1Dh: Enemy map ID. Used to $C500
 ;    + 1Eh: AI pointer(?)
@@ -532,7 +532,7 @@ section "WRAM Bank 0 - Audio RAM", wram0[$CEC0] ;{
 ;    ; Song / sound effect is requested by writing directly to $CEDC/$CEC0/$CEC7/$CFE5/$CED5/$CEDE
 ;    ; Audio is paused/unpaused by writing directly to $CFC7
 ;    ; The rest of audio data RAM is fully managed by code in bank 4
-;    
+;
 ;    $CEC0: Tone/sweep channel sound effect
 ;    {
 sfxRequest_square1: ds 1 ; $CEC0 - Tone/sweep channel sound effect request
@@ -982,7 +982,7 @@ samusPose: ds 1 ; $D020 - Samus' pose
 
 ds 1 ; $D021 - Unused
 
-; Used by the running animation. 
+; Used by the running animation.
 ;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
 ; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
 samus_animationTimer: ds 1 ; $D022

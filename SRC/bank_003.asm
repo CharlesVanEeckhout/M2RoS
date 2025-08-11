@@ -713,7 +713,7 @@ enemy_deleteSelf: ;{ 03:6AE7
             jr .endIf_C
         .else_C:
             ld a, $01 ; Active
-        .endIf_C:        
+        .endIf_C:
         ld [hl+], a
         
         ld b, a
@@ -1034,7 +1034,7 @@ queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
 ;
 ; $80 tells the neck to stop extending
 ; $81 tells the neck to stop retracting
-; 
+;
 ; The movement vectors are YX nybble pairs, with the Y component being signed
 ;  and the X component being unsigned
 
@@ -1136,7 +1136,6 @@ queen_initialize: ;{ 03:6D4A
         ld [hl], $00
         ; Iterate to next sprite
         inc l
-        ; 
         add $08
         dec b
     jr nz, .wallLoop
@@ -1352,7 +1351,7 @@ queen_headCollision: ;{ 03:6EA7
     cp LOW(queenActor_mouth) ; $20
         jr nz, .checkHead
 
-; A mouth collision happened    
+; A mouth collision happened
     ; Exit if it hit the mouth when it was not open
     ld l, LOW(queenActor_mouth + 3) ; $23
     ld a, [hl]
@@ -1394,7 +1393,7 @@ ret
 
 ; Set actor positions from these various variables
 queen_setActorPositions: ;{ 03:6F07
-    ; Queen body 
+    ; Queen body
     ld hl, queenActor_body + 1 ; $C601
     ; Y + &18
     ld a, [queen_bodyY]
@@ -1719,7 +1718,7 @@ queen_rearFoot2:
     db $4b,$4c,$4d,    $4f
     db $7f,$f2,$ef,$df
 queen_rearFoot3:
-    db     $2c,$2d,$2e,$2f 
+    db     $2c,$2d,$2e,$2f
     db $3b,$3c,$3d,$3e
     db $4b,$4c,$4d,    $4f
     db $10,$11,$12,$df
@@ -1748,8 +1747,8 @@ queen_rearFootOffsets:
     db $40,$41,$42,    $44
     db $60,$61,$62,$63
 queen_frontFootOffsets:
-    db $08,$09,$0a 
-    db $28,$29,$2a 
+    db $08,$09,$0a
+    db $28,$29,$2a
     db $48,$49,$4a
     db $68,$69,$6a
 
@@ -2002,7 +2001,7 @@ queen_drawNeck: ;{ 03:7230
     ld a, [queen_neckXMovementSum]
     cp $08
     jr nc, .endIf_A
-        ; ...or if the head has moved more than 12 pixels vertically 
+        ; ...or if the head has moved more than 12 pixels vertically
         ld a, [queen_neckYMovementSum]
         cp $0c
         ret c
@@ -3413,7 +3412,7 @@ queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck exten
         jp .endIf_A
     .else_A:
         ld a, [queen_headY]
-        ; Choose downwards 
+        ; Choose downwards
         ld b, $00 ; downwards neck pattern
         ; Select another neck pattern if the head is below $29 pixels onscreen
         cp $29
@@ -3902,7 +3901,7 @@ queenStateFunc_disintegrate: ;{ 03:7B05 - Queen State $12:  - Dying pt 1 (disint
         inc b
     jr .loop
     .break:
-    ld b, a ; Double check B == A (seems unnecessary)    
+    ld b, a ; Double check B == A (seems unnecessary)
     ; Note: DE now points to queen_deathArray[queen_deathArrayIndex]
     
     ; Get starting address for next disintegration
@@ -4016,7 +4015,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
         .waitLoop_A:
             ld a, [rSTAT]
             and $03
-        jr nz, .waitLoop_A    
+        jr nz, .waitLoop_A
         ld [hl], $ff
     
         .waitLoop_B:

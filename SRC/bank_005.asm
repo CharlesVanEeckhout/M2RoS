@@ -322,7 +322,7 @@ titleScreenRoutine: ;{ 05:4118
     ; Also, the number sprites have a ridiculous baked-in x-offset
     call drawNonGameSprite_longCall
 
-; Draw the start text    
+; Draw the start text
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, $74
@@ -460,8 +460,8 @@ titleScreenRoutine: ;{ 05:4118
     ; WARNING: THIS CODE IS COMPLETELY BUSTED AND ONLY WORKS ON ACCIDENT.
     ; Explanation: This routine should check if the magic number in the
     ;  save file matches the one in the ROM. In practice, only the first
-    ;  byte of the magic number needs to be correct. 
-    ; 
+    ;  byte of the magic number needs to be correct.
+    ;
     ; The `cp $08` after the comparison loop makes me think that that loop
     ;  is supposed to count the number of matching bytes between the two
     ;  magic numbers (since both should have a length of 8). However, no
@@ -477,7 +477,7 @@ titleScreenRoutine: ;{ 05:4118
     ;
     ; In other words, you could easily break this code on accident.
     ;
-    ; For a fun creepypasta, take an uninitialized SRAM, and modify the 
+    ; For a fun creepypasta, take an uninitialized SRAM, and modify the
     ;  first byte of one of the save files ($A000, $A040, or $A080) to be $01.
     
     ld hl, saveFile_magicNumber
@@ -1164,7 +1164,7 @@ prepareCredits: ;{ 05:587F
     ld a, $43
     ld [ob_palette1], a
 
-    call clearTilemaps    
+    call clearTilemaps
     ; Clear OAM buffer
     ld hl, wram_oamBuffer + $FF ; $C0FF
     ld a, $ff
@@ -1314,7 +1314,7 @@ ret ;}
 credits_drawSamusJumpTable: ;{ 05:598D
     rst $28
         dw .run_frameA ; 00 - Samus running
-        dw .run_frameB ; 01 - Samus running 
+        dw .run_frameB ; 01 - Samus running
         dw .run_frameC ; 02 - Samus running
         dw .run_frameD ; 03 - Samus running
         

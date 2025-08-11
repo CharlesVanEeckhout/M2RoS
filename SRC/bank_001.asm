@@ -222,7 +222,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     .endIf_B:
 
 ; Adjust health {
-    ; Check health high byte 
+    ; Check health high byte
     ld a, [samusCurHealthHigh]
     ld b, a
     ld a, [samusDispHealthHigh]
@@ -291,7 +291,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
 ;}
 
  ; Adjust missiles {
-.checkMissileHighByte: 
+.checkMissileHighByte:
     ; Check missile high byte
     ld a, [samusCurMissilesHigh]
     ld b, a
@@ -346,7 +346,7 @@ ret
 ;} end proc
 
 ; Debug Menu drawing routine (note this procedure has two entrances
-debug_drawNumber: ;{ 01:4AFC 
+debug_drawNumber: ;{ 01:4AFC
 .twoDigit: ; Display a two-sprite number
     ldh [hTemp.b], a
     swap a
@@ -473,7 +473,7 @@ drawSamusSprite: ;{ 01:4B62
         ld [hl+], a
         
         ; Load x coordinate
-        inc de        
+        inc de
         ld a, [de]
         add c
         ld [hl+], a
@@ -2211,7 +2211,7 @@ drawBombs: ;{ 01:540E
                 dec hl
                 dec hl
                 ld a, $ff
-                ld [hl], a        
+                ld [hl], a
         .nextBomb:
         
         ; Iterate to next bomb
@@ -2490,25 +2490,25 @@ samus_cannonYOffsetByPose: ;{ 01:561D - Projectile y-offsets per pose
 ;}
 
 samus_cannonYOffsetByAimDirection: ;{ 01:5630 - Projectile y offset due to firing direction
-    db $00 ; $00 
+    db $00 ; $00
     db $00 ; $01 - Right
     db $00 ; $02 - Left
-    db $00 ; $03 
+    db $00 ; $03
     db $F0 ; $04 - Up
-    db $00 ; $05 
-    db $00 ; $06 
-    db $00 ; $07 
+    db $00 ; $05
+    db $00 ; $06
+    db $00 ; $07
     db $08 ; $08 - Down
-    db $00 ; $09 
-    db $00 ; $0A 
-    db $00 ; $0B 
-    db $00 ; $0C 
-    db $00 ; $0D 
-    db $00 ; $0E 
-    db $00 ; $0F 
+    db $00 ; $09
+    db $00 ; $0A
+    db $00 ; $0B
+    db $00 ; $0C
+    db $00 ; $0D
+    db $00 ; $0E
+    db $00 ; $0F
     db $1F ; $10 - ? Morph ?
-    db $00 ; $11 
-    db $00 ; $12 
+    db $00 ; $11
+    db $00 ; $12
 ;}
 
 samus_shotDirectionPriorityTable: ;{ 01:5643 - Shot direction based on directional input
@@ -3764,7 +3764,7 @@ math_multiply_B_E_to_HL: ; { 01:73B9
     
     ; Init result
     ld hl, $0000
-    ; Init 
+    ; Init
     ld c, l
     
     ; This multiplication loop is roughly equivalent to this pseudo-code (thanks PJ):
@@ -3795,7 +3795,7 @@ math_multiply_B_E_to_HL: ; { 01:73B9
     jr nz, .loop
 ret ;}
 
-; division 
+; division
 ; HL = HL / C
 ; DE = (HL % C) * 2 (remainder)
 math_divide_HL_by_C: ; { 01:73CC
@@ -4052,7 +4052,7 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
     ld hl, saveBuf_enemySpawnFlags
     add hl, de
     
-    ; Load 
+    ; Load
     ld de, enemySpawnFlags.saved
     ld b, $40
     .bufferLoop:
@@ -4117,7 +4117,7 @@ loadEnemySaveFlags: ;{ 01:7AB9
     ld a, $0a
     ld [$0000], a
     
-; Copy over 7 banks of save flags    
+; Copy over 7 banks of save flags
     ; Set destination pointer
     ld de, saveBuf_enemySpawnFlags
     
@@ -4210,7 +4210,7 @@ saveFileToSRAM: ;{ 01:7ADF
     ld [hl+], a
 
     ; Loop to save the following variables:
-    ;  - enGfxSrcLow, enGfxSrcHigh 
+    ;  - enGfxSrcLow, enGfxSrcHigh
     ;  - bgGfxSrcBank, bgGfxSrcLow, bgGfxSrcHigh
     ;  - tiletableSrcLow, tiletableSrcHigh
     ;  - collisionSrcLow, collisionSrcHigh
