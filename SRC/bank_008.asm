@@ -50,14 +50,14 @@ gfx_queenSPR:: incbin "gfx/enemies/queenSPR.chr",0,$500
 ; Check if killed target number of metroids
 earthquakeCheck:: ;{ 08:7EBC:
     ld hl, .thresholds
-	
+    
     .loop:
-	    ; If we have reached the end of .thresholds, then return
-	    ld a, [hl+]
+        ; If we have reached the end of .thresholds, then return
+        ld a, [hl+]
         cp $ff
-	    jr z, .return
+        jr z, .return
 
-	    ; If metroidCountReal = .thresholds[hl], then branch ahead to set the timer
+        ; If metroidCountReal = .thresholds[hl], then branch ahead to set the timer
         ld b, a
         ld a, [metroidCountReal]
         cp b
@@ -82,7 +82,7 @@ earthquakeCheck:: ;{ 08:7EBC:
 .thresholds:
     db $46, $42, $34, $24, $23, $21, $14, $13, $12, $09, $01, $ff
 ;}
-    
+
 ; 8:7EEA - Collision Table Pointers
 collisionPointerTable::
     dw collision_plantBubbles ; 0

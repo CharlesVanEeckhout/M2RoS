@@ -87,7 +87,7 @@ VBlankHandler: ;{ 00:0154
     ld a, [ob_palette0]
     ldh [rOBP0], a
     ld a, [ob_palette1]
-    ldh [rOBP1], a    
+    ldh [rOBP1], a
     ; Decrement countdown timer every frame
     ld a, [countdownTimerLow]
     sub $01
@@ -102,7 +102,7 @@ VBlankHandler: ;{ 00:0154
         ld [countdownTimerHigh], a
     .endIf_A:
 ; Various different update handlers
-;  Looks like 
+;  Looks like
     ; Credits drawing routine
     ld a, [credits_nextLineReady]
     and a
@@ -1331,7 +1331,7 @@ handleCamera: ;{ 00:08FE
     ld b, a
     ldh a, [hCameraXScreen]
     or b
-    ld e, a    
+    ld e, a
     ld d, $00
     
     ; Load scroll data for screen
@@ -1689,7 +1689,7 @@ handleCamera: ;{ 00:08FE
                     ldh a, [hCameraYScreen]
                     sbc $00
                     ldh [hCameraYScreen], a
-                    jr .endIf_M   
+                    jr .endIf_M
     .else_M:
         ; (Screen does not block scrolling upwards)
         ; Check if Samus is below threshold
@@ -2109,7 +2109,7 @@ poseFunc_outStomach: ;{ 00:0D8B - $1C - Escaping Queen's mouth
         ; Set pose to escape Queen
         ld a, pose_exitQueen ; $1D
         ld [samusPose], a
-        ret 
+        ret
 ;}
 
 poseFunc_toStomach: ;{ 00:0DBE - $1A - Being swallowed by Metroid Queen
@@ -3079,7 +3079,7 @@ poseFunc_fall: ;{ 00:12F5 - $07 - Falling
             ; If so, provide normal jump parameters
             ld a, samus_jumpArrayBaseOffset - $F ;$31
             ld [samus_jumpArcCounter], a
-            ; High jump 
+            ; High jump
             ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
         .endIf_C:
@@ -3091,7 +3091,7 @@ poseFunc_fall: ;{ 00:12F5 - $07 - Falling
         ld [samus_jumpStartCounter], a
         xor a
         ld [samus_unmorphJumpTimer], a
-        ret    
+        ret
     .endIf_A:
 
     ; Check if right is held
@@ -4793,7 +4793,7 @@ samus_moveRightInAir: ;{ 00:1CF5
     ldh a, [hSamusXScreen]
     adc $00
     and $0f
-    ldh [hSamusXScreen], a    
+    ldh [hSamusXScreen], a
     ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
     
@@ -5237,7 +5237,7 @@ collision_samusBottom: ;{ 00:1F0F
     add OAM_Y_OFS + samusOriginY_toBottom
     ld [tileY], a
     
-    ; Perform collision check 
+    ; Perform collision check
     call samus_getTileIndex
     
     ; Perform compare operation to set the carry flag if applicable
@@ -5297,7 +5297,7 @@ collision_samusBottom: ;{ 00:1F0F
     add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     
-    ; Perform collision check 
+    ; Perform collision check
     call samus_getTileIndex
     
     ; Perform compare operation to set the carry flag if applicable
@@ -5490,7 +5490,7 @@ metroidLCounterTable: ;{ 0:203B - Metroids remaining (L counter) - Value is BCD
 saveFile_magicNumber: ; 00:2083
     db $01, $23, $45, $67, $89, $ab, $cd, $ef
 
-; Damage pose transition table 
+; Damage pose transition table
 samus_damagePoseTransitionTable: ;{ 00:208B
     ; Table Generated from samus/samus.csv
     include "samus/samus_damagePoseTransitionTable.asm"
@@ -5609,7 +5609,7 @@ samus_tryShooting: ;{ 00:21FB
 gfxInfo_cannonMissile: db BANK(gfx_cannonMissile)
     dw gfx_cannonMissile, vramDest_cannon, $0020
 ; 00:2249
-gfxInfo_cannonBeam: db BANK(gfx_cannonBeam) 
+gfxInfo_cannonBeam: db BANK(gfx_cannonBeam)
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
 ; Function returns the tile number for a particular x-y tile on the tilemap
@@ -5759,7 +5759,7 @@ getTilemapCoordinates: ;{ 00:22E1
     rlca
     add $08
     ld [tileY], a
-    ; X = (low mod 32)*8 + 
+    ; X = (low mod 32)*8 +
     ld a, [pTilemapDestLow]
     and $1f
     rla
@@ -5901,7 +5901,7 @@ executeDoorScript: ;{ 00:239C
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call waitOneFrame
     call OAM_DMA
-	
+
 ; From the door index, get the pointer and load the script
     switchBank doorPointerTable
     ; Get index to door script pointer
@@ -5925,7 +5925,7 @@ executeDoorScript: ;{ 00:239C
     ld de, doorScriptBuffer
     .loadDoor:
         ld a, [hl+]
-	    ld [de], a
+        ld [de], a
         inc de
         dec b
     jr nz, .loadDoor
@@ -5941,7 +5941,7 @@ executeDoorScript: ;{ 00:239C
         ; Technically unnecessary (since the script is finished)
         ;  but good practice because each token's code is expected
         ;  to increment HL to the next token
-        inc hl 
+        inc hl
     jp .endDoorScript ;}
 
     .doorToken_load:
@@ -5991,7 +5991,7 @@ executeDoorScript: ;{ 00:239C
     .doorToken_solidity:
     cp $30 ; SOLIDITY {
     jr nz, .doorToken_warp
-        ; Re-read token (why?)
+        ; Re-read token to undo and $f0
         ld a, [hl+]
         push hl
             ; Extract table index from token
@@ -6209,7 +6209,7 @@ executeDoorScript: ;{ 00:239C
         call waitOneFrame
         ; Set countdown timer
         ld a, $2f
-        ld [countdownTimerLow], a    
+        ld [countdownTimerLow], a
         .fadeLoop:
             ld hl, .fadePaletteTable
             ; Use upper nybble of timer to index into .fadePaletteTable
@@ -6252,7 +6252,7 @@ executeDoorScript: ;{ 00:239C
             and $0f
             ; Check if argument is $A
             cp $0a
-            jr z, .song_else_B    
+            jr z, .song_else_B
                 ; Argument was not $A, so just request the song properly
                 ld [songRequest], a
                 ld [currentRoomSong], a
@@ -6356,7 +6356,7 @@ executeDoorScript: ;{ 00:239C
             ; Set destination address
             ld a, LOW(vramDest_item)
             ldh [hVramTransfer.destAddrLow], a
-            ld a, HIGH(vramDest_item)    
+            ld a, HIGH(vramDest_item)
             ldh [hVramTransfer.destAddrHigh], a
             
             ; Set transfer size (4 tiles)
@@ -6628,7 +6628,7 @@ beginGraphicsTransfer: ;{ 00:27BA
     ld [vramTransferFlag], a
 
     .loop:
-        ; Skip some common routines during the Varia animation
+        ; Run some common routines during the Varia animation
         ld a, [variaAnimationFlag]
         and a
         jr z, .endIf
@@ -7616,7 +7616,7 @@ debugPauseMenu: ;{ 00:2D39
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, .endIf_G
-        ; Toggle item bit 
+        ; Toggle item bit
         ld b, %00000001 ; Initial bitmask
         ld a, [debugItemIndex]
         .bitmaskLoop:
@@ -7717,7 +7717,7 @@ debugPauseMenu: ;{ 00:2D39
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
-        call nz, drawSamusSprite   
+        call nz, drawSamusSprite
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
@@ -7900,7 +7900,7 @@ applyDamage: ;{ This procedure has multiple entry points
     ld a, [samusCurHealthLow]
     sub b
     daa
-    ld [samusCurHealthLow], a    
+    ld [samusCurHealthLow], a
     ld a, [samusCurHealthHigh]
     sbc $00
     daa
@@ -7960,7 +7960,7 @@ prepUnusedDeathAnimation: ;{ 00:2FC8 - Unused
     ld a, $80 | pose_standing
     ld [samusPose], a
     ; Set timer
-    ; Note: The reason it is suspected that this function pertains to 
+    ; Note: The reason it is suspected that this function pertains to
     ;  "unusedDeathAnimation" is because it sets deathAnimTimer but
     ;  not deathFlag.
     ld a, $20
@@ -8074,7 +8074,7 @@ unusedDeathAnimation: ;{ 00:3062
             ld a, l
             and $f0
         jr nz, .eraseLoop
-        ; Iterate to next row of pixels to clear        
+        ; Iterate to next row of pixels to clear
         ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
@@ -8579,7 +8579,7 @@ ret ;}
 
 ; Note: Function has two entry points
 collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
-    .standard: 
+    .standard:
         ; Conditions for skipping collision processing
         ; Exit if being eaten
         ld a, [samusPose]
@@ -9467,7 +9467,7 @@ ret ;}
 
 ; Common exit for collision-loop routines that preemptively skip collision checks
 collision_exitNoHit: ; { 00:3698
-    ; We do not pop the enemy address 
+    ; We do not pop the enemy address
     ; Clear carry flag (no solid collision occurred)
     scf
     ccf
@@ -9522,7 +9522,7 @@ gameMode_dead: ;{ 00:36B0
             jr z, .exitLoop
         ld [de], a
         inc de
-    jr .loadTextLoop    
+    jr .loadTextLoop
     .exitLoop:
     
     ; Reset scroll
@@ -10607,7 +10607,7 @@ unusedDeathAnimation_copy: ;{ 00:3F07
             ld a, l
             and $f0
         jr nz, .eraseLoop
-        ; Iterate to next row of pixels to clear        
+        ; Iterate to next row of pixels to clear
         ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff

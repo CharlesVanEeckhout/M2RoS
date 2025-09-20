@@ -1,8 +1,8 @@
 ; This file was automatically generated from enemies.csv. Please do not edit this directly.
-    dw enSprite_tsumuriHori_frame1 ; Tsumari
-    dw enSprite_tsumuriHori_frame2 ; Tsumari
-    dw enSprite_tsumuriVert_frame1 ; Tsumari
-    dw enSprite_tsumuriVert_frame2 ; Tsumari
+    dw enSprite_tsumuriHori_frame1 ; Tsumuri
+    dw enSprite_tsumuriHori_frame2 ; Tsumuri
+    dw enSprite_tsumuriVert_frame1 ; Tsumuri
+    dw enSprite_tsumuriVert_frame2 ; Tsumuri
     dw enSprite_skreek_frame1 ; Skreek
     dw enSprite_skreek_frame2 ; Skreek
     dw enSprite_skreek_frame3 ; Skreek

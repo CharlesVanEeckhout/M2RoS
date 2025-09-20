@@ -1,8 +1,8 @@
 ; This file was automatically generated from enemies.csv. Please do not edit this directly.
-    dw enHead_crawlerRight ; Tsumari
-    dw enHead_crawlerLeft ; Tsumari
-    dw enHead_NULL ; Tsumari
-    dw enHead_NULL ; Tsumari
+    dw enHead_crawlerRight ; Tsumuri
+    dw enHead_crawlerLeft ; Tsumuri
+    dw enHead_NULL ; Tsumuri
+    dw enHead_NULL ; Tsumuri
     dw enHead_skreek ; Skreek
     dw enHead_NULL ; Skreek
     dw enHead_NULL ; Skreek

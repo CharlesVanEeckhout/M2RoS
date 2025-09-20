@@ -1,8 +1,8 @@
 ; This file was automatically generated from enemies.csv. Please do not edit this directly.
-    db $08 ; Tsumari
-    db $08 ; Tsumari
-    db $08 ; Tsumari
-    db $08 ; Tsumari
+    db $08 ; Tsumuri
+    db $08 ; Tsumuri
+    db $08 ; Tsumuri
+    db $08 ; Tsumuri
     db $10 ; Skreek
     db $10 ; Skreek
     db $10 ; Skreek

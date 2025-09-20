@@ -78,7 +78,7 @@ enemyHandler: ;{ 02:4000
         .endIf_B:
 
 .handleEnemies:
-    ; Load enemySolidityIndex 
+    ; Load enemySolidityIndex
     ld a, [enemySolidityIndex_canon]
     ld [enemySolidityIndex], a
     ; Done after a door transition script is executed
@@ -252,7 +252,7 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
 
     ; Reset first enemy data slot
     ld a, HIGH(enemyDataSlots)
-    ld [enemy_pFirstEnemyHigh], a    
+    ld [enemy_pFirstEnemyHigh], a
     xor a
     ld [enemy_pFirstEnemyLow], a
     ; Clear other variables
@@ -313,7 +313,7 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
         add hl, de
         ; Save flags to save buffer
         ld de, enemySpawnFlags.saved
-        ld b, $40    
+        ld b, $40
         .loop_B:
             ld a, [de]
             cp $02 ; Save $02 as $02
@@ -560,7 +560,7 @@ jr .deleteDrop
     dec hl
     ld a, [hl]
     cp $10
-        jr z, .screwAttack 
+        jr z, .screwAttack
         jp nc, .transferCollisionResults ; Exit
     ; Check if not ice
     cp $01
@@ -613,7 +613,6 @@ jp .transferCollisionResults ; Exit
     sub [hl]
         jr z, .smallExplosion
         jr c, .smallExplosion
-    ; 
     ldh [hEnemy.health], a
     ld a, sfx_noise_enemyShot
     ld [sfxRequest_noise], a
@@ -780,7 +779,7 @@ enemy_moveFromWramToHram: ;{ 02:43D2
     ld a, [hl+] ; enemyOffset + $10
     ldh [hEnemy.xScreen], a
     ld a, [hl] ; enemyOffset + $11
-    ldh [hEnemy.maxHealth], a    
+    ldh [hEnemy.maxHealth], a
     ; Load spawn flag, spawn number, and AI pointer to $FFEF-$FFF2
     ; First get the address to them
     ldh a, [hEnemyWramAddrLow]
@@ -880,7 +879,7 @@ enemy_moveFromHramToWram: ;{ 02:4421
     ldh a, [hEnemyWramAddrLow]
     ld l, a
     ldh a, [hEnemyWramAddrHigh]
-    ld h, a    
+    ld h, a
     ld a, [hl]
     cp $ff
         ret nz
@@ -977,7 +976,7 @@ jp processEnemies.doneProcessingEnemy
 ;} end proc
 
 ; Check if offscreen enemy needs to be reactivated
-reactivateOffscreenEnemy: ;{ 02:44C0 
+reactivateOffscreenEnemy: ;{ 02:44C0
 ; yScreen cases
     ld hl, hEnemy.yScreen
     ld de, hEnemy.yPos
@@ -1256,7 +1255,7 @@ unused_setXFlip: ;{ 02:45FA - Unreferenced
 ; "$11 routines" = Check right side of object
 ; 8 routines (2 unused)
 enCollision_right: ;{ 02:4608
-.nearSmall: 
+.nearSmall:
 ;(3,-3)
 ;(3, 3)
     ld a, $11
@@ -1511,7 +1510,7 @@ enCollision_right: ;{ 02:4608
 ; "$44 functions" = Check left edge of object
 ; 8 functions (2 unused)
 enCollision_left: ;{ 02:47E1
-.nearSmall: 
+.nearSmall:
 ;(-3,-3)
 ;(-3, 3)
     ld a, $44
@@ -1766,7 +1765,7 @@ enCollision_left: ;{ 02:47E1
 ; "$22 functions" - Check bottom edge of object
 ; 9 functions (2 unused)
 enCollision_down: ;{ 02:49BA
-.nearSmall: 
+.nearSmall:
 ;(-3,3)
 ;( 3,3)
     ld a, $22
@@ -3219,7 +3218,7 @@ enAI_blobProjectile: ;{ 02:536F
     add b
     ldh [hEnemy.xPos], a
 
-;moveVertical    
+;moveVertical
     ; Extract lower nybble
     ld a, [de]
     and $0f
@@ -3265,7 +3264,7 @@ ret
         ld a, $ff
         ldh [hEnemy.spawnFlag], a
         ret
-; end 
+; end
 
 ; Bitpacked speed pairs
 ; - Signed-magnitude format (Signs: $X---Y---, Magnitudes: $-xxx-yyy)
@@ -3829,7 +3828,7 @@ ret
         jr .setDrop
 
 .setDrop:
-    ; Set drop and sprite type from 
+    ; Set drop and sprite type based on what's in bc
     ld a, b
     ldh [hEnemy.dropType], a
     ld a, c
@@ -4045,7 +4044,7 @@ ret
     ldh a, [hEnemy.directionFlags]
     and a ; Case 0 - Right
         jr z, .insideCornerCheck_bottomRight
-    dec a ; Case 1 - Down                 
+    dec a ; Case 1 - Down
         jr z, .insideCornerCheck_bottomLeft
     dec a ; Case 2 - Left
         jr z, .insideCornerCheck_topLeft
@@ -4740,7 +4739,7 @@ ret
     ; Check timer so enemy does not animate for the first few frames of its swoop motion
     ldh a, [hEnemy.counter]
     cp $0c
-        jr nc, .nextFrame        
+        jr nc, .nextFrame
 .resetAnimation:
     ld [hl], SPRITE_DRIVEL_1 ; $09
     ret
@@ -5032,7 +5031,7 @@ enAI_gullugg: ;{ 02:5CE0
         ld hl, .ySpeedTable_cw ; yPos table
         add hl, bc
         ld a, [hl]
-        cp $80 
+        cp $80
             jr nz, .break
     
         ; If the table gave us a value of $80, reset the counter try again at the beginning
@@ -5551,7 +5550,7 @@ ret
     .else_K:
         ; Yumee animation
         xor SPRITE_YUMEE_1 ^ SPRITE_YUMEE_2 ; $01
-    .endIf_K:    
+    .endIf_K:
     ld [hl], a
 ret
 ;} end pipe bug AI
@@ -5642,7 +5641,7 @@ enAI_skorpHori: ;{ 02:60F8
     ld hl, hEnemy.state
     ld a, [hl-]
     dec a ; Wait while extended
-        jr z, .case_1 
+        jr z, .case_1
     dec a ; Extend
         jr z, .case_2
     dec a ; Wait while retracted
@@ -7177,7 +7176,7 @@ ret
 
 ; Curve that is slightly slowing down
 .concaveSpeedTable: ; 02:682D
-    db $01, $01, $01, $01, $01, $01, $01, $00, $01, $00 
+    db $01, $01, $01, $01, $01, $01, $01, $00, $01, $00
 ; Curve that is slightly speeding up
 .convexSpeedTable: ; 02:6837
     db $00, $01, $00, $01, $01, $01, $01, $01, $01, $01
@@ -7464,14 +7463,16 @@ enAI_gravitt: ;{ 02:695F
     ; Next state
     ld a, $01
     ldh [hEnemy.state], a
-    ; Set 
+    ; Set movement direction (bit 1 of direction flags)
     ld a, b
     and a
     jr nz, .else_B
+        ; movement will be to the right
         ld a, %10000000 ;$80
         ldh [hEnemy.directionFlags], a
         ret
     .else_B:
+        ; movement will be to the left
         ld a, %10000010 ;$82
         ldh [hEnemy.directionFlags], a
         ret
@@ -7999,7 +8000,7 @@ enAI_hatchingAlpha: ;{ 02:6BB2
         jr nc, .endIf_D
             cpl
             inc a
-        .endIf_D:    
+        .endIf_D:
         cp $50
             ret nc
         ; Activate fight
@@ -9182,7 +9183,7 @@ ret
     ldh a, [hEnemy.spawnFlag]
     cp $04
         jr z, .quickIntro
-    ld c, a    
+    ld c, a
 ; Fancy intro stuff
     ld a, b
     cp $02 ; When the husk has fallen offscreen
@@ -9328,7 +9329,7 @@ jr .standardAction
     ld a, [hl]
     and a
         ret z
-    ; Clear proximity flag for next frame's check    
+    ; Clear proximity flag for next frame's check
     ld [hl], $00
     ; Check if Samus is within $20 pixels underneath Zeta
     ld hl, hEnemy.yPos
@@ -10883,7 +10884,7 @@ ret
         jr nc, .endIf_C
             cpl
             inc a
-        .endIf_C:    
+        .endIf_C:
         cp $10
             ret nc
         ; Freeze Samus in place

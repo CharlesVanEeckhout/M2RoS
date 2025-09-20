@@ -39,7 +39,7 @@ SECTION "ROM Bank $00C", ROMX[$4000], BANK[$C]
     db $0F, $0B, $0B, $0B, $0F, $0F, $0B, $0F, $07, $0B, $0F, $0B, $0F, $03, $0F, $0F
     db $0F, $0F, $0F, $0F, $0F, $0F, $0B, $0F, $0B, $0F, $0F, $0B, $0F, $0B, $0F, $0F
 
-; Room Transition Indexes 
+; Room Transition Indexes
 
     dw $0000, $0000, $00A0, $00A1, $00A2, $00A3, $00A4, $0000, $00A5, $0000, $00A6, $0000, $00AE, $00A8, $0195, $0000
     dw $0000, $0000, $00AA, $0114, $01AB, $01AC, $00AB, $00AC, $0000, $00AD, $0000, $0000, $0000, $00AF, $0197, $0000
