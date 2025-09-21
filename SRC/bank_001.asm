@@ -3934,7 +3934,9 @@ drawNonGameSprite: ;{ 01:73F7
 ret ;}
 
 ; 01:744A
-include "data/sprites_credits.asm" ; Also title
+creditsSpritePointerTable: ; Also title sprites
+    include "data/sprites_creditsPointers.asm"
+    include "data/sprites_credits.asm"
 
 ;------------------------------------------------------------------------------
 

@@ -1,44 +1,3 @@
-; Sprite Pointers
-creditsSpritePointerTable:
-    dw sprite_titleStart ; 00
-    dw sprite_titleClear ; 01
-    dw sprite_titleCursor_frameA ; 02
-    dw sprite_titleCursor_frameB ; 03
-    dw sprite_titleCursor_frameC ; 04
-    dw sprite_titleCursor_frameUnused ; 05
-    dw sprite_titleStar ; 06
-    dw sprite_creditsSuitedStanding ; 07
-    dw sprite_creditsSuitedRunningTop_frameA ; 08
-    dw sprite_creditsSuitedRunningTop_frameB ; 09
-    dw sprite_creditsSuitedRunningTop_frameC ; 0a
-    dw sprite_creditsSuitedRunningBottom_frameA ; 0b
-    dw sprite_creditsSuitedRunningBottom_frameB ; 0c
-    dw sprite_titleStar ; 0d
-    dw sprite_creditsSuitlessHead_frameA ; 0e
-    dw sprite_creditsSuitlessArm_frameA ; 0f
-    dw sprite_creditsSuitlessBottom ; 10
-    dw sprite_creditsSuitlessKneeling ; 11
-    dw sprite_creditsSuitedKneeling ; 12
-    dw sprite_creditsSuitlessArm_frameB ; 13
-    dw sprite_creditsSuitlessArm_frameC ; 14
-    dw sprite_creditsSuitlessHead_frameB ; 15
-    dw sprite_creditsSuitlessHead_frameC ; 16
-    dw sprite_creditsSuitlessHead_frameD ; 17
-    dw sprite_creditsSuitlessHead_frameE ; 18
-    dw sprite_creditsSuitlessHead_frameF ; 19
-    dw sprite_creditsSuitlessHead_frameG ; 1a
-    dw sprite_creditsStarSmall ; 1b
-    dw sprite_creditsStarLarge ; 1c
-    dw sprite_creditsUnusedThe ; 1d
-    dw sprite_creditsUnusedEnd ; 1e
-    dw sprite_creditsSpinJump_frameA ; 1f
-    dw sprite_creditsSpinJump_frameB ; 20
-    dw sprite_creditsSpinJump_frameC ; 21
-    dw sprite_creditsSpinJump_frameD ; 22
-    dw sprite_titleFile1 ; 23 - File 1
-    dw sprite_titleFile2 ; 24 - File 2
-    dw sprite_titleFile3 ; 25 - File 3
-
 ; Metasprite Data:
 sprite_titleFile1:
     db   0, 54, $FB, $80
@@ -49,6 +8,7 @@ sprite_titleFile2:
 sprite_titleFile3:
     db   0, 54, $FD, $80
     db METASPRITE_END
+
 sprite_creditsSuitedRunningTop_frameA:
     db -24,-20, $00, $80
     db -24,-12, $01, $80
@@ -145,6 +105,7 @@ sprite_creditsSuitedStanding:
     db  40,  3, $72, $A0
     db  40, 11, $71, $A0
     db METASPRITE_END
+
 sprite_titleStar:
     db   0,  0, $EF, $80
     db METASPRITE_END
@@ -174,6 +135,7 @@ sprite_titleCursor_frameC:
 sprite_titleCursor_frameUnused:
     db   0,  0, $F0, $00
     db METASPRITE_END
+
 sprite_creditsSuitedRunningBottom_frameA:
     db   0,-12, $0F, $80
     db   0, -4, $10, $80
@@ -423,12 +385,14 @@ sprite_creditsSuitlessHead_frameG:
     db -24, -8, $EC, $80
     db -24,  0, $ED, $80
     db METASPRITE_END
+
 sprite_creditsStarSmall:
     db  -4, -4, $EE, $80
     db METASPRITE_END
 sprite_creditsStarLarge:
     db  -4, -4, $EF, $80
     db METASPRITE_END
+
 sprite_creditsUnusedThe:
     db  -8,-16, $F0, $80
     db  -8, -8, $F1, $80

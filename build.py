@@ -3,6 +3,7 @@ import subprocess
 import hashlib
 from scripts import enemy_csv2asm
 from scripts import samus_csv2asm
+from scripts import general_csv2asm
 
 def run_or_exit(args, err):
     completed_process = subprocess.run(args, shell=True)
@@ -17,6 +18,7 @@ if not os.path.exists('out/'):
 print('Running scripts')
 enemy_csv2asm.csv2asm("./SRC/data/enemies.csv", "./SRC/data")
 samus_csv2asm.csv2asm("./SRC/samus/samus.csv", "./SRC/samus")
+general_csv2asm.csv2asm("./SRC/data/sprites_credits.csv","./SRC/data","sprites_credits")
 print('Success\n')
 
 completed_process = subprocess.run("rgbasm -V", shell=True)
