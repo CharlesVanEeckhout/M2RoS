@@ -445,7 +445,7 @@ titleScreenRoutine: ;{ 05:4118
     ; Play sound
     ld a, sfx_square1_select
     ld [sfxRequest_square1], a
-    ; Play Samus fanfare
+    ; Play Samus fanfare (made redundant later on by loadGame_samusData)
     ld a, $12
     ld [songRequest], a
 
