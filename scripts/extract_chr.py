@@ -1,5 +1,4 @@
-# Script by Alex W
-# Thanks to PJ for the lambda functions
+# Original credit to Alex W and PJ
 
 # Tool for extracting chr data into a binary file
 

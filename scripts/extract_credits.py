@@ -1,10 +1,9 @@
-
+# Original credit to Alex W and PJ
 import os
 
 file_path = "./SRC/data/credits.asm"
 
 def parse_credits_line(line_data):
-    print(line_data)
     for i in range(len(line_data)):
         if line_data[i] == 0x5E: # Dashes aren't ^s
             line_data[i] = "-"
@@ -24,7 +23,7 @@ def parse_credits_line(line_data):
             line_data[i] = '"' + line_data[i] + '"'
         else:
             line_data[i] = f"${line_data[i]:02X}"
-    print(line_data)
+    
     return '    db ' + ",".join(line_data) + "\n"
 
 def extract():

@@ -1,21 +1,22 @@
 import os
-
-from scripts import extract_chr
-from scripts import extract_maps
-from scripts import extract_credits
+import importlib
+modules = [importlib.import_module("scripts." + m) for m in [
+    "extract_chr",
+    "extract_maps",
+    "extract_credits",
+    "extract_doors",
+]]
 
 
 print('Removing previous resources from disassembly')
-extract_chr.clean()
-extract_maps.clean()
-extract_credits.clean()
+for module in modules:
+    module.clean()
 print('Success\n')
 
 print('Extracting resources from vanilla ROM')
 if not os.path.exists("./Metroid2.gb"):
     print('Vanilla ROM file ./Metroid2.gb was not found')
     exit()
-extract_chr.extract()
-extract_maps.extract()
-extract_credits.extract()
+for module in modules:
+    module.extract()
 print('Success')
