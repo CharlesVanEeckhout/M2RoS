@@ -9,3 +9,13 @@ rgbgfx.exe
 rgblink.exe
 zlib1.dll
 libpng16.dll
+
+SRC/data/credits.asm
+SRC/gfx/*.chr
+SRC/gfx/enemies/*.chr
+SRC/gfx/samus/*.chr
+SRC/gfx/titleCredits/*.chr
+SRC/maps/bank_*
+SRC/maps/doors.asm
+SRC/maps/enemyData.asm
+SRC/tilesets/*.chr

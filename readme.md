@@ -6,12 +6,15 @@ A disassembly of one of my favorite Game Boy games. A first-pass over every func
 
 1. Install [rgbds](https://github.com/rednex/rgbds#1-installing-rgbds)
 2. Install [Python](https://www.python.org/downloads/)
-3. Either run `make all`, `build.bat`, or `build.py`, depending on your preference.
-4. The assembled game and a [BGB](http://bgb.bircd.org/) compatible `.sym` file will appear in the `out` folder.
+3. Run `extract.py` to extract proprietary assets from a legally acquired copy of the original game.
+4. Either run `make all`, `build.bat`, or `build.py`, depending on your preference.
+5. The assembled game and a [BGB](http://bgb.bircd.org/) compatible `.sym` file will appear in the `out` folder.
 
 The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87`
 
 This project uses rgbds v0.9.1 and Python 3.13. Compatibility with other versions of these tools is not guaranteed.
+
+If you wish to make a mod based on this repo, you may want to remove the lines at the bottom of the `.gitignore` file that blacklist proprietary assets from this repository, so that your custom assets will be tracked by your version control.
 
 ## How to Contribute
 
