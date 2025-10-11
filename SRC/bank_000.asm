@@ -7434,7 +7434,7 @@ tryPausing: ;{ 00:2C79
     ; Attempt to find the first sprite that uses the HUD Metroid sprite tiles ($9A and $9B)
     ; Note that the following hex values would all be detected by this loop:
     ;  9A, 9B, 9E, 9F, BA, BB, BE, BF, DA, DB, DE, DF, FA, FB, FE, FF
-    ; The HUD Metroid is rendered after Samus and the beams, which menas that they
+    ; The HUD Metroid is rendered after Samus and the beams, which means that they
     ;  should not use tiles with those values. (Enemy sprites are not a concern here.)
     .loop:
         ld a, [hl]

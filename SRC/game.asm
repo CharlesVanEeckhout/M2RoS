@@ -7,6 +7,7 @@ INCLUDE "hardware.inc"
 
 INCLUDE "constants.asm"
 INCLUDE "data/enemy_nameConstants.asm"
+INCLUDE "data/sprites_creditsConstants.asm"
 INCLUDE "macros.asm"
 
 ; RAM definitions

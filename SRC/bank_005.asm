@@ -273,7 +273,7 @@ titleScreenRoutine: ;{ 05:4118
     ld a, [titleStarX]
     ldh [hSpriteXPixel], a
     ; Get the base sprite number
-    ld a, $06
+    ld a, SPRITE_TITLE_STAR ;$06
     ldh [hSpriteId], a
     ; Toggle the lower bit of the sprite priority bit regularly -- but this does nothing??
     ;  Perhaps the original intent was to have the sprite flicker between sprites $06 and $05
@@ -316,7 +316,7 @@ titleScreenRoutine: ;{ 05:4118
 
 ; Draw sprite for save number
     ld a, [activeSaveSlot]
-    add $23
+    add SPRITE_TITLE_FILE_1 ;$23
     ldh [hSpriteId], a
     ; Y position is same as the cursor
     ; Also, the number sprites have a ridiculous baked-in x-offset
@@ -327,7 +327,7 @@ titleScreenRoutine: ;{ 05:4118
     ldh [hSpriteXPixel], a
     ld a, $74
     ldh [hSpriteYPixel], a
-    ld a, $00
+    ld a, SPRITE_TITLE_START ;$00
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     
@@ -339,7 +339,7 @@ titleScreenRoutine: ;{ 05:4118
         ; Show "Clear" text
         ld a, $80
         ldh [hSpriteYPixel], a
-        ld a, $01
+        ld a, SPRITE_TITLE_CLEAR ;$01
         ldh [hSpriteId], a
         call drawNonGameSprite_longCall
     .endIf_E:
@@ -578,7 +578,10 @@ ret
 ;------------------------------------------------------------------------------
 ; Used by title
 titleCursorTable: ; 05:42E1
-    db $02, $03, $04, $03
+    db SPRITE_TITLE_CURSOR_1 ;$02
+    db SPRITE_TITLE_CURSOR_2 ;$03
+    db SPRITE_TITLE_CURSOR_3 ;$04
+    db SPRITE_TITLE_CURSOR_2 ;$03
 
 ;------------------------------------------------------------------------------
 ; Screen transitions
@@ -680,7 +683,7 @@ credits_drawStars: ;{ 05:5603 - Draw stars to the OAM buffer during credits
         ; LSB of loop counter determines if star graphic is $1B or $1C
         ld a, b
         and $01
-        add $1b
+        add SPRITE_CREDITS_STAR_SMALL ;$1B
         ldh [hSpriteId], a
         ; push/pop variables to avoid clobbering
         push hl
@@ -1341,25 +1344,25 @@ credits_drawSamusJumpTable: ;{ 05:598D
 
 ; Functions called by table {
 .run_frameA:
-    ld a, $08
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_1 ;$08
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0b
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_1 ;$0b
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .run_frameB:
-    ld a, $09
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_2 ;$09
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0c
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_2 ;$0c
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .run_frameC:
-    ld a, $0a
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_3 ;$0a
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ; Flip bottom, adjust position
@@ -1368,7 +1371,7 @@ ret
     ldh a, [hSpriteXPixel]
     dec a
     ldh [hSpriteXPixel], a
-    ld a, $0b
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_1 ;$0b
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ; Clear flip
@@ -1377,13 +1380,13 @@ ret
 ret
 
 .run_frameD:
-    ld a, $09
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_2 ;$09
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ; Flip bottom
     ld a, OAMF_XFLIP
     ldh [hSpriteAttr], a
-    ld a, $0c
+    ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_2 ;$0c
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ; Clear flip
@@ -1392,160 +1395,160 @@ ret
 ret
 
 .jump_frameA:
-    ld a, $1f
+    ld a, SPRITE_CREDITS_SPINJUMP_1 ;$1f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .jump_frameB:
-    ld a, $20
+    ld a, SPRITE_CREDITS_SPINJUMP_2 ;$20
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .jump_frameC:
-    ld a, $21
+    ld a, SPRITE_CREDITS_SPINJUMP_3 ;$21
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .jump_frameD:
-    ld a, $22
+    ld a, SPRITE_CREDITS_SPINJUMP_4 ;$22
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suited_standing:
-    ld a, $07
+    ld a, SPRITE_CREDITS_SUITED_STANDING ;$07
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suited_kneeling:
-    ld a, $12
+    ld a, SPRITE_CREDITS_SUITED_KNEELING ;$12
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_kneeling:
-    ld a, $11
+    ld a, SPRITE_CREDITS_SUITLESS_KNEELING ;$11
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameA:
-    ld a, $0e
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_1 ;$0e
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameB:
-    ld a, $0e
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_1 ;$0e
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $13
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_2 ;$13
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameC:
-    ld a, $14
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_3 ;$14
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameD:
-    ld a, $15
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_2 ;$15
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameE:
-    ld a, $16
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_3 ;$16
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameF:
-    ld a, $17
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_4 ;$17
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameG:
-    ld a, $18
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_5 ;$18
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .suitless_frameH:
-    ld a, $19
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_6 ;$19
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .hairWaving_frameA:
-    ld a, $18
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_5 ;$18
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret
 
 .hairWaving_frameB:
-    ld a, $1a
+    ld a, SPRITE_CREDITS_SUITLESS_HEAD_7 ;$1a
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $0f
+    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $10
+    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 ret

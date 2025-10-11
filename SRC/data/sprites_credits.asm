@@ -1,57 +1,15 @@
-; Sprite Pointers
-creditsSpritePointerTable:
-
-    dw sprite_titleStart ; 00
-    dw sprite_titleClear ; 01
-    dw sprite7638 ; 02
-    dw sprite763D ; 03
-    dw sprite7642 ; 04
-    dw sprite7647 ; 05
-    dw sprite7609 ; 06
-    dw sprite7578 ; 07
-    dw sprite74A5 ; 08
-    dw sprite74E6 ; 09
-    dw sprite7537 ; 0a
-    dw sprite764C ; 0b
-    dw sprite7675 ; 0c
-    dw sprite7609 ; 0d
-    dw sprite7796 ; 0e
-    dw sprite77A7 ; 0f
-    dw sprite77C0 ; 10
-    dw sprite780D ; 11
-    dw sprite7876 ; 12
-    dw sprite78FB ; 13
-    dw sprite7910 ; 14
-    dw sprite7935 ; 15
-    dw sprite7946 ; 16
-    dw sprite7957 ; 17
-    dw sprite7970 ; 18
-    dw sprite7985 ; 19
-    dw sprite7996 ; 1a
-    dw sprite79AB ; 1b
-    dw sprite79B0 ; 1c
-    dw sprite79B5 ; 1d
-    dw sprite79D2 ; 1e
-    dw sprite7692 ; 1f
-    dw sprite76D3 ; 20
-    dw sprite7714 ; 21
-    dw sprite7755 ; 22
-    dw sprite7496 ; 23 - File 1
-    dw sprite749B ; 24 - File 2
-    dw sprite74A0 ; 25 - File 3
-
-
 ; Metasprite Data:
-sprite7496:
+sprite_titleFile1:
     db   0, 54, $FB, $80
     db METASPRITE_END
-sprite749B:
+sprite_titleFile2:
     db   0, 54, $FC, $80
     db METASPRITE_END
-sprite74A0:
+sprite_titleFile3:
     db   0, 54, $FD, $80
     db METASPRITE_END
-sprite74A5:
+
+sprite_creditsSuitedRunningTop_frameA:
     db -24,-20, $00, $80
     db -24,-12, $01, $80
     db -24, -4, $02, $80
@@ -69,7 +27,7 @@ sprite74A5:
     db  -8, 12, $0E, $80
     db   0, 12, $12, $80
     db METASPRITE_END
-sprite74E6:
+sprite_creditsSuitedRunningTop_frameB:
     db -24,-20, $1A, $80
     db -24,-12, $1B, $80
     db -24, -4, $1C, $80
@@ -91,7 +49,7 @@ sprite74E6:
     db   0,  4, $2C, $80
     db   0, 12, $2D, $80
     db METASPRITE_END
-sprite7537:
+sprite_creditsSuitedRunningTop_frameC:
     db -24,-20, $35, $80
     db -24,-12, $36, $80
     db -24, -4, $37, $80
@@ -109,7 +67,7 @@ sprite7537:
     db  -8, 12, $43, $80
     db   0,-20, $44, $80
     db METASPRITE_END
-sprite7578:
+sprite_creditsSuitedStanding:
     db -24,-20, $53, $80
     db -24,-12, $54, $80
     db -24, -4, $55, $80
@@ -147,7 +105,8 @@ sprite7578:
     db  40,  3, $72, $A0
     db  40, 11, $71, $A0
     db METASPRITE_END
-sprite7609:
+
+sprite_titleStar:
     db   0,  0, $EF, $80
     db METASPRITE_END
 sprite_titleStart:
@@ -164,19 +123,20 @@ sprite_titleClear:
     db   0, 24, $F9, $00
     db   0, 32, $FA, $00
     db METASPRITE_END
-sprite7638:
+sprite_titleCursor_frameA:
     db   0,  0, $ED, $00
     db METASPRITE_END
-sprite763D:
+sprite_titleCursor_frameB:
     db   0,  0, $EE, $00
     db METASPRITE_END
-sprite7642:
+sprite_titleCursor_frameC:
     db   0,  0, $EF, $00
     db METASPRITE_END
-sprite7647:
+sprite_titleCursor_frameUnused:
     db   0,  0, $F0, $00
     db METASPRITE_END
-sprite764C:
+
+sprite_creditsSuitedRunningBottom_frameA:
     db   0,-12, $0F, $80
     db   0, -4, $10, $80
     db   0,  4, $11, $80
@@ -188,7 +148,7 @@ sprite764C:
     db  32,  0, $18, $80
     db  40, -1, $19, $80
     db METASPRITE_END
-sprite7675:
+sprite_creditsSuitedRunningBottom_frameB:
     db   8,-12, $2E, $80
     db   8, -4, $2F, $80
     db   8,  4, $30, $80
@@ -197,7 +157,7 @@ sprite7675:
     db  24, -1, $33, $80
     db  32, -1, $34, $80
     db METASPRITE_END
-sprite7692:
+sprite_creditsSpinJump_frameA:
     db -16,-16, $45, $80
     db -16, -8, $46, $80
     db -16,  0, $46, $A0
@@ -215,7 +175,7 @@ sprite7692:
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
     db METASPRITE_END
-sprite76D3:
+sprite_creditsSpinJump_frameB:
     db -16,-16, $4D, $80
     db -16, -8, $4E, $80
     db -16,  0, $4E, $A0
@@ -233,7 +193,7 @@ sprite76D3:
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
     db METASPRITE_END
-sprite7714:
+sprite_creditsSpinJump_frameC:
     db -16,-16, $4B, $C0
     db -16, -8, $4C, $C0
     db -16,  0, $4C, $E0
@@ -251,7 +211,7 @@ sprite7714:
     db   8,  0, $46, $E0
     db   8,  8, $45, $E0
     db METASPRITE_END
-sprite7755:
+sprite_creditsSpinJump_frameD:
     db -16,-16, $4B, $C0
     db -16, -8, $4C, $C0
     db -16,  0, $4C, $E0
@@ -269,13 +229,13 @@ sprite7755:
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
     db METASPRITE_END
-sprite7796:
+sprite_creditsSuitlessHead_frameA:
     db -32, -8, $AA, $80
     db -32,  0, $AB, $80
     db -24, -8, $AC, $80
     db -24,  0, $AD, $80
     db METASPRITE_END
-sprite77A7:
+sprite_creditsSuitlessArm_frameA:
     db -16,-16, $AE, $80
     db -16, -8, $AF, $80
     db  -8,-16, $B2, $80
@@ -283,7 +243,7 @@ sprite77A7:
     db   0,-16, $B6, $80
     db   8,-16, $BA, $80
     db METASPRITE_END
-sprite77C0:
+sprite_creditsSuitlessBottom:
     db -16,  0, $B0, $80
     db -16,  8, $B1, $80
     db  -8,  0, $B4, $80
@@ -304,7 +264,7 @@ sprite77C0:
     db  40,  0, $C5, $80
     db  40,  8, $C6, $80
     db METASPRITE_END
-sprite780D:
+sprite_creditsSuitlessKneeling:
     db   0, -8, $90, $80
     db   0,  0, $91, $80
     db   8, -8, $92, $80
@@ -332,7 +292,7 @@ sprite780D:
     db  40,  0, $A8, $80
     db  40,  8, $A9, $80
     db METASPRITE_END
-sprite7876:
+sprite_creditsSuitedKneeling:
     db   0,-20, $53, $80
     db   0,-12, $54, $80
     db   0, -4, $55, $80
@@ -367,14 +327,14 @@ sprite7876:
     db  40, -4, $8D, $80
     db  40,  4, $8E, $80
     db METASPRITE_END
-sprite78FB:
+sprite_creditsSuitlessArm_frameB:
     db -16,-24, $C7, $80
     db -16,-16, $C8, $80
     db -16, -8, $C9, $80
     db  -8,-16, $CA, $80
     db  -8, -8, $CB, $80
     db METASPRITE_END
-sprite7910:
+sprite_creditsSuitlessArm_frameC:
     db -32,-16, $CC, $80
     db -32, -8, $CD, $80
     db -32,  0, $AB, $80
@@ -385,19 +345,19 @@ sprite7910:
     db -16, -8, $D1, $80
     db  -8, -8, $D2, $80
     db METASPRITE_END
-sprite7935:
+sprite_creditsSuitlessHead_frameB:
     db -32, -8, $E3, $80
     db -32,  0, $E4, $80
     db -24, -8, $E5, $80
     db -24,  0, $E6, $80
     db METASPRITE_END
-sprite7946:
+sprite_creditsSuitlessHead_frameC:
     db -32, -8, $E7, $80
     db -32,  0, $E8, $80
     db -24, -8, $E9, $80
     db -24,  0, $EA, $80
     db METASPRITE_END
-sprite7957:
+sprite_creditsSuitlessHead_frameD:
     db -32,-16, $D4, $80
     db -32, -8, $D5, $80
     db -32,  0, $D6, $80
@@ -405,33 +365,35 @@ sprite7957:
     db -24, -8, $D8, $80
     db -24,  0, $D9, $80
     db METASPRITE_END
-sprite7970:
+sprite_creditsSuitlessHead_frameE:
     db -32, -8, $DA, $80
     db -32,  0, $DB, $80
     db -24,-16, $DC, $80
     db -24, -8, $DD, $80
     db -24,  0, $DE, $80
     db METASPRITE_END
-sprite7985:
+sprite_creditsSuitlessHead_frameF:
     db -32, -8, $DF, $80
     db -32,  0, $E0, $80
     db -24, -8, $E1, $80
     db -24,  0, $E2, $80
     db METASPRITE_END
-sprite7996:
+sprite_creditsSuitlessHead_frameG:
     db -32, -8, $DA, $80
     db -32,  0, $DB, $80
     db -24,-16, $EB, $80
     db -24, -8, $EC, $80
     db -24,  0, $ED, $80
     db METASPRITE_END
-sprite79AB:
+
+sprite_creditsStarSmall:
     db  -4, -4, $EE, $80
     db METASPRITE_END
-sprite79B0:
+sprite_creditsStarLarge:
     db  -4, -4, $EF, $80
     db METASPRITE_END
-sprite79B5:
+
+sprite_creditsUnusedThe:
     db  -8,-16, $F0, $80
     db  -8, -8, $F1, $80
     db  -8,  0, $F2, $80
@@ -440,7 +402,7 @@ sprite79B5:
     db   0,  0, $F8, $80
     db   0,  8, $F9, $80
     db METASPRITE_END
-sprite79D2:
+sprite_creditsUnusedEnd:
     db  -8,-16, $F3, $80
     db  -8, -8, $F4, $80
     db  -8,  8, $F5, $80
