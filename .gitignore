@@ -19,3 +19,5 @@ SRC/maps/bank_*
 SRC/maps/doors.asm
 SRC/maps/enemyData.asm
 SRC/tilesets/*.chr
+SRC/tilesets/*_collision.asm
+SRC/tilesets/*_metatiles.asm

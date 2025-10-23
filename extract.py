@@ -6,6 +6,7 @@ modules = [importlib.import_module("scripts." + m) for m in [
     "extract_credits",
     "extract_doors",
     "extract_enemyData",
+    "extract_tileset",
 ]]
 
 
