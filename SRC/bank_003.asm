@@ -2482,7 +2482,7 @@ queen_stateList: ;{ 03:7484
 
 queen_handleState: ; 03:748C
     ld a, [queen_state] ; Queen's state!
-    rst $28
+    rst LOW(RST_28)
         dw queenStateFunc_prepForwardWalk    ; $00 - 03:7821 - Prep forward walk
         dw queenStateFunc_forwardWalk        ; $01 - 03:783C - Walking forward
         dw queenStateFunc_prepExtendingNeck  ; $02 - 03:7864 - Prep neck extension

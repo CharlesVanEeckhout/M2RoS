@@ -308,7 +308,7 @@ playSongInterruption:
         ld [sfxPlayingBackup_lowHealthBeep], a
         xor a
         ld [sfxPlaying_lowHealthBeep], a
-        .endIf_notEarthquake
+    .endIf_notEarthquake:
 
     ld a, [audioChannelOutputStereoFlags]
     ld [audioChannelOutputStereoFlagsBackup], a
@@ -632,7 +632,7 @@ handleChannelSoundEffect_wave:
         ld hl, songSoundEffectPlaybackFunctionPointers_wave
         call loadPointerFromTable
         jp hl
-    .endif_sfxPlaying
+    .endif_sfxPlaying:
 
     xor a
     ld [sfxPlaying_wave], a
@@ -2353,7 +2353,7 @@ square1Sfx_init_1:
     jr c, .endIf
         cp sfx_square1_shootingSpazerBeam
             jp c, handleChannelSoundEffect_square1.playing
-    .endIf
+    .endIf:
 
     ld a, [songPlaying]
     cp song_chozoRuins
@@ -2430,7 +2430,7 @@ square1Sfx_init_2:
     jr c, .endIf
         cp sfx_square1_shootingSpazerBeam
             jp c, handleChannelSoundEffect_square1.playing
-    .endIf
+    .endIf:
 
     ld a, [songPlaying]
     cp song_chozoRuins
@@ -3180,7 +3180,7 @@ square1Sfx_init_18:
         call nz, .endIf ; Vanilla bug: call instead of jr
         ld a, $02
         ld [samusHealthChangedOptionSetIndex], a
-    .endIf
+    .endIf:
 
     cp $01
         jr z, .set1
@@ -3311,7 +3311,7 @@ square1Sfx_playback_1B:
         ldh [rAUD1LOW], a
         ld [sfxVariableFrequency_square1], a
         ret
-    .endIf
+    .endIf:
 
     ld a, [sfxVariableFrequency_square1]
     dec a
@@ -5691,28 +5691,28 @@ macro WaveOptionSet ; [volume], [frequency]
     dw \2 | $8000
 endm
 
-.healthUnder20_0 ; $5EFF
+.healthUnder20_0: ; $5EFF
     WaveOptionSet 1, $4F0
 
-.healthUnder20_1 ; $5F04
+.healthUnder20_1: ; $5F04
     WaveOptionSet 2, $4D0
 
-.healthUnder30_0 ; $5F09
+.healthUnder30_0: ; $5F09
     WaveOptionSet 1, $4C4
 
-.healthUnder30_1 ; $5F0E
+.healthUnder30_1: ; $5F0E
     WaveOptionSet 2, $4C4
 
-.healthUnder40_0 ; $5F13
+.healthUnder40_0: ; $5F13
     WaveOptionSet 1, $4B6
 
-.healthUnder40_1 ; $5F18
+.healthUnder40_1: ; $5F18
     WaveOptionSet 2, $4B6
 
-.healthUnder50_0 ; $5F1D
+.healthUnder50_0: ; $5F1D
     WaveOptionSet 1, $4A3
 
-.healthUnder50_1 ; $5F22
+.healthUnder50_1: ; $5F22
     WaveOptionSet 2, $4A3
 ;}
 

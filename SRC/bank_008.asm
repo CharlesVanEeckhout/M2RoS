@@ -78,7 +78,7 @@ earthquakeCheck:: ;{ 08:7EBC:
 .return:
     ret
 
-; Earthquake threshholds (terminated with $FF)
+; Earthquake thresholds (terminated with $FF)
 .thresholds:
     db $46, $42, $34, $24, $23, $21, $14, $13, $12, $09, $01, $ff
 ;}
@@ -94,7 +94,7 @@ collisionPointerTable::
     dw collision_ruinsExt     ; 6
     dw collision_finalLab     ; 7
 
-; 8:7EFA Solidity threshholds
+; 8:7EFA Solidity thresholds
 solidityIndexTable:: include "tilesets/solidityValues.asm"
 
 ; 8:7F1A Metatile definition pointers

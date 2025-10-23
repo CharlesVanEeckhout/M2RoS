@@ -2802,7 +2802,7 @@ ret
 ; Arachnus / Arachnus Orb
 enAI_arachnus: ;{ 02:5109
     ldh a, [hEnemy.generalVar]
-    rst $28
+    rst LOW(RST_28)
         dw .state_0 ; Init and start fight
         dw .state_1 ; Initial bouncing for the intro
         dw .state_2 ; An additional small bounce for the intro

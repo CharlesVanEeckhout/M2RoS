@@ -347,7 +347,7 @@ jp mainGameLoop
 
 main_handleGameMode: ;{ 0:02F0
     ldh a, [gameMode]
-    rst $28
+    rst LOW(RST_28)
         dw gameMode_Boot           ; $00
         dw gameMode_Title          ; $01
         dw gameMode_LoadA          ; $02 Setup for playing the game
@@ -1718,7 +1718,7 @@ handleCamera: ;{ 00:08FE
 ret
 ;}
 
-.unusedTable ; 00:0B39 - Unreferenced data of unknown purpose
+.unusedTable: ; 00:0B39 - Unreferenced data of unknown purpose
     db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
 ; Already in a door transition?
@@ -2058,7 +2058,7 @@ samus_handlePose: ;{ 00:0D21
         jp nz, handleTurnaroundTimer
     ; Take the jump table
     ld a, [samusPose]
-    rst $28
+    rst LOW(RST_28)
         ; Table Generated from samus/samus.csv
         include "samus/samus_poseJumpTable.asm"
 ;}
@@ -5427,7 +5427,7 @@ samus_getTileIndex: ;{ 00:1FF5
         add h
         ld h, a
         ld [pTilemapDestHigh], a
-    .endIf_A
+    .endIf_A:
 
     ; Wait for HBlank and read once
     .waitLoop_A:
@@ -5641,7 +5641,7 @@ getTileIndex: ;{ 00:2250 - Called by enemy routines
         add h
         ld h, a
         ld [pTilemapDestHigh], a
-    .endIf
+    .endIf:
 
     ; Wait for HBlank and read once
     .waitLoop_A:
@@ -5737,6 +5737,7 @@ ret ;}
 ;  Function is unused
 getTilemapCoordinates: ;{ 00:22E1
     ; DE = pTilemapDest
+    ; format is %100110YY YYYXXXXX
     ld a, [pTilemapDestHigh]
     ld d, a
     ld a, [pTilemapDestLow]
@@ -5749,24 +5750,27 @@ getTilemapCoordinates: ;{ 00:22E1
         rr e
         dec b
     jr nz, .loop
+    ; now E is %10YYYYYX
     ld a, e
-    ; The $8x part seems to adjust for the $9800 base address
+    ; The $8x part adjusts for the $9800 base address
     ; The $x4 seems to adjust for 2 rows of tiles
     sub $84
-    ; Mask out lowest bit
+    ; Mask out lowest bit containing X pos MSB
     and $fe
-    ; A*4 + 8
+    ; now A is %00YYYYY0 - 4
+    ; tileY = A*4 + 8 = (%00YYYYY0 - 4)*4 + 8 = %YYYYY000 - 8
+    ; this is wrong, it should be %YYYYY000 + OAM_Y_OFS
     rlca
     rlca
     add $08
     ld [tileY], a
-    ; X = (low mod 32)*8 +
+    ; tileX = (low mod 32)*8 + OAM_X_OFS
     ld a, [pTilemapDestLow]
     and $1f
     rla
     rla
     rla
-    add $08
+    add OAM_X_OFS
     ld [tileX], a
 ret ;}
 
@@ -9632,7 +9636,7 @@ handleItemPickup: ;{ 00:372F
     ; Jump to pick-up specific routine
     ld a, b
     dec a
-    rst $28
+    rst LOW(RST_28)
         dw pickup_plasmaBeam
         dw pickup_iceBeam
         dw pickup_waveBeam

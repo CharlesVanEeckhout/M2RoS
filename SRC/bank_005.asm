@@ -701,7 +701,7 @@ ret
 ; Animate Samus during credits
 credits_animateSamus: ;{ 05:5620
     ld a, [credits_samusAnimState]
-    rst $28
+    rst LOW(RST_28)
         dw .standingStart     ; 00
         dw .running           ; 01
         dw .unused            ; 02 - Unused stub
@@ -1315,7 +1315,7 @@ credits_drawSamus: ;{ 05:5989
 ret ;}
 
 credits_drawSamusJumpTable: ;{ 05:598D
-    rst $28
+    rst LOW(RST_28)
         dw .run_frameA ; 00 - Samus running
         dw .run_frameB ; 01 - Samus running
         dw .run_frameC ; 02 - Samus running
