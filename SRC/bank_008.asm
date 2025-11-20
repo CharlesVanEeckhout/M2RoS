@@ -83,7 +83,7 @@ earthquakeCheck:: ;{ 08:7EBC:
     db $46, $42, $34, $24, $23, $21, $14, $13, $12, $09, $01, $ff
 ;}
 
-; 8:7EEA - Collision Table Pointers
+; 08:7EEA - Collision Table Pointers
 collisionPointerTable::
     dw collision_plantBubbles ; 0
     dw collision_ruinsInside  ; 1
@@ -94,10 +94,10 @@ collisionPointerTable::
     dw collision_ruinsExt     ; 6
     dw collision_finalLab     ; 7
 
-; 8:7EFA Solidity thresholds
+; 08:7EFA Solidity thresholds
 solidityIndexTable:: include "tilesets/solidityValues.asm"
 
-; 8:7F1A Metatile definition pointers
+; 08:7F1A Metatile definition pointers
 metatilePointerTable::
     dw metatiles_finalLab       ; 0 - 2
     dw metatiles_ruinsInside    ; 1 - 1
@@ -110,4 +110,4 @@ metatilePointerTable::
     dw metatiles_lavaCavesMid   ; 8 - 6
     dw metatiles_ruinsExt       ; 9 - 9
 
-bank8_freespace: ; 7:7B90 - Freespace (filled with $00)
+bank8_freespace: ; 08:7F2E - Freespace (filled with $00)
