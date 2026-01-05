@@ -12,45 +12,50 @@ def run_or_exit(args, err):
         exit(completed_process.returncode)
 
 
-if not os.path.exists('out/'):
-    os.mkdir('out/')
+def main():
+    if not os.path.exists('out/'):
+        os.mkdir('out/')
 
-print('Running scripts')
-enemy_csv2asm.csv2asm("./SRC/data/enemies.csv", "./SRC/data")
-samus_csv2asm.csv2asm("./SRC/samus/samus.csv", "./SRC/samus")
-general_csv2asm.csv2asm("./SRC/data/sprites_credits.csv","./SRC/data","sprites_credits")
-print('Success\n')
+    print('Running scripts')
+    enemy_csv2asm.csv2asm("./SRC/data/enemies.csv", "./SRC/data")
+    samus_csv2asm.csv2asm("./SRC/samus/samus.csv", "./SRC/samus")
+    general_csv2asm.csv2asm("./SRC/data/sprites_credits.csv","./SRC/data","sprites_credits")
+    print('Success\n')
 
-completed_process = subprocess.run("rgbasm -V", shell=True)
-if completed_process.returncode != 0:
-    print("RGBDS not detected. Downloading...")
-    run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v0.9.1/rgbds-0.9.1-win32.zip\"", "Failed to download.")
-    run_or_exit("tar -xvf rgbds-0.9.1-win32.zip", "Failed to extract RGBDS archive.")
-    run_or_exit("rgbasm -V", "Unable to use downloaded RGBDS.")
+    completed_process = subprocess.run("rgbasm -V", shell=True)
+    if completed_process.returncode != 0:
+        print("RGBDS not detected. Downloading...")
+        run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v1.0.1/rgbds-win32.zip\"", "Failed to download.")
+        run_or_exit("tar -xvf rgbds-win32.zip", "Failed to extract RGBDS archive.")
+        run_or_exit("rgbasm -V", "Unable to use downloaded RGBDS.")
 
-print('RGBDS detected')
-print('Assembling .asm files')
-run_or_exit("rgbasm -o out/game.o -Weverything -I SRC/ SRC/game.asm", "Assembler Error.")
-print('Success\n')
+    print('RGBDS detected')
+    print('Assembling .asm files')
+    run_or_exit("rgbasm -o out/game.o -Weverything -I SRC/ SRC/game.asm", "Assembler Error.")
+    print('Success\n')
 
-print('Linking .o files')
-run_or_exit("rgblink -n out/M2RoS.sym -m out/M2RoS.map -o out/M2RoS.gb out/game.o", "Linker Error.")
-print('Success\n')
+    print('Linking .o files')
+    run_or_exit("rgblink -n out/M2RoS.sym -Weverything -m out/M2RoS.map -o out/M2RoS.gb out/game.o", "Linker Error.")
+    print('Success\n')
 
-print('Fixing header')
-run_or_exit("rgbfix -v out/M2RoS.gb", "RGBFIX Error.")
-print('Done\n')
+    print('Fixing header')
+    run_or_exit("rgbfix -v out/M2RoS.gb", "RGBFIX Error.")
+    print('Done\n')
 
-with open("out/M2RoS.gb", "rb") as f:
-    md5_hash_generated = hashlib.md5(f.read())
-print('MD5 hash: ' + md5_hash_generated.hexdigest())
+    with open("out/M2RoS.gb", "rb") as f:
+        md5_hash_generated = hashlib.md5(f.read())
+    print('MD5 hash: ' + md5_hash_generated.hexdigest())
 
-try:
-    with open("Metroid2.gb", "rb") as f:
-        md5_hash_expected = hashlib.md5(f.read())
-    if md5_hash_generated.hexdigest() == md5_hash_expected.hexdigest():
-        print("Hash matches vanilla ROM.")
-    else:
-        print("Hash does not match vanilla ROM.")
-except FileNotFoundError:
-    print("Could not check hash against vanilla ROM.")
+    try:
+        with open("Metroid2.gb", "rb") as f:
+            md5_hash_expected = hashlib.md5(f.read())
+        if md5_hash_generated.hexdigest() == md5_hash_expected.hexdigest():
+            print("Hash matches vanilla ROM.")
+        else:
+            print("Hash does not match vanilla ROM.")
+    except FileNotFoundError:
+        print("Could not check hash against vanilla ROM.")
+
+
+if __name__ == "__main__":
+    main()

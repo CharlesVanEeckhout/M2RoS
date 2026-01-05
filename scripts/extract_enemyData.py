@@ -6,8 +6,8 @@ file_path = "./SRC/maps/enemyData.asm"
 gb2rom = lambda gb_bank, gb_address: (gb_bank * 0x4000) + (gb_address & 0x3fff)
 
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     rom_read = lambda n: int.from_bytes(rom.read(n), byteorder='little')
     enemy_pointers_begin = gb2rom(0x3,0x42E0)
     enemy_data_begin = gb2rom(0x3,0x50E0)

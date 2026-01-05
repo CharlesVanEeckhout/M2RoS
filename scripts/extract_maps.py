@@ -37,8 +37,8 @@ def create_map_bank_file(bank_data, bank_num):
     with open(os.path.join(folder, file_name), "w") as f:
         f.write(file_content)
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     for bank_num in range(0x9, 0xF+1):
         rom.seek(bank_num * 0x4000)
         bank_data = rom.read(0x4000)

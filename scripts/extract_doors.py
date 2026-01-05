@@ -48,8 +48,8 @@ pointer_dest_dict = {
 }
 
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     rom_read = lambda n: int.from_bytes(rom.read(n), byteorder='little')
     door_pointers_begin = gb2rom(0x5,0x42E5)
     door_data_begin = gb2rom(0x5,0x46E5)

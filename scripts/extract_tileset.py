@@ -42,8 +42,8 @@ data_list = [
     MetatilesEntry(0x8,0x57bc, 0x200, "ruinsExt"),
 ]
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     for data in data_list:
         rom.seek(data.rom_address)
         asm = rom.read(data.size)

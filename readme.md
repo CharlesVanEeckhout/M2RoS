@@ -12,7 +12,7 @@ A disassembly of one of my favorite Game Boy games. A first-pass over every func
 
 The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87`
 
-This project uses rgbds v0.9.1 and Python 3.13. Compatibility with other versions of these tools is not guaranteed.
+This project uses rgbds v1.0.1 and Python 3.13. Compatibility with other versions of these tools is not guaranteed.
 
 If you wish to make a mod based on this repo, you may want to remove the lines at the bottom of the `.gitignore` file that blacklist proprietary assets from this repository, so that your custom assets will be tracked by your version control.
 
@@ -33,7 +33,7 @@ If you wish to make a mod based on this repo, you may want to remove the lines a
 
 Please refrain from moving any chunk of code into a separate file without first discussing it in the issue tracker.
 
-If you have questions or comments, please drop by the #metroid-ii channel on the [MetConst Discord](https://discord.gg/xDwaaqa).
+If you have questions or comments, please drop by the #metroid_ii channel on the [MetConst Discord](https://discord.gg/xDwaaqa).
 
 ## Directory Structure
 

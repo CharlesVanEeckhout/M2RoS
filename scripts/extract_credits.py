@@ -26,8 +26,8 @@ def parse_credits_line(line_data):
     
     return '    db ' + ",".join(line_data) + "\n"
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     credits_begin = (0x6 * 0x4000) + (0x7920 & 0x3fff)
     rom.seek(credits_begin)
     

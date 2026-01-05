@@ -64,8 +64,8 @@ gfx_list = [
     GfxEntry(0x8,0x79bc, 0x500, "gfx/enemies/queenSPR"),
 ]
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     for gfx in gfx_list:
         rom.seek(gfx.rom_address)
         chr = rom.read(gfx.size)
