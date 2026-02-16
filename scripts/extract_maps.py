@@ -1,6 +1,6 @@
 import os
 
-folder = "./SRC/maps/"
+FOLDER = "./SRC/maps/"
 
 def byte_lines(data, per_row=16):
     data = [data[i:i+per_row] for i in range(0, len(data), per_row)]
@@ -34,7 +34,7 @@ def create_map_bank_file(bank_data, bank_num):
         file_content += byte_lines(bank_data[s:s+0x0100])
     file_content += "\n"
     
-    with open(os.path.join(folder, file_name), "w") as f:
+    with open(os.path.join(FOLDER, file_name), "w") as f:
         f.write(file_content)
 
 def extract(vanilla_rom_path):
@@ -47,7 +47,7 @@ def extract(vanilla_rom_path):
 
 def clean():
     for bank_num in range(0x9, 0xF+1):
-        file_path = os.path.join(folder, f"bank_{bank_num:03x}.asm")
+        file_path = os.path.join(FOLDER, f"bank_{bank_num:03x}.asm")
         if os.path.exists(file_path):
             os.remove(file_path)
 

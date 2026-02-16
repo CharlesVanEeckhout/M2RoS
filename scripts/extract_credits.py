@@ -1,7 +1,7 @@
 # Original credit to Alex W and PJ
 import os
 
-file_path = "./SRC/data/credits.asm"
+FILE_PATH = "./SRC/data/credits.asm"
 
 def parse_credits_line(line_data):
     for i in range(len(line_data)):
@@ -43,11 +43,11 @@ def extract(vanilla_rom_path):
     rom.close()
     file_content += '    db "<END>"'
     
-    with open(file_path, "w") as f:
+    with open(FILE_PATH, "w") as f:
         f.write(file_content)
 
 def clean():
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(FILE_PATH):
+        os.remove(FILE_PATH)
 
 # EoF

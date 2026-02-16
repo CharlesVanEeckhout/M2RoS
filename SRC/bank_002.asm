@@ -5328,7 +5328,7 @@ enAI_pipeBug: ;{ 02:5F67
 
     ; Set sprite type depending on current sprite type
     ldh a, [hEnemy.spriteType]
-    cp SPRITE_YUMEE_SPAWNER ; $3C
+    cp SPRITE_YUMEE_SPAWNER_1 ; $3C
     jr nc, .else_B
         ld a, SPRITE_GAWRON_1 ; $17 ; Gawron
         jr .endIf_B
