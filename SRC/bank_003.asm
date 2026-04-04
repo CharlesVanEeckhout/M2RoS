@@ -4030,7 +4030,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
     jr nz, .clearLoop
 
     ; Iterate to next row
-    ld de, $0015
+    ld de, $0020 - $0b
     add hl, de
 
     ; Check if we're at the end
@@ -4234,7 +4234,7 @@ VBlank_drawQueen: ;{ 03:7CF0
     ld [rSCX], a
     ld a, [scrollY]
     ld [rSCY], a
-    ; Set head X position
+    ; Set head X position (prevent rWX from being 166 due to hardware bug)
     ld a, [queen_headX]
     cp $a6
     jr nz, .endIf_A
@@ -4245,10 +4245,10 @@ VBlank_drawQueen: ;{ 03:7CF0
     ; Set head Y position
     ld a, [queen_headY]
     ld [rWY], a
-    add $26
-    cp $90
+    add queenInRoom_headHeight
+    cp SCRN_Y
     jr c, .endIf_B
-        ld a, $8f
+        ld a, SCRN_Y-1
     .endIf_B:
     ld [queen_headBottomY], a
     
@@ -4257,9 +4257,9 @@ VBlank_drawQueen: ;{ 03:7CF0
     ld b, a
     ld a, [queen_bodyHeight]
     add b
-    cp $90
+    cp SCRN_Y
     jr c, .endIf_C
-        ld a, $8f
+        ld a, SCRN_Y-1
     .endIf_C:
     ld d, a
     
@@ -4269,9 +4269,11 @@ VBlank_drawQueen: ;{ 03:7CF0
     ld a, [queen_bodyY]
     sub b
     jr c, .elseIf_D
+        ; bodyY >= headBottomY
         ; Decide whether "disable window" is the only interrupt for its scanline or not
         ld c, $83
         jr z, .endIf_E
+            ; bodyY > headBottomY
             ld c, $03
         .endIf_E:
         ; Write y pos of initial interrupt
@@ -4294,12 +4296,15 @@ VBlank_drawQueen: ;{ 03:7CF0
         jr .endIf_D
     .elseIf_D:
     
+    ; bodyY < headBottomY
     ld a, b
     sub d
     jr c, .else_D
+        ; headBottomY >= bodyBottomY
         ; Decide whether the "restore room" command will be the only iterrupt on its scanline
         ld c, $82
         jr z, .endIf_F
+            ; headBottomY > bodyBottomY
             ld c, $02
         .endIf_F:
         ; Set the y position of the initial interrupt to the top of the queen's body
@@ -4321,6 +4326,7 @@ VBlank_drawQueen: ;{ 03:7CF0
         ld [hl], $03
         jr .endIf_D
     .else_D:
+        ; headBottomY < bodyBottomY
         ; Set y pos of inital interrupt to top of queen's body
         ld a, [queen_bodyY]
         ld [hl+], a
