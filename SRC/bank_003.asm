@@ -38,19 +38,19 @@ loadEnemies: ;{ 03:4014
     ld h, a
     push hl
         ; Get bottom edge of the visible screen, rounded to the nearest block
-        ld bc, $68 ;$0068
+        ld bc, SCRN_Y/2 + $10 + OAM_Y_OFS ;$0068
         add hl, bc
         ld a, l
-        and $f0
+        and $100 - OAM_Y_OFS
         ld [bottomEdge_pixel], a
         ld a, h
         ld [bottomEdge_screen], a
     pop hl
     ; Get top edge of visible screen, rounded to the nearest block
-    ld bc, -$58 ;$ffa8
+    ld bc, -SCRN_Y/2 - $10 ;$ffa8
     add hl, bc
     ld a, l
-    and $f0
+    and $100 - OAM_Y_OFS
     ld [topEdge_pixel], a
     ld a, h
     ld [topEdge_screen], a
@@ -65,19 +65,19 @@ loadEnemies: ;{ 03:4014
     ld h, a
     push hl
         ; Get right edge of the visible screen, rounded to the nearest tile
-        ld bc, $68 ;$0068
+        ld bc, SCRN_X/2 + $10 + OAM_X_OFS ;$0068
         add hl, bc
         ld a, l
-        and $f8
+        and $100 - OAM_X_OFS
         ld [rightEdge_pixel], a
         ld a, h
         ld [rightEdge_screen], a
     pop hl
     ; Get left edge of the visible screen, rounded to the nearest tile
-    ld bc, -$60 ;$ffa0 - Just a negative number, not sprite DMA related
+    ld bc, -SCRN_X/2 - $10 ;$ffa0
     add hl, bc
     ld a, l
-    and $f8
+    and $100 - OAM_X_OFS
     ld [leftEdge_pixel], a
     ld a, h
     ld [leftEdge_screen], a
@@ -93,21 +93,21 @@ loadEnemies: ;{ 03:4014
         and $0f
         cp $0f
         jr nz, .endIf_A
-            ; We get to this point if the bottom edge of the screen is on the top screen
-            ;  and the top edge of the screen on the bottom screen
+            ; We get to this point if the bottom edge of the camera is on the top map screen
+            ;  and the top edge of the camera on the bottom map screen.
             
-            ; Check if the center of the screen is above or below the seam
+            ; Check if the center of the camera is above or below the seam
             ld a, [hCameraYScreen]
             cp b
             jr z, .else_B
-                ; Clamp bottom edge of screen to the bottom edge of the map
+                ; Clamp bottom edge of camera to the bottom edge of the map
                 ld a, c ; C = topEdge_screen
                 ld [bottomEdge_screen], a
                 ld a, d ; D is $FF
                 ld [bottomEdge_pixel], a
                 jr .endIf_A
             .else_B:
-                ; Clamp top edge of screen to the top edge of the map
+                ; Clamp top edge of camera to the top edge of the map
                 ld a, b ; B = bottomEdge_screen
                 ld [topEdge_screen], a
                 xor a
@@ -124,21 +124,21 @@ loadEnemies: ;{ 03:4014
         and $0f
         cp $0f
         jr nz, .endIf_C
-            ; We get to this point if the right edge of the screen is on the leftmost screen
-            ;  and the left edge of the screen on the rightmost screen.
+            ; We get to this point if the right edge of the camera is on the leftmost map screen
+            ;  and the left edge of the camera on the rightmost map screen.
         
-            ; Check if the center of the screen is to the left or right of the seam
+            ; Check if the center of the camera is to the left or right of the seam
             ld a, [hCameraXScreen]
             cp b
             jr z, .else_D
-                ; Clamp right edge of screen to the right edge of the map
+                ; Clamp right edge of camera to the right edge of the map
                 ld a, c ; C = leftEdge_screen
                 ld [rightEdge_screen], a
                 ld a, d ; D is $FF
                 ld [rightEdge_pixel], a
                 jr .endIf_C
             .else_D:
-                ; Clamp left edge of the screen to the left edge of the map
+                ; Clamp left edge of the camera to the left edge of the map
                 ld a, b ; B = rightEdge_screen
                 ld [leftEdge_screen], a
                 xor a
@@ -212,7 +212,7 @@ loadEnemies_vertical: ;{ 03:40BE
     ; Load x
     inc hl
     ld a, [hl]
-    and $f8 ; Clamp to nearest tile
+    and $100 - OAM_X_OFS ; Clamp to nearest tile
     ld e, a
     ; Compare with left edge of screen
     ld a, [leftEdge_pixel]
@@ -234,7 +234,7 @@ loadEnemies_vertical: ;{ 03:40BE
     ; Load y
     inc hl
     ld a, [hl]
-    and $f0 ; Clamp to nearest block
+    and $100 - OAM_Y_OFS ; Clamp to nearest block
     ld e, a
     ; If the clamped enemy Y equals the clamped camera Y
     ;  then load the enemy
@@ -279,7 +279,7 @@ jr .left_skipToNext ;}
     ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8 ; Clamp to nearest tile
+    and $100 - OAM_X_OFS ; Clamp to nearest tile
     ld e, a
     ld a, [rightEdge_pixel]
     cp e ; Exit if enemy is not to the left side of the right edge
@@ -288,7 +288,7 @@ jr .left_skipToNext ;}
     ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0 ; Clamp to nearest block
+    and $100 - OAM_Y_OFS ; Clamp to nearest block
     ld e, a
     ; If the clamped enemy Y equals the clamped camera Y
     ;  then load the enemy
@@ -362,7 +362,7 @@ loadEnemies_horizontal: ;{ 03:416A
     ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8 ; Clamp to nearest tile
+    and $100 - OAM_X_OFS ; Clamp to nearest tile
     ld e, a
     ; Compare enemy x to seam
     ld a, [hTemp.a]
@@ -376,7 +376,7 @@ loadEnemies_horizontal: ;{ 03:416A
     ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0 ; Clamp to nearest block
+    and $100 - OAM_Y_OFS ; Clamp to nearest block
     ld e, a
     ; If y pos does not equal top edge, skip to next enemy
     ld a, [topEdge_pixel]
@@ -439,7 +439,7 @@ jr .top_skipToNext ;}
     ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8 ; Clamp to nearest tile
+    and $100 - OAM_X_OFS ; Clamp to nearest tile
     ld e, a
     ; Compare camera x to enemy x
     ld a, [hTemp.a]
@@ -453,7 +453,7 @@ jr .top_skipToNext ;}
     ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0 ; Clamp to nearest block
+    and $100 - OAM_Y_OFS ; Clamp to nearest block
     ld e, a
     ; Compare enemy y to camera y
     ld a, [bottomEdge_pixel]
@@ -490,7 +490,7 @@ loadOneEnemy: ;{ 03:422F
     ld a, [scrollY]
     ld b, a
     ld a, [de] ; Load enemy y
-    add $10 ; Common y adjustment?
+    add OAM_Y_OFS
     sub b
     ld [hl+], a
 
@@ -499,7 +499,7 @@ loadOneEnemy: ;{ 03:422F
     ld b, a
     dec de
     ld a, [de] ; Load enemy x
-    add $08 ; Common x adjustment?
+    add OAM_X_OFS
     sub b
     ld [hl+], a
     
@@ -747,7 +747,7 @@ enemy_deleteSelf: ;{ 03:6AE7
     ld a, [de]
     cp [hl]
         ret nz
-    ; Clear enSprCollision.weaponType, etc. ($ C466, $ C467, $ C468, $ C469)
+    ; Clear enSprCollision.weaponType, etc. ($C466, $C467, $C468, $C469)
     dec l
     ld a, $ff
     ld [hl+], a
@@ -1073,9 +1073,9 @@ queen_initialize: ;{ 03:6D4A
     jr nz, .clearLoop
     
     ; Initial raster split locations
-    ld a, $67
+    ld a, queenInRoom_bodyYTop
     ld [queen_bodyY], a
-    ld a, $37
+    ld a, queenInRoom_bodyHeight
     ld [queen_bodyHeight], a
     
     ; Enable interrupt
@@ -1141,13 +1141,13 @@ queen_initialize: ;{ 03:6D4A
     jr nz, .wallLoop
     call queen_adjustWallSpriteToHead
     
-    ; Initialize Queen's state
+    ; Initialize Queen's state to Init fight pt 1 (wait to scream)
     ld hl, queen_stateList
     ld a, l
     ld [queen_pNextStateLow], a
     ld a, h
     ld [queen_pNextStateHigh], a
-    ld a, $17 ; Init fight pt 1 (wait to scream)
+    ld a, queenState_startA
     ld [queen_state], a
     
     ; Clear enemy slots
@@ -1395,7 +1395,7 @@ ret
 queen_setActorPositions: ;{ 03:6F07
     ; Queen body
     ld hl, queenActor_body + 1 ; $C601
-    ; Y + &18
+    ; Y + $18
     ld a, [queen_bodyY]
     add $18
     ld [hl+], a
@@ -1863,20 +1863,20 @@ queen_adjustBodyForCamera: ;{ 03:7190
     .endIf:
     ld c, a
     
-    ld a, $67 ; Pixels between the top of the BG map to the top of the queen (minus 1)
+    ld a, queenInRoom_bodyYTop ; Pixels between the top of the BG map to the top of the queen (minus 1)
     sub c
     jr c, .else
         ; If the top of the camera is above the top of the queen's body
         ; bodyY = $67 - ScrollY
         ld [queen_bodyY], a
         ; height = standard
-        ld a, $37
+        ld a, queenInRoom_bodyHeight
         ld [queen_bodyHeight], a
         ret
     .else:
         ; If the top of the camera is below the top of the queen's body (normally impossible)
-        ; height = $67 - ScrollY + $37 (this math doesn't seem right)
-        ld d, $37
+        ; height = $67 - ScrollY + $37 (bottom of body relative to scroll y)
+        ld d, queenInRoom_bodyHeight
         add d
         ld [queen_bodyHeight], a
         ; Set top of queen's body to top of the screen
@@ -2172,7 +2172,8 @@ queen_moveNeck: ;{ 03:72B8
     xor a
     ld [queen_bodyPalette], a
     call queen_setDefaultNeckAttributes
-    ld a, $0d ; Prep Samus in mouth
+    ; Prep Samus in mouth
+    ld a, queenState_prepEatingSamus
     ld [queen_state], a
 ret
 
@@ -2208,7 +2209,7 @@ ret
         and a
         jr nz, .else_F
             ; If not, just immediately retract the neck
-            ld a, $04 ; Prep retraction
+            ld a, queenState_prepRetractingNeck
             ld [queen_state], a
             ; Clear variables
             xor a
@@ -2217,7 +2218,7 @@ ret
             jr .saveNeckPointer
         .else_F:
             ; If so, just spit Samus out
-            ld a, $0a ; Spitting Samus out
+            ld a, queenState_vomitingSamus
             ld [queen_state], a
             jr .saveNeckPointer
     .endIf_E:
@@ -2424,7 +2425,7 @@ queen_missileHurt: ;{ 03:7436
     ld a, $81
     ld [queen_neckStatus], a
     ; Set state to prep death
-    ld a, $11
+    ld a, queenState_prepDeath
     ld [queen_state], a
     
     ; Clear flags
@@ -2471,13 +2472,12 @@ ret ;}
 
 ; Queen state table
 queen_stateList: ;{ 03:7484
-    db $00, $02, $04, $02, $04, $06, $14, $ff
-; 0    - Walk forward
-; 2, 4 - Shove head forward and retract
-; 2, 4 - Shove head forward and retract
-; 6    - Walk back
-; $14  - Spit blobs
-; $FF  - Repeat
+    db queenState_prepForwardWalk ; Walk forward
+    db queenState_prepExtendingNeck, queenState_prepRetractingNeck ; Shove head forward and retract
+    db queenState_prepExtendingNeck, queenState_prepRetractingNeck ; Shove head forward and retract
+    db queenState_prepBackwardWalk ; Walk back
+    db queenState_prepProjectiles ; Spit blobs
+    db $ff ; Repeat
 ;}
 
 queen_handleState: ; 03:748C
@@ -2525,7 +2525,7 @@ queenStateFunc_startA: ;{ 03:74C4 - Queen State $17: Start Fight A (wait to scre
         ld a, $02
         ld [queen_headFrameNext], a
         ; Set state to Start B
-        ld a, $18
+        ld a, queenState_startB
         ld [queen_state], a
         ; Make different noises based on aggression flag?
         ld a, [queen_lowHealthFlag]
@@ -2549,7 +2549,7 @@ queenStateFunc_startB: ;{ 03:74EA - Queen State $18: Start Fight B (wait to move
     ld a, $01
     ld [queen_headFrameNext], a
     ; Set state to Pick Next State
-    ld a, $0c
+    ld a, queenState_pickNextState
     ld [queen_state], a
 ret ;}
 
@@ -2639,8 +2639,8 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ld a, $10
     ld [queen_projectileChaseTimer], a
 
-    ; Set state
-    ld a, $15 ; Blobs out
+    ; Set state to Blobs out
+    ld a, queenState_projectilesActive
     ld [queen_state], a
 
     ; Set flag to indicate projectiles are active
@@ -3158,8 +3158,8 @@ queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mout
     ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
     ld [queenActor_mouth + 3], a
     
-    ; Set state
-    ld a, $0e ; Samus in mouth (head retracting)
+    ; Set state to Samus in mouth (head retracting)
+    ld a, queenState_retractNeckEating
     ld [queen_state], a
     
     ; Decrement neck pointer and save
@@ -3174,8 +3174,8 @@ queenStateFunc_retractNeckEating: ;{ 03:776F - Queen State $0E: Samus in mouth (
     ; Set eating state to mouth closed and in place
     ld a, $03
     ld [queen_eatingState], a
-    ; Set state
-    ld a, $0f ; Samus in mouth/stomach (head retracted)
+    ; Set state to Samus in mouth/stomach (head retracted)
+    ld a, queenState_samusEaten
     ld [queen_state], a
     ; Animate
     ld a, $01
@@ -3200,8 +3200,8 @@ queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
         ld a, $02
         ld [queen_headFrameNext], a
         ld [queen_headFrame], a
-        ; Set state
-        ld a, $10 ; Spitting Samus out of mouth
+        ; Set state to Spitting Samus out of mouth
+        ld a, queenState_vomitingOutMouth
         ld [queen_state], a
         ; Set timer
         ld a, $3e
@@ -3227,8 +3227,8 @@ queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
             ld a, $08
           .killExit:
             ld [queen_eatingState], a
-            ; Set state
-            ld a, $08 ; Queen's stomach just bombed
+            ; Set state to Queen's stomach just bombed
+            ld a, queenState_stomachBombed
             ld [queen_state], a
             ; Have the queen flash
             ld a, $93
@@ -3280,7 +3280,7 @@ queenStateFunc_vomitingOutMouth: ;{ 03:77DD -  Queen State $10: Spitting Samus o
         ld [queen_headFrameNext], a
         ld [queen_headFrame], a
         ; Pointless state assignment given the jump right there
-        ld a, $06 ; Prep walking backwards
+        ld a, queenState_prepBackwardWalk
         ld [queen_state], a
         ld hl, queen_stateList + 6 ;$748a
         jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
@@ -3319,8 +3319,8 @@ queenStateFunc_prepForwardWalk: ;{ 03:7821 - Queen State $00: Prep forward walk
     ; Set foot frame
     ld a, $02
     ld [queen_footFrame], a
-    ; Set state
-    ld a, $01 ; Walking forward
+    ; Set state to Walking forward
+    ld a, queenState_forwardWalk
     ld [queen_state], a
 ret ;}
 
@@ -3369,8 +3369,8 @@ queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck exten
     ld a, $01
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
-    ; Set next state
-    ld a, $03 ; Extending neck
+    ; Set next state to Extending neck
+    ld a, queenState_extendingNeck
     ld [queen_state], a
     
     ; Flip flag every call
@@ -3503,8 +3503,8 @@ queenStateFunc_prepRetractingNeck: ;{ 03:78F7 - Queen State $04: Prep neck retra
     ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
     ld [queenActor_mouth + 3], a
     
-    ; Set state manually
-    ld a, $05 ; Retracting neck
+    ; Set state manually to Retracting neck
+    ld a, queenState_retractingNeck
     ld [queen_state], a
     
     ; Decrement/save neck pointer (in case it was at the end of the list?)
@@ -3531,8 +3531,8 @@ queenStateFunc_prepBackwardWalk: ;{ 03:793B Queen State $06: Prep walking backwa
     ; Set foot frame
     ld a, $82
     ld [queen_footFrame], a
-    ; Set state
-    ld a, $07 ; Walking backward
+    ; Set state to Walking backward
+    ld a, queenState_backwardWalk
     ld [queen_state], a
 ret ;}
 
@@ -3573,8 +3573,8 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
     
-    ; Set next state
-    ld a, $09 ; Prep spitting Samus out of stomach
+    ; Set next state to Prep spitting Samus out of stomach
+    ld a, queenState_prepVomitingSamus
     ld [queen_state], a
     
 ; Write diagonal neck sprite
@@ -3647,8 +3647,8 @@ queenStateFunc_prepVomitingSamus: ;{ 03:79D0 - Queen State $09: Prep spitting Sa
     ; Set delay timer for next state
     ld a, $50
     ld [queen_delayTimer], a
-    ; Set next state
-    ld a, $0a ; Spitting Samus out
+    ; Set next state to Spitting Samus out
+    ld a, queenState_vomitingSamus
     ld [queen_state], a
 ret ;}
 
@@ -3685,8 +3685,8 @@ queenStateFunc_vomitingSamus: ;{ 03:79E1 - Queen State $0A: Spitting Samus out o
         ; Set neck to retract
         ld a, $02
         ld [queen_neckControl], a
-        ; Set state
-        ld a, $0b ; Done spitting Samus out
+        ; Set state to Done spitting Samus out
+        ld a, queenState_doneVomitingSamus
         ld [queen_state], a
         
         ; Set neck pattern
@@ -3748,8 +3748,8 @@ queen_killFromStomach: ;{ 03:7A4D Kill Queen from stomach
     ld a, $01
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
-    ; Set state
-    ld a, $11 ; Prep death
+    ; Set state to Prep death
+    ld a, queenState_prepDeath
     ld [queen_state], a
     
     ; Clear several variables
@@ -3827,7 +3827,7 @@ queenStateFunc_prepDeath: ;{ 03:7ABF - State $11: Prep Death
     ld a, $50
     ld [queen_delayTimer], a
     ; Set state to disintegrating (dying part 1)
-    ld a, $12
+    ld a, queenState_disintegrate
     ld [queen_state], a
     ; Set animation counter
     ld a, $05
@@ -3944,7 +3944,7 @@ ret
     ld a, HIGH(queenDeath_bodyStart)
     ld [queen_pDeleteBodyHigh], a
     ; Set state to "Dying part 2"
-    ld a, $13
+    ld a, queenState_deleteBody
     ld [queen_state], a
 ret
 ;}
@@ -4051,7 +4051,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
         ld [metroidCountDisplayed], a
         ld [metroidCountReal], a
         ; Set state to that stub right down there
-        ld a, $16
+        ld a, queenState_allDone
         ld [queen_state], a
         ; Shuffle counter and play noise
         ld a, $80

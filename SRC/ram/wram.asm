@@ -166,6 +166,33 @@ queen_neckStatus: ds 1 ; $C3C1 - 0x81 = "done extending", 0x82 = "done retractin
 queen_walkSpeed: ds 1 ; $C3C2 - Used for adjusting the queen's head's position
 
 queen_state: ds 1 ; $C3C3 - Metroid Queen's state
+; {
+    def queenState_prepForwardWalk    equ $00 ; Prep forward walk
+    def queenState_forwardWalk        equ $01 ; Walking forward
+    def queenState_prepExtendingNeck  equ $02 ; Prep neck extension
+    def queenState_extendingNeck      equ $03 ; Extending neck
+    def queenState_prepRetractingNeck equ $04 ; Prep retraction
+    def queenState_retractingNeck     equ $05 ; Retracting neck
+    def queenState_prepBackwardWalk   equ $06 ; Prep backwards walking
+    def queenState_backwardWalk       equ $07 ; Walking backward
+    def queenState_stomachBombed      equ $08 ; Stomach just bombed
+    def queenState_prepVomitingSamus  equ $09 ; Prep spitting Samus out of stomach
+    def queenState_vomitingSamus      equ $0A ; Spitting Samus out of stomach
+    def queenState_doneVomitingSamus  equ $0B ; Done spitting Samus out of stomach
+    def queenState_pickNextState      equ $0C ; Init fight pt 3 (choose next state)
+    def queenState_prepEatingSamus    equ $0D ; Prep Samus in mouth
+    def queenState_retractNeckEating  equ $0E ; Samus in mouth (head retracting)
+    def queenState_samusEaten         equ $0F ; Samus in mouth/stomach (head retracted)
+    def queenState_vomitingOutMouth   equ $10 ; Spitting Samus out of mouth
+    def queenState_prepDeath          equ $11 ; Prep death
+    def queenState_disintegrate       equ $12 ; Dying pt 1 (disintegrating)
+    def queenState_deleteBody         equ $13 ; Dying pt 2
+    def queenState_prepProjectiles    equ $14 ; Prepping blob spit
+    def queenState_projectilesActive  equ $15 ; Blobs out
+    def queenState_allDone            equ $16 ; Dying pt 3
+    def queenState_startA             equ $17 ; Start Fight A (wait to scream)
+    def queenState_startB             equ $18 ; Start Fight B (wait to move)
+; }
 queen_pNextStateLow:  ds 1 ; $C3C4 - Pointer to the next state number (low byte)
 queen_pNextStateHigh: ds 1 ; $C3C5 -  "" (high byte)
 
