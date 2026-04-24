@@ -586,7 +586,7 @@ titleCursorTable: ; 05:42E1
 ;------------------------------------------------------------------------------
 ; Screen transitions
 doorPointerTable:: ; 05:42E5
-include "maps/door macros.asm"
+include "maps/door_macros.asm"
 include "maps/doors.asm"
 doorData_end: ; Label used by the LAMP editor
 
