@@ -20,6 +20,7 @@ def main():
     enemy_csv2asm.csv2asm("SRC/data/enemies.csv", "SRC/data")
     samus_csv2asm.csv2asm("SRC/samus/samus.csv", "SRC/samus")
     general_csv2asm.csv2asm("SRC/data/sprites_credits.csv","SRC/data","sprites_credits")
+    general_csv2asm.csv2asm("SRC/data/sprites_samus.csv","SRC/data","sprites_samus")
     print('Success\n')
 
     completed_process = subprocess.run("rgbasm -V", shell=True)

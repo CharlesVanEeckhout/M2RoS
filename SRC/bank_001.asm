@@ -6,6 +6,8 @@
 SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 
 ; 01:4000
+samusSpritePointerTable:
+    include "data/sprites_samusPointers.asm"
 include "data/sprites_samus.asm"
 
 VBlank_updateStatusBar: ;{ 01:493E
