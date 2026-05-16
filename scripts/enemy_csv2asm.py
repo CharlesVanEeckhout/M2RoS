@@ -17,9 +17,8 @@ def csv2asm(infile, outdir):
     constFile.write('; This file was automatically generated from enemies.csv. Please do not edit this directly.\n')
 
     with open(infile, newline='') as f:
-        i = 0
         reader = csv.reader(f)
-        for row in reader:
+        for i, row in enumerate(reader):
             spriteFile.write('    dw '+row[0]+' ; '+row[6]+'\n')
             headerFile.write('    dw '+row[1]+' ; '+row[6]+'\n')
             hitboxFile.write('    dw '+row[2]+' ; '+row[6]+'\n')
@@ -28,7 +27,6 @@ def csv2asm(infile, outdir):
                 constFile.write('def '+row[4]+' = ${:02X} ; '.format(i)+row[6]+'\n')
             if row[5] != '':
                 constFile.write('def '+row[5]+' = ${:02X} ; '.format(i)+row[6]+'\n')
-            i += 1
 
 
 def main():

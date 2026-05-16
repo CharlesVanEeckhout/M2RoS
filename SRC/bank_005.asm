@@ -445,7 +445,7 @@ titleScreenRoutine: ;{ 05:4118
     ; Play sound
     ld a, sfx_square1_select
     ld [sfxRequest_square1], a
-    ; Play Samus fanfare
+    ; Play Samus fanfare (made redundant later on by loadGame_samusData)
     ld a, $12
     ld [songRequest], a
 
@@ -586,7 +586,7 @@ titleCursorTable: ; 05:42E1
 ;------------------------------------------------------------------------------
 ; Screen transitions
 doorPointerTable:: ; 05:42E5
-include "maps/door macros.asm"
+include "maps/door_macros.asm"
 include "maps/doors.asm"
 doorData_end: ; Label used by the LAMP editor
 
@@ -701,7 +701,7 @@ ret
 ; Animate Samus during credits
 credits_animateSamus: ;{ 05:5620
     ld a, [credits_samusAnimState]
-    rst $28
+    rst LOW(RST_28)
         dw .standingStart     ; 00
         dw .running           ; 01
         dw .unused            ; 02 - Unused stub
@@ -1315,7 +1315,7 @@ credits_drawSamus: ;{ 05:5989
 ret ;}
 
 credits_drawSamusJumpTable: ;{ 05:598D
-    rst $28
+    rst LOW(RST_28)
         dw .run_frameA ; 00 - Samus running
         dw .run_frameB ; 01 - Samus running
         dw .run_frameC ; 02 - Samus running

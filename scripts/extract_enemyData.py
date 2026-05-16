@@ -1,20 +1,30 @@
 # Original credit to Alex W and PJ
 import os
+import csv
 
-file_path = "./SRC/maps/enemyData.asm"
+FILE_PATH = "./SRC/maps/enemyData.asm"
+FILE_PATH_CSV = "./SRC/data/enemies.csv"
 
 gb2rom = lambda gb_bank, gb_address: (gb_bank * 0x4000) + (gb_address & 0x3fff)
 
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     rom_read = lambda n: int.from_bytes(rom.read(n), byteorder='little')
     enemy_pointers_begin = gb2rom(0x3,0x42E0)
     enemy_data_begin = gb2rom(0x3,0x50E0)
     enemy_end = gb2rom(0x3,0x6244)
     file_content = ""
     
-    #Read enemy pointers and give each a name
+    # Read enemy name constants
+    enemy_name_constants = {}
+    with open(FILE_PATH_CSV, newline='') as f:
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            if row[4] != '':
+                enemy_name_constants[i] = row[4]
+
+    # Read enemy pointers and give each a name
     enemy_pointers = {}
     enemy_pointers_bank = []
     rom.seek(enemy_pointers_begin)
@@ -34,7 +44,7 @@ def extract():
                 enemy_pointers_bank = []
                 bank += 1
     
-    #Write the enemyPointerTable with label names
+    # Write the enemyPointerTable with label names
     for bank, enemy_pointers_bank in enemy_pointers.items():
         file_content += f"; Enemy Data Pointers for Bank {bank:X}\n"
         for row in [enemy_pointers_bank[i:i+16] for i in range(0, len(enemy_pointers_bank), 16)]:
@@ -61,14 +71,18 @@ def extract():
             byte2 = rom_read(1)
             byte3 = rom_read(1)
             byte4 = rom_read(1)
-            line += f", ${byte2:02X}, ${byte3:02X}, ${byte4:02X}"
+            if byte2 in enemy_name_constants:
+                line += f", {enemy_name_constants[byte2]}"
+            else:
+                line += f", ${byte2:02X}"
+            line += f", ${byte3:02X}, ${byte4:02X}"
         file_content += line + "\n"
     
-    with open(file_path, "w") as f:
+    with open(FILE_PATH, "w") as f:
         f.write(file_content)
 
 def clean():
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(FILE_PATH):
+        os.remove(FILE_PATH)
 
 # EoF

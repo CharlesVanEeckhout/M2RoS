@@ -2802,7 +2802,7 @@ ret
 ; Arachnus / Arachnus Orb
 enAI_arachnus: ;{ 02:5109
     ldh a, [hEnemy.generalVar]
-    rst $28
+    rst LOW(RST_28)
         dw .state_0 ; Init and start fight
         dw .state_1 ; Initial bouncing for the intro
         dw .state_2 ; An additional small bounce for the intro
@@ -5328,7 +5328,7 @@ enAI_pipeBug: ;{ 02:5F67
 
     ; Set sprite type depending on current sprite type
     ldh a, [hEnemy.spriteType]
-    cp SPRITE_YUMEE_SPAWNER ; $3C
+    cp SPRITE_YUMEE_SPAWNER_1 ; $3C
     jr nc, .else_B
         ld a, SPRITE_GAWRON_1 ; $17 ; Gawron
         jr .endIf_B

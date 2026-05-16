@@ -1,4 +1,4 @@
-; 8:7EFA - Solidity threshholds
+; 8:7EFA - Solidity thresholds
     db $69, $63, $6e, $ff ; 0 - plantBubbles
     db $5e, $54, $5e, $ff ; 1 - ruinsInside
     db $f0, $f0, $f0, $ff ; 2 - queen

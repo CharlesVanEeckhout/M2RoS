@@ -1,7 +1,7 @@
 # Original credit to Alex W and PJ
 import os
 
-file_path = "./SRC/maps/doors.asm"
+FILE_PATH = "./SRC/maps/doors.asm"
 
 gb2rom = lambda gb_bank, gb_address: (gb_bank * 0x4000) + (gb_address & 0x3fff)
 
@@ -48,8 +48,8 @@ pointer_dest_dict = {
 }
 
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     rom_read = lambda n: int.from_bytes(rom.read(n), byteorder='little')
     door_pointers_begin = gb2rom(0x5,0x42E5)
     door_data_begin = gb2rom(0x5,0x46E5)
@@ -143,11 +143,11 @@ def extract():
     
     rom.close()
     
-    with open(file_path, "w") as f:
+    with open(FILE_PATH, "w") as f:
         f.write(file_content)
 
 def clean():
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(FILE_PATH):
+        os.remove(FILE_PATH)
 
 # EoF

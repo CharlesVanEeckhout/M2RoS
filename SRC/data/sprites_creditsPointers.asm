@@ -1,4 +1,4 @@
-; This file was automatically generated from ./SRC/data/sprites_credits.csv. Please do not edit this directly.
+; This file was automatically generated from SRC/data/sprites_credits.csv. Please do not edit this directly.
     dw sprite_titleStart ; 
     dw sprite_titleClear ; 
     dw sprite_titleCursor_frameA ; 

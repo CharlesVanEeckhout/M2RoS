@@ -1,4 +1,4 @@
-; This file was automatically generated from ./SRC/data/sprites_credits.csv. Please do not edit this directly.
+; This file was automatically generated from SRC/data/sprites_credits.csv. Please do not edit this directly.
 def SPRITE_TITLE_START = $00 ; 
 def SPRITE_TITLE_CLEAR = $01 ; 
 def SPRITE_TITLE_CURSOR_1 = $02 ; 

@@ -18,9 +18,9 @@ if ERRORLEVEL 1 (
     echo.
     echo RGBDS not detected. Downloading...
     echo.
-    curl -LJO "https://github.com/gbdev/rgbds/releases/download/v0.9.1/rgbds-0.9.1-win32.zip"
+    curl -LJO "https://github.com/gbdev/rgbds/releases/download/v1.0.1/rgbds-win32.zip"
     echo.
-    tar -xvf rgbds-0.9.1-win32.zip
+    tar -xvf rgbds-win32.zip
     echo.
     goto checkRGBDS
 )

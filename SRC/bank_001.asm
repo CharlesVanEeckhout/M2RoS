@@ -579,7 +579,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
             ret z
     .endIf_B:
 
-.ignoreDamageFrames ; 01:4BF3 - Entry point 2
+.ignoreDamageFrames: ; 01:4BF3 - Entry point 2
     ld a, [samusPose]
     bit 7, a
         jp nz, drawSamus_faceScreen
@@ -613,7 +613,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
     
     ; Jump to the appropriate draw routine
     ld a, [samusPose]
-    rst $28
+    rst LOW(RST_28)
         ; Table Generated from samus/samus.csv
         include "samus/samus_drawJumpTable.asm"
 ;}
@@ -1311,7 +1311,7 @@ getFirstEmptyProjectileSlot: ;{ 01:4FEE
         ld a, (projectileArray.slotC >> 4) & $0F ;$02
         swap a
         ld l, a
-    .endIf
+    .endIf:
     
     ; Loop to find first open slot
     .loop:

@@ -1,7 +1,7 @@
 # Original credit to Alex W and PJ
 import os
 
-file_path = "./SRC/data/credits.asm"
+FILE_PATH = "./SRC/data/credits.asm"
 
 def parse_credits_line(line_data):
     for i in range(len(line_data)):
@@ -26,8 +26,8 @@ def parse_credits_line(line_data):
     
     return '    db ' + ",".join(line_data) + "\n"
 
-def extract():
-    rom = open("./Metroid2.gb", "rb")
+def extract(vanilla_rom_path):
+    rom = open(vanilla_rom_path, "rb")
     credits_begin = (0x6 * 0x4000) + (0x7920 & 0x3fff)
     rom.seek(credits_begin)
     
@@ -43,11 +43,11 @@ def extract():
     rom.close()
     file_content += '    db "<END>"'
     
-    with open(file_path, "w") as f:
+    with open(FILE_PATH, "w") as f:
         f.write(file_content)
 
 def clean():
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(FILE_PATH):
+        os.remove(FILE_PATH)
 
 # EoF

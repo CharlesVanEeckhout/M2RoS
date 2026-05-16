@@ -77,6 +77,11 @@ def blockType_save  = 7 ;Save pillar
 ; Samus' pose constants ($D020)
 include "samus/samus_poseConstants.asm"
 
+; queen constants
+def queenInRoom_bodyYTop = $67
+def queenInRoom_bodyHeight = $37
+def queenInRoom_headHeight = $26
+
 
 ; charmaps
 PUSHC

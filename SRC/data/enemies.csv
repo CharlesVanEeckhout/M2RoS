@@ -1,5 +1,5 @@
-enSprite_tsumuriHori_frame1,enHead_crawlerRight,hitbox_block,$08,,,Tsumuri,$00
-enSprite_tsumuriHori_frame2,enHead_crawlerLeft,hitbox_block,$08,,,Tsumuri,$01
+enSprite_tsumuriHori_frame1,enHead_crawlerRight,hitbox_block,$08,SPRITE_TSUMURI_RIGHT,,Tsumuri,$00
+enSprite_tsumuriHori_frame2,enHead_crawlerLeft,hitbox_block,$08,SPRITE_TSUMURI_LEFT,,Tsumuri,$01
 enSprite_tsumuriVert_frame1,enHead_NULL,hitbox_block,$08,,,Tsumuri,$02
 enSprite_tsumuriVert_frame2,enHead_NULL,hitbox_block,$08,,,Tsumuri,$03
 enSprite_skreek_frame1,enHead_skreek,hitbox6A6F,$10,SPRITE_SKREEK_1,,Skreek,$04
@@ -16,38 +16,38 @@ enSprite_drivelSpit_frame3,enHead_NULL,hitbox_tile,$03,SPRITE_DRIVEL_SPIT_3,,Dri
 enSprite_drivelSpit_frame4,enHead_NULL,hitbox6A43,$03,SPRITE_DRIVEL_SPIT_4,,Drivel projectile,$0F
 enSprite_drivelSpit_frame5,enHead_NULL,hitbox6A7B,$03,,,Drivel projectile,$10
 enSprite_drivelSpit_frame6,enHead_NULL,hitbox6AA7,$03,SPRITE_DRIVEL_SPIT_6,,Drivel projectile,$11
-enSprite_smallBug_frame1,enHead_smallBug,hitbox6A43,$05,,,Small bugs,$12
+enSprite_smallBug_frame1,enHead_smallBug,hitbox6A43,$05,SPRITE_SMALLBUG_1,,Small bugs,$12
 enSprite_smallBug_frame2,enHead_NULL,hitbox6A43,$05,,,Small bugs,$13
-enSprite_hornoad_frame1,enHead_hornoad,hitbox6A6F,$10,,,Hornoad,$14
+enSprite_hornoad_frame1,enHead_hornoad,hitbox6A6F,$10,SPRITE_HORNOAD_1,,Hornoad,$14
 enSprite_hornoad_frame2,enHead_NULL,hitbox6A6F,$10,,,Hornoad,$15
-enSprite_senjoo,enHead_senjoo,hitbox6A6F,$15,,,Senjoo,$16
+enSprite_senjoo,enHead_senjoo,hitbox6A6F,$15,SPRITE_SENJOO,,Senjoo,$16
 enSprite_gawron_frame1,enHead_NULL,hitbox_block,$08,SPRITE_GAWRON_1,,Gawron,$17
 enSprite_gawron_frame2,enHead_NULL,hitbox_block,$08,SPRITE_GAWRON_2,,Gawron,$18
-enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,,,Gawron spawner?,$19
-enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,,,Gawron spawner?,$1A
+enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,SPRITE_GAWRON_SPAWNER_1,,Gawron spawner?,$19
+enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,SPRITE_GAWRON_SPAWNER_2,,Gawron spawner?,$1A
 enSprite_chuteLeech_frame1,enHead_chuteLeech,hitbox6A47,$12,SPRITE_CHUTELEECH_1,,Chute leech,$1B
 enSprite_chuteLeech_frame2,enHead_NULL,hitbox_block,$12,SPRITE_CHUTELEECH_2,,Chute leech,$1C
 enSprite_chuteLeech_frame3,enHead_NULL,hitbox6A6F,$12,SPRITE_CHUTELEECH_3,,Chute leech,$1D
 enSprite_autrack_frame1,enHead_autrackFlipped,hitbox_block,$15,SPRITE_AUTRACK_FLIPPED,,(uses same spritemap as 41h autrack),$1E
 enSprite_wallfire_frame1,enHead_wallfireFlipped,hitbox6A8F,$15,SPRITE_WALLFIRE_FLIPPED,,(uses same spritemap as 4Ah wallfire),$1F
-enSprite_needler_frame1,enHead_crawlerRight,hitbox_block,$10,,,Needler,$20
-enSprite_needler_frame2,enHead_crawlerLeft,hitbox_block,$10,,,Needler,$21
+enSprite_needler_frame1,enHead_crawlerRight,hitbox_block,$10,SPRITE_NEEDLER_RIGHT,,Needler,$20
+enSprite_needler_frame2,enHead_crawlerLeft,hitbox_block,$10,SPRITE_NEEDLER_LEFT,,Needler,$21
 enSprite_needler_frame1,enHead_NULL,hitbox_block,$10,,,Needler,$22
 enSprite_needler_frame2,enHead_NULL,hitbox_block,$10,,,Needler,$23
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$24
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$25
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$26
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$27
-enSprite_skorpVert,enHead_skorpUp,hitbox6A93,$11,,,Skorp,$28
-enSprite_skorpVert,enHead_skorpDown,hitbox6A93,$11,,,Skorp,$29
-enSprite_skorpHori,enHead_skorpRight,hitbox6A6F,$11,,,Skorp,$2A
-enSprite_skorpHori,enHead_skorpLeft,hitbox6A6F,$11,,,Skorp,$2B
+enSprite_skorpVert,enHead_skorpUp,hitbox6A93,$11,SPRITE_SKORP_UP,,Skorp,$28
+enSprite_skorpVert,enHead_skorpDown,hitbox6A93,$11,SPRITE_SKORP_DOWN,,Skorp,$29
+enSprite_skorpHori,enHead_skorpRight,hitbox6A6F,$11,SPRITE_SKORP_RIGHT,,Skorp,$2A
+enSprite_skorpHori,enHead_skorpLeft,hitbox6A6F,$11,SPRITE_SKORP_LEFT,,Skorp,$2B
 enSprite_glowFly_frame1,enHead_glowFly,hitbox6A8F,$10,SPRITE_GLOWFLY_IDLE_1,,Glow fly,$2C
 enSprite_glowFly_frame2,enHead_NULL,hitbox6A8F,$10,SPRITE_GLOWFLY_IDLE_2,,Glow fly,$2D
 enSprite_glowFly_frame3,enHead_NULL,hitbox_block,$10,SPRITE_GLOWFLY_WINDUP,,Glow fly,$2E
 enSprite_glowFly_frame4,enHead_NULL,hitbox_block,$10,SPRITE_GLOWFLY_MOVING,,Glow fly,$2F
-enSprite_moheekHori_frame1,enHead_moheekRight,hitbox_block,$13,,,Moheek,$30
-enSprite_moheekHori_frame2,enHead_moheekLeft,hitbox_block,$13,,,Moheek,$31
+enSprite_moheekHori_frame1,enHead_moheekRight,hitbox_block,$13,SPRITE_MOHEEK_RIGHT,,Moheek,$30
+enSprite_moheekHori_frame2,enHead_moheekLeft,hitbox_block,$13,SPRITE_MOHEEK_LEFT,,Moheek,$31
 enSprite_moheekVert_frame1,enHead_NULL,hitbox_block,$13,,,Moheek,$32
 enSprite_moheekVert_frame2,enHead_NULL,hitbox_block,$13,,,Moheek,$33
 enSprite_rockIcicle_frame1,enHead_rockIcicle,hitbox_tile,$00,SPRITE_ROCKICICLE_IDLE_1,,Rock icicle,$34
@@ -58,8 +58,8 @@ enSprite_yumee_frame1,enHead_NULL,hitbox_block,$12,SPRITE_YUMEE_1,,Yumee,$38
 enSprite_yumee_frame2,enHead_NULL,hitbox_block,$12,SPRITE_YUMEE_2,,Yumee,$39
 enSprite_yumee_frame3,enHead_NULL,hitbox6A5B,$12,SPRITE_YUMEE_3,,Yumee,$3A
 enSprite_yumee_frame4,enHead_NULL,hitbox6A5B,$12,,,Yumee,$3B
-enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,SPRITE_YUMEE_SPAWNER,,Yumee spawner?,$3C
-enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,,,Yumee spawner?,$3D
+enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,SPRITE_YUMEE_SPAWNER_1,,Yumee spawner?,$3C
+enSprite_blankTile,enHead_pipeBug,hitbox_point,$00,SPRITE_YUMEE_SPAWNER_2,,Yumee spawner?,$3D
 enSprite_octroll_frame1,enHead_NULL,hitbox_octroll,$20,SPRITE_OCTROLL_1,,Octroll,$3E
 enSprite_octroll_frame2,enHead_NULL,hitbox_octroll,$20,,,Octroll,$3F
 enSprite_octroll_frame3,enHead_octroll,hitbox_octroll,$20,SPRITE_OCTROLL_3,,Octroll,$40
@@ -68,7 +68,7 @@ enSprite_autrack_frame2,enHead_NULL,hitbox_autrackMid,$15,,,Autrack,$42
 enSprite_autrack_frame3,enHead_NULL,hitbox_autrackTall,$15,SPRITE_AUTRACK_3,,Autrack,$43
 enSprite_autrack_frame4,enHead_NULL,hitbox_autrackTall,$15,SPRITE_AUTRACK_4,,Autrack,$44
 enSprite_autrackShot,enHead_NULL,hitbox6A43,$10,SPRITE_AUTRACK_LASER,,Autrack projectile,$45
-enSprite_autoad_frame1,enHead_autoad,hitbox6A6F,$15,,,Autoad,$46
+enSprite_autoad_frame1,enHead_autoad,hitbox6A6F,$15,SPRITE_AUTOAD_1,,Autoad,$46
 enSprite_autoad_frame2,enHead_NULL,hitbox6A6F,$15,SPRITE_AUTOAD_2,,Autoad,$47
 enSprite_sideAutoad_frame1,enHead_NULL,hitbox6A93,$00,,,Sideways Autoad (unused),$48
 enSprite_sideAutoad_frame2,enHead_NULL,hitbox6A93,$00,,,Sideways Autoad (unused),$49
@@ -99,15 +99,15 @@ enSprite_automShot_frame4,enHead_NULL,hitbox6ACF,$10,,,Autom projectile,$61
 enSprite_automShot_frame5,enHead_NULL,hitbox6ACF,$10,,,Autom projectile,$62
 enSprite_shirk_frame1,enHead_shirk,hitbox6A97,$15,SPRITE_SHIRK_1,,Shirk,$63
 enSprite_shirk_frame2,enHead_NULL,hitbox6A97,$15,SPRITE_SHIRK_2,,Shirk,$64
-enSprite_septogg_frame1,enHead_septogg,hitbox6A93,$FF,,,Septogg,$65
+enSprite_septogg_frame1,enHead_septogg,hitbox6A93,$FF,SPRITE_SEPTOGG_1,,Septogg,$65
 enSprite_septogg_frame2,enHead_NULL,hitbox6A93,$FF,,,Septogg,$66
 enSprite_moto_frame1,enHead_NULL,hitbox6A93,$20,,,Moto,$67
 enSprite_moto_frame2,enHead_moto,hitbox6A93,$20,SPRITE_MOTO_2,,Moto,$68
 enSprite_moto_frame3,enHead_NULL,hitbox6A93,$20,,,Moto,$69
-enSprite_halzyn,enHead_halzyn,hitbox6A67,$10,,,Halzyn,$6A
-enSprite_ramulken_frame1,enHead_ramulken,hitbox6A6F,$20,,,Ramulken,$6B
+enSprite_halzyn,enHead_halzyn,hitbox6A67,$10,SPRITE_HALZYN,,Halzyn,$6A
+enSprite_ramulken_frame1,enHead_ramulken,hitbox6A6F,$20,SPRITE_RAMULKEN_1,,Ramulken,$6B
 enSprite_ramulken_frame2,enHead_NULL,hitbox6A6F,$20,,,Ramulken,$6C
-enSprite_blankTile,enHead_metroidStinger,hitbox_block,$00,,,Musical stinger event trigger,$6D
+enSprite_blankTile,enHead_metroidStinger,hitbox_block,$00,SPRITE_METROID_STINGER,,Musical stinger event trigger,$6D
 enSprite_proboscum_frame1,enHead_proboscumFlipped,hitbox6A43,$FF,SPRITE_PROBOSCUM_FLIPPED,,(uses same spritemap as 72h proboscum),$6E
 enSprite_none,enHead_NULL,hitbox6A43,$00,,,(no graphics),$6F
 enSprite_none,enHead_NULL,hitbox6A43,$00,,,(no graphics),$70
@@ -115,7 +115,7 @@ enSprite_none,enHead_NULL,hitbox6A43,$00,,,(no graphics),$71
 enSprite_proboscum_frame1,enHead_proboscum,hitbox6A47,$FF,SPRITE_PROBOSCUM_1,,Proboscum,$72
 enSprite_proboscum_frame2,enHead_NULL,hitbox_point,$00,SPRITE_PROBOSCUM_2,,Proboscum,$73
 enSprite_proboscum_frame3,enHead_NULL,hitbox_point,$00,SPRITE_PROBOSCUM_3,,Proboscum,$74
-enSprite_missileBlock,enHead_missileBlock,hitbox_block,$FF,,,Missile block,$75
+enSprite_missileBlock,enHead_missileBlock,hitbox_block,$FF,SPRITE_MISSILE_BLOCK,,Missile block,$75
 enSprite_arachnus_frame1,enHead_arachnus,hitbox_block,$20,SPRITE_ARACHNUS_ROLL_1,,Arachnus,$76
 enSprite_arachnus_frame2,enHead_arachnus,hitbox_block,$20,,,Arachnus,$77
 enSprite_arachnus_frame3,enHead_arachnus,hitbox6ABB,$20,SPRITE_ARACHNUS_UPRIGHT_1,,Arachnus,$78
@@ -126,35 +126,35 @@ enSprite_arachnusShot_frame2,enHead_NULL,hitbox6A77,$02,SPRITE_ARACHNUS_FIREBALL
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$7D
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$7E
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$7F
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Plasma beam orb,$80
-enSprite_item,enHead_item,hitbox_tile,$00,SPRITE_ITEM_BASE_ID,,Plasma beam,$81
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,QUEEN_ACTOR_BENT_NECK,Ice beam orb (and bent neck of Queen’s vomiting pose!?),$82
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_PLASMA_BEAM_ORB,,Plasma beam orb,$80
+enSprite_item,enHead_item,hitbox_tile,$00,,SPRITE_ITEM_BASE_ID,Plasma beam,$81
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_ICE_BEAM_ORB,QUEEN_ACTOR_BENT_NECK,Ice beam orb (and bent neck of Queen’s vomiting pose!?),$82
 enSprite_item,enHead_item,hitbox_tile,$00,,,Ice beam,$83
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Wave beam orb,$84
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_WAVE_BEAM_ORB,,Wave beam orb,$84
 enSprite_item,enHead_item,hitbox_tile,$00,,,Wave beam,$85
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Spazer beam orb,$86
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_SPAZER_ORB,,Spazer beam orb,$86
 enSprite_item,enHead_item,hitbox_tile,$00,,,Spazer beam,$87
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Bombs orb,$88
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_BOMB_ORB,,Bombs orb,$88
 enSprite_item,enHead_item,hitbox_tile,$00,,,Bombs,$89
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Screw attack orb,$8A
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_SCREW_ATTACK_ORB,,Screw attack orb,$8A
 enSprite_item,enHead_item,hitbox_tile,$00,,,Screw attack,$8B
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Varia suit orb,$8C
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_VARIA_ORB,,Varia suit orb,$8C
 enSprite_item,enHead_item,hitbox_tile,$00,,,Varia suit,$8D
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Hi-jump boots orb,$8E
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_HIGH_JUMP_BOOTS_ORB,,Hi-jump boots orb,$8E
 enSprite_item,enHead_item,hitbox_tile,$00,,,Hi-jump boots,$8F
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Space jump orb,$90
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,SPRITE_SPACE_JUMP_ORB,,Space jump orb,$90
 enSprite_item,enHead_item,hitbox_tile,$00,,,Space jump,$91
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,(spider ball orb?),$92
-enSprite_item,enHead_item,hitbox_tile,$00,,,Spider ball,$93
+enSprite_item,enHead_item,hitbox_tile,$00,SPRITE_SPIDER_BALL_ITEM,,Spider ball,$93
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,(spring ball orb?),$94
 enSprite_item,enHead_item,hitbox_tile,$00,SPRITE_SPRING_BALL_ITEM,,Spring ball,$95
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,(energy tank orb?),$96
-enSprite_energyTank,enHead_item,hitbox_tile,$00,,,Energy tank,$97
+enSprite_energyTank,enHead_item,hitbox_tile,$00,SPRITE_ENERGY_TANK,,Energy tank,$97
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,(missile tank orb?),$98
-enSprite_missileTank,enHead_item,hitbox_tile,$00,,,Missile tank,$99
-enSprite_blobThrower,enHead_blobThrower,hitboxC360,$30,,,Blob thrower (sprite is written to WRAM),$9A
+enSprite_missileTank,enHead_item,hitbox_tile,$00,SPRITE_MISSILE_TANK,,Missile tank,$99
+enSprite_blobThrower,enHead_blobThrower,hitboxC360,$30,SPRITE_BLOB_THROWER,,Blob thrower (sprite is written to WRAM),$9A
 enSprite_energyRefill,enHead_item,hitbox_refill,$00,SPRITE_ENERGY_REFILL,,Energy refill,$9B
-enSprite_itemOrb,enHead_arachnusOrb,hitbox_block,$FF,,,Arachnus orb,$9C
+enSprite_itemOrb,enHead_arachnusOrb,hitbox_block,$FF,SPRITE_ARACHNUS_ORB,,Arachnus orb,$9C
 enSprite_missileRefill,enHead_item,hitbox_refill,$00,SPRITE_MISSILE_REFILL,,Missile refill,$9D
 enSprite_blob_frame1,enHead_NULL,hitbox_tile,$10,SPRITE_BLOB_1,,Blob thrower projectile,$9E
 enSprite_blob_frame2,enHead_NULL,hitbox_tile,$10,SPRITE_BLOB_2,,Blob thrower projectile,$9F
@@ -217,7 +217,7 @@ enSprite_gravitt_frame3,enHead_NULL,hitbox_block,$10,SPRITE_GRAVITT_5,,Gravitt,$
 enSprite_gullugg_frame1,enHead_gullugg,hitbox6A93,$12,SPRITE_GULLUGG_1,,Gullugg,$D8
 enSprite_gullugg_frame2,enHead_NULL,hitbox6A93,$12,,,Gullugg,$D9
 enSprite_gullugg_frame3,enHead_NULL,hitbox6A93,$12,SPRITE_GULLUGG_3,,Gullugg,$DA
-enSprite_egg_frame2,enHead_NULL,hitbox_point,$00,,,Baby metroid egg preview,$DB
+enSprite_egg_frame2,enHead_NULL,hitbox_point,$00,SPRITE_EGG_PREVIEW,,Baby metroid egg preview,$DB
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$DC
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$DD
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$DE

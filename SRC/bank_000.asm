@@ -332,12 +332,12 @@ mainGameLoop: ;{ 00:02CD
     ld a, [doorScrollDirection]
     and a
     call z, main_readInput
-    ; Do imporatant stuff
+    ; Do important stuff
     call main_handleGameMode
     call handleAudio_longJump
     call executeDoorScript
-    ldh a, [hInputPressed]
     ; Soft reset
+    ldh a, [hInputPressed]
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_START | PADF_SELECT | PADF_B | PADF_A
         jp z, bootRoutine
@@ -347,7 +347,7 @@ jp mainGameLoop
 
 main_handleGameMode: ;{ 0:02F0
     ldh a, [gameMode]
-    rst $28
+    rst LOW(RST_28)
         dw gameMode_Boot           ; $00
         dw gameMode_Title          ; $01
         dw gameMode_LoadA          ; $02 Setup for playing the game
@@ -375,7 +375,7 @@ gameMode_None: ; 00:031B
 
 ; Called when frame is done
 waitForNextFrame: ;{ 00:031C
-    db $76 ; HALT
+    halt
 
     .vBlankNotDone:
         ldh a, [hVBlankDoneFlag]
@@ -416,7 +416,7 @@ waitForNextFrame: ;{ 00:031C
                     daa
                     ld [gameTimeHours], a
                     jr nz, .endIf
-                        ; Clamp to max IGT (59:99)
+                        ; Clamp to max IGT (99:59)
                         ld a, $59
                         ld [gameTimeMinutes], a
                         ld a, $99
@@ -920,7 +920,7 @@ prepMapUpdate: ;{ 00:0698
 ret ; Should never end up here
 
 .up: ; Up
-    ; If if not scrolling up
+    ; Exit if not scrolling up
     ld a, [camera_scrollDirection]
     bit scrollDirBit_up, a
         ret z
@@ -950,7 +950,7 @@ ret ; Should never end up here
 jp .row
 
 .down: ; Down
-    ; If if not scrolling down
+    ; Exit if not scrolling down
     ld a, [camera_scrollDirection]
     bit scrollDirBit_down, a
         ret z
@@ -979,7 +979,7 @@ jp .row
 jr .row
 
 .left: ; Left
-    ; If if not scrolling left
+    ; Exit if not scrolling left
     ld a, [camera_scrollDirection]
     bit scrollDirBit_left, a
         ret z
@@ -1008,7 +1008,7 @@ jr .row
 jp .column
 
 .right: ; Right
-    ; If if not scrolling right
+    ; Exit if not scrolling right
     ld a, [camera_scrollDirection]
     bit scrollDirBit_right, a
         ret z
@@ -1718,7 +1718,7 @@ handleCamera: ;{ 00:08FE
 ret
 ;}
 
-.unusedTable ; 00:0B39 - Unreferenced data of unknown purpose
+.unusedTable: ; 00:0B39 - Unreferenced data of unknown purpose
     db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
 ; Already in a door transition?
@@ -1951,7 +1951,7 @@ loadDoorIndex: ;{ 00:0C37
     ld a, [debugFlag]
     and a
         ret z
-    ; Check if either A and Start are pressed
+    ; Check if B + Select is pressed
     ldh a, [hInputPressed]
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_SELECT | PADF_B ;$06
@@ -2058,7 +2058,7 @@ samus_handlePose: ;{ 00:0D21
         jp nz, handleTurnaroundTimer
     ; Take the jump table
     ld a, [samusPose]
-    rst $28
+    rst LOW(RST_28)
         ; Table Generated from samus/samus.csv
         include "samus/samus_poseJumpTable.asm"
 ;}
@@ -3199,6 +3199,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         and PADF_LEFT | PADF_RIGHT ;$30
         jr z, .endIf_B
             ; This check makes it so you can't spin-jump from a standstill without Space Jump. Very strange.
+            ; It doesn't do much, because almost all spin-jumps are done from at least one frame of running.
             ld a, [samusItems]
             bit itemBit_space, a
                 jp z, .normalJump
@@ -4187,7 +4188,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     jr z, .endIf_L
         ld a, sfx_square1_standingTransition
         ld [sfxRequest_square1], a
-    .endIf_L
+    .endIf_L:
 
 .startFalling:
     ; Why write to rom?
@@ -5426,7 +5427,7 @@ samus_getTileIndex: ;{ 00:1FF5
         add h
         ld h, a
         ld [pTilemapDestHigh], a
-    .endIf_A
+    .endIf_A:
 
     ; Wait for HBlank and read once
     .waitLoop_A:
@@ -5640,7 +5641,7 @@ getTileIndex: ;{ 00:2250 - Called by enemy routines
         add h
         ld h, a
         ld [pTilemapDestHigh], a
-    .endIf
+    .endIf:
 
     ; Wait for HBlank and read once
     .waitLoop_A:
@@ -5736,6 +5737,7 @@ ret ;}
 ;  Function is unused
 getTilemapCoordinates: ;{ 00:22E1
     ; DE = pTilemapDest
+    ; format is %100110YY YYYXXXXX
     ld a, [pTilemapDestHigh]
     ld d, a
     ld a, [pTilemapDestLow]
@@ -5748,24 +5750,27 @@ getTilemapCoordinates: ;{ 00:22E1
         rr e
         dec b
     jr nz, .loop
+    ; now E is %10YYYYYX
     ld a, e
-    ; The $8x part seems to adjust for the $9800 base address
+    ; The $8x part adjusts for the $9800 base address
     ; The $x4 seems to adjust for 2 rows of tiles
     sub $84
-    ; Mask out lowest bit
+    ; Mask out lowest bit containing X pos MSB
     and $fe
-    ; A*4 + 8
+    ; now A is %00YYYYY0 - 4
+    ; tileY = A*4 + 8 = (%00YYYYY0 - 4)*4 + 8 = %YYYYY000 - 8
+    ; this is wrong, it should be %YYYYY000 + OAM_Y_OFS
     rlca
     rlca
     add $08
     ld [tileY], a
-    ; X = (low mod 32)*8 +
+    ; tileX = (low mod 32)*8 + OAM_X_OFS
     ld a, [pTilemapDestLow]
     and $1f
     rla
     rla
     rla
-    add $08
+    add OAM_X_OFS
     ld [tileX], a
 ret ;}
 
@@ -9631,7 +9636,7 @@ handleItemPickup: ;{ 00:372F
     ; Jump to pick-up specific routine
     ld a, b
     dec a
-    rst $28
+    rst LOW(RST_28)
         dw pickup_plasmaBeam
         dw pickup_iceBeam
         dw pickup_waveBeam
