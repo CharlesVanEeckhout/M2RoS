@@ -7715,7 +7715,7 @@ debugPauseMenu: ;{ 00:2D39
     ; Set common y position and sprite ID
     ld a, $54
     ldh [hSpriteYPixel], a
-    ld a, $36
+    ld a, SPRITE_SAMUS_BOMB_2
     ldh [hSpriteId], a
     ; Draw item icons
     ld a, $34

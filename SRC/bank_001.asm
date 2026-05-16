@@ -429,7 +429,7 @@ drawHudMetroid:: ;{ 01:4B2C
     ldh a, [frameCounter]
     and $10
     swap a
-    add $3f
+    add SPRITE_SAMUS_HUD_METROID_1
     ldh [hSpriteId], a
     ; Draw the sprite
     call drawSamusSprite
@@ -633,7 +633,8 @@ drawSamus_knockback: ;{ 01:4C59 - $0F, $11: Knockback
 jp drawSamus_common
 
 .knockbackTable: ; 02:4C69
-    db $16, $09
+    db SPRITE_SAMUS_JUMP_LEFT
+    db SPRITE_SAMUS_JUMP_RIGHT
 ;}
 
 drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
@@ -660,8 +661,16 @@ drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
 jp drawSamus_common
 
 .spiderTable: ; 02:4C8C
-    db $37, $38, $39, $3a ; Left
-    db $3b, $3c, $3d, $3e ; Right
+    ; Left
+    db SPRITE_SAMUS_SPIDER_LEFT_1
+    db SPRITE_SAMUS_SPIDER_LEFT_2
+    db SPRITE_SAMUS_SPIDER_LEFT_3
+    db SPRITE_SAMUS_SPIDER_LEFT_4
+    ; Right
+    db SPRITE_SAMUS_SPIDER_RIGHT_1
+    db SPRITE_SAMUS_SPIDER_RIGHT_2
+    db SPRITE_SAMUS_SPIDER_RIGHT_3
+    db SPRITE_SAMUS_SPIDER_RIGHT_4
 ;}
 
 drawSamus_morph: ;{ 01:4C94 - Morph poses
@@ -687,8 +696,16 @@ drawSamus_morph: ;{ 01:4C94 - Morph poses
 jp drawSamus_common
 
 .morphTable: ; 01:4CB5
-    db $1e, $1f, $20, $21 ; Left
-    db $26, $27, $28, $29 ; Right
+    ; Left
+    db SPRITE_SAMUS_MORPH_LEFT_1
+    db SPRITE_SAMUS_MORPH_LEFT_2
+    db SPRITE_SAMUS_MORPH_LEFT_3
+    db SPRITE_SAMUS_MORPH_LEFT_4
+    ; Right
+    db SPRITE_SAMUS_MORPH_RIGHT_1
+    db SPRITE_SAMUS_MORPH_RIGHT_2
+    db SPRITE_SAMUS_MORPH_RIGHT_3
+    db SPRITE_SAMUS_MORPH_RIGHT_4
 ;}
 
 drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
@@ -704,20 +721,37 @@ drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
 jp drawSamus_common ;}
 
 drawSamus_jumpStart: ;{ 01:4CCC - $09, $0A: Jump Start
-    ld a, $03 ; Right
+    ld a, SPRITE_SAMUS_RUN_RIGHT_1 ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
         jp nz, drawSamus_common
-    ld a, $10 ; Left
+    ld a, SPRITE_SAMUS_RUN_LEFT_1 ; Left
     ldh [hSpriteId], a
 jp drawSamus_common ;}
 
 jumpSpriteTable: ; 01:4CDE
 ; Value read is based on input and facing direction
-;                                U    U              D    D
-;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
-    db $00, $09, $16, $00, $00, $0a, $17, $00, $00, $0c, $19, $00, $00, $00, $00, $00
+    ; no vertical input
+    db $00 ; no facing direction (impossible)
+    db SPRITE_SAMUS_JUMP_RIGHT ; face right
+    db SPRITE_SAMUS_JUMP_LEFT ; face left
+    db $00 ; face both left and right (impossible)
+    ; input up
+    db $00 ; x
+    db SPRITE_SAMUS_JUMP_RIGHT_AIM_UP ; face right
+    db SPRITE_SAMUS_JUMP_LEFT_AIM_UP ; face left
+    db $00 ; x
+    ; input down
+    db $00 ; x
+    db SPRITE_SAMUS_JUMP_RIGHT_AIM_DOWN ; face right
+    db SPRITE_SAMUS_JUMP_LEFT_AIM_DOWN ; face left
+    db $00 ; x
+    ; input both up and down (impossible)
+    db $00 ; x
+    db $00 ; x
+    db $00 ; x
+    db $00 ; x
 
 drawSamus_spinJump: ;{ 01:4CEE - $02: Spin jump
     ld a, [samusFacingDirection]
@@ -762,9 +796,17 @@ drawSamus_spinJump: ;{ 01:4CEE - $02: Spin jump
 
 ; Spin tables
 .spinRightTable: ; 01:4D2B
-    db $1A, $1B, $1C, $1D ; Right
+    ; Right
+    db SPRITE_SAMUS_JUMP_RIGHT_1
+    db SPRITE_SAMUS_JUMP_RIGHT_2
+    db SPRITE_SAMUS_JUMP_RIGHT_3
+    db SPRITE_SAMUS_JUMP_RIGHT_4
 .spinLeftTable: ; 01:4D2F
-    db $22, $23, $24, $25 ; Left
+    ; Left
+    db SPRITE_SAMUS_JUMP_LEFT_1
+    db SPRITE_SAMUS_JUMP_LEFT_2
+    db SPRITE_SAMUS_JUMP_LEFT_3
+    db SPRITE_SAMUS_JUMP_LEFT_4
 ;}
 
 drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
@@ -778,7 +820,7 @@ drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
         ret z
     .endIf:
     ; Load sprite ID
-    ld a, $00
+    ld a, SPRITE_SAMUS_FACE_SCREEN
     ldh [hSpriteId], a
 jp drawSamus_common ;}
 
@@ -796,18 +838,37 @@ jp drawSamus_common
 
 .standingTable: ; 01:4D54
 ; Value read is based on input and facing direction
-;                                U    U              D    D
-;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
-    db $00, $01, $0e, $00, $00, $02, $0f, $00, $00, $01, $0e, $00, $00, $00, $00, $00, $00
+    ; no vertical input
+    db $00 ; no facing direction (impossible)
+    db SPRITE_SAMUS_STAND_RIGHT ; face right
+    db SPRITE_SAMUS_STAND_LEFT ; face left
+    db $00 ; face both left and right (impossible)
+    ; input up
+    db $00 ; x
+    db SPRITE_SAMUS_STAND_RIGHT_AIM_UP ; face right
+    db SPRITE_SAMUS_STAND_LEFT_AIM_UP ; face left
+    db $00 ; x
+    ; input down
+    db $00 ; x
+    db SPRITE_SAMUS_STAND_RIGHT ; face right
+    db SPRITE_SAMUS_STAND_LEFT ; face left
+    db $00 ; x
+    ; input both up and down (impossible)
+    db $00 ; x
+    db $00 ; x
+    db $00 ; x
+    db $00 ; x
 ;}
 
+db $00 ; unused
+
 drawSamus_crouch: ;{ $04 - Crouching
-    ld a, $0b ; Right
+    ld a, SPRITE_SAMUS_CROUCH_RIGHT ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
         jp nz, drawSamus_common
-    ld a, $18 ; Left
+    ld a, SPRITE_SAMUS_CROUCH_LEFT ; Left
     ldh [hSpriteId], a
 jp drawSamus_common ;}
 
@@ -869,14 +930,38 @@ jp drawSamus_common
 
 ; The fourth frame in these tables is just padding
 .runningTableNormal: ; 01:4DC7 - Normal
-    db $10, $11, $12, $00 ; Left
-    db $03, $04, $05, $00 ; Right
+    ; Left
+    db SPRITE_SAMUS_RUN_LEFT_1
+    db SPRITE_SAMUS_RUN_LEFT_2
+    db SPRITE_SAMUS_RUN_LEFT_3
+    db $00
+    ; Right
+    db SPRITE_SAMUS_RUN_RIGHT_1
+    db SPRITE_SAMUS_RUN_RIGHT_2
+    db SPRITE_SAMUS_RUN_RIGHT_3
+    db $00
 .runningTableShooting: ; 01:4DCF - Firing forwards
-    db $13, $14, $15, $00 ; Left
-    db $06, $07, $08, $00 ; Right
+    ; Left
+    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_1
+    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_2
+    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_3
+    db $00
+    ; Right
+    db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_1
+    db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_2
+    db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_3
+    db $00
 .runningTableAimingUp: ; 01:4DD7 - Aiming up
-    db $2e, $2f, $30, $00 ; Left
-    db $2b, $2c, $2d, $00 ; Right
+    ; Left
+    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_1
+    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_2
+    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_3
+    db $00
+    ; Right
+    db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_1
+    db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_2
+    db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_3
+    db $00
 ;}
 
 ; All the above drawSamus procedures jump here
@@ -2165,7 +2250,7 @@ drawBombs: ;{ 01:540E
                         and $08
                         sla a
                         swap a
-                        add $35
+                        add SPRITE_SAMUS_BOMB_1
                         ldh [hSpriteId], a
                         ; Draw sprite
                         call drawSamusSprite
@@ -2184,7 +2269,7 @@ drawBombs: ;{ 01:540E
                             ; SpriteId = Timer/2 + $31
                             ld a, c
                             srl a
-                            add $31
+                            add SPRITE_SAMUS_BOMB_EXPLOSION_4
                             ldh [hSpriteId], a
                             ; Draw sprite
                             call drawSamusSprite
@@ -2201,7 +2286,7 @@ drawBombs: ;{ 01:540E
                             ; SpriteId = Timer/2 + $31
                             ld a, c
                             srl a
-                            add $31
+                            add SPRITE_SAMUS_BOMB_EXPLOSION_4
                             ldh [hSpriteId], a
                             ; Draw sprite
                             call drawSamusSprite
@@ -2927,7 +3012,7 @@ miscIngameTasks: ;{ 01:57F2
                 ldh [hSpriteYPixel], a
                 ld a, $44
                 ldh [hSpriteXPixel], a
-                ld a, $43
+                ld a, SPRITE_SAMUS_SAVE_COMPLETED
                 ldh [hSpriteId], a
                 call drawSamusSprite
                 jr .endIf_B
@@ -2943,7 +3028,7 @@ miscIngameTasks: ;{ 01:57F2
                     ldh [hSpriteYPixel], a
                     ld a, $44
                     ldh [hSpriteXPixel], a
-                    ld a, $42
+                    ld a, SPRITE_SAMUS_SAVE_PRESS_START
                     ldh [hSpriteId], a
                     call drawSamusSprite
     .endIf_B: ;}
