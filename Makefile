@@ -22,8 +22,11 @@ SAMUS_SCRIPT_OUT = $(foreach f,\
 	spriteHitboxTopTable,\
 	SRC/samus/samus_$(f).asm)
 
-GENERAL_SCRIPT_OUT = $(foreach f,\
-	sprites_credits,\
+GENERAL_SCRIPT_NAMES = \
+	sprites_credits \
+	sprites_samus
+
+GENERAL_SCRIPT_OUT = $(foreach f,$(GENERAL_SCRIPT_NAMES),\
 	SRC/data/$(f)Pointers.asm SRC/data/$(f)Constants.asm)
 
 ALL_CODE = $(shell find SRC/ -type f \( -iname '*.asm' -o -iname '*.chr' \))
@@ -43,8 +46,11 @@ $(ENEMY_SCRIPT_OUT): SRC/data/enemies.csv
 $(SAMUS_SCRIPT_OUT): SRC/samus/samus.csv
 	python scripts/samus_csv2asm.py -i $< -o SRC/samus
 
-$(GENERAL_SCRIPT_OUT): SRC/data/sprites_credits.csv
-	python scripts/general_csv2asm.py -i $< -o SRC/data -n sprites_credits
+define make_general_script_target
+SRC/data/$(1)Pointers.asm SRC/data/$(1)Constants.asm: SRC/data/$(1).csv
+	python scripts/general_csv2asm.py -i SRC/data/$(1).csv -o SRC/data -n $(1)
+endef
+$(foreach name,$(GENERAL_SCRIPT_NAMES),$(eval $(call make_general_script_target,$(name))))
 
 out/game.o: SRC/game.asm out $(ENEMY_SCRIPT_OUT) $(SAMUS_SCRIPT_OUT) $(GENERAL_SCRIPT_OUT) $(ALL_CODE)
 	rgbasm -o $@ -Weverything -I SRC/ $<

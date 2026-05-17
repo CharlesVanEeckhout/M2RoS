@@ -9,6 +9,8 @@ python.exe .\scripts\samus_csv2asm.py -i .\SRC\samus\samus.csv -o .\SRC\samus
 if errorlevel 1 goto errorSCRIPT
 python.exe .\scripts\general_csv2asm.py -i .\SRC\data\sprites_credits.csv -o .\SRC\data -n sprites_credits
 if errorlevel 1 goto errorSCRIPT
+python.exe .\scripts\general_csv2asm.py -i .\SRC\data\sprites_samus.csv -o .\SRC\data -n sprites_samus
+if errorlevel 1 goto errorSCRIPT
 echo.  Success
 echo.
 
