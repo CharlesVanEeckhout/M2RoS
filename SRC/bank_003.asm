@@ -1079,7 +1079,7 @@ queen_initialize: ;{ 03:6D4A
     ld [queen_bodyHeight], a
     
     ; Enable interrupt
-    ld a, STAT_LYC | STAT_LYCF ; $44
+    ld a, STAT_LYC | STAT_LYC_EQ ; $44
     ld [rSTAT], a
     
     ; Set initial position values
@@ -1566,7 +1566,7 @@ queen_drawHead: ;{
         ld d, a
         ld a, [queen_headSrcLow]
         ld e, a
-        ld h, $9c
+        ld h, HIGH(vramDest_queenHead)
         jr .resume_B
 .entry: ; 03:701E - Entry point
     ld a, [queen_headFrameNext]
@@ -1584,7 +1584,7 @@ queen_drawHead: ;{
             ld de, queen_headFrameC
     .endIf:
 
-    ld hl, $9c00
+    ld hl, vramDest_queenHead
   .resume_B:
     ld c, $03 ; Draw only 3 rows per frame (split update into two frames)
 
@@ -3798,12 +3798,12 @@ jp queen_moveNeck.saveNeckPointer ;}
 ; Seals the bottom exit upon death
 queen_closeFloor: ;{ 03:7AA8
     ; Get address to write. (X,Y) = (14,24)
-    ld hl, $9800 + $20*24 + 14 ; $9B0E
+    ld hl, vramDest_queenCloseFloor
     
     ; Wait for HBlank
     .waitLoop_A:
         ld a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_A
     ; Write tile
     ld [hl], $5d
@@ -3812,7 +3812,7 @@ queen_closeFloor: ;{ 03:7AA8
     ; Wait for HBlank
     .waitLoop_B:
         ld a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_B
     ; Write tile
     ld [hl], $5e
@@ -3905,7 +3905,7 @@ queenStateFunc_disintegrate: ;{ 03:7B05 - Queen State $12:  - Dying pt 1 (disint
     ; Note: DE now points to queen_deathArray[queen_deathArrayIndex]
     
     ; Get starting address for next disintegration
-    or LOW(queenDeath_firstTile) ;$10
+    or LOW(vramDest_queenDeath_firstTile) ;$10
     ld [queen_pDeathChrLow], a
     ; Get next value of index
     ; NOTE: This code relies on the relative primality of 3 and 8
@@ -3934,14 +3934,14 @@ queenStateFunc_disintegrate: ;{ 03:7B05 - Queen State $12:  - Dying pt 1 (disint
     ; Load bitmask
     ld [queen_deathBitmask], a
     ; Load high byte of starting address
-    ld a, HIGH(queenDeath_firstTile) ; $8B
+    ld a, HIGH(vramDest_queenDeath_firstTile) ; $8B
     ld [queen_pDeathChrHigh], a
 ret
 
 .nextState:
-    ld a, LOW(queenDeath_bodyStart)
+    ld a, LOW(vramDest_queenDeath_bodyStart)
     ld [queen_pDeleteBodyLow], a
-    ld a, HIGH(queenDeath_bodyStart)
+    ld a, HIGH(vramDest_queenDeath_bodyStart)
     ld [queen_pDeleteBodyHigh], a
     ; Set state to "Dying part 2"
     ld a, queenState_deleteBody
@@ -3974,7 +3974,7 @@ queen_disintegrate: ;{ 03:7B69
         add hl, de
         ; Break if on the last row of tiles (though we may re-enter the loop at .nextClear)
         ld a, h
-        cp HIGH(queenDeath_lastTile) ;$95
+        cp HIGH(vramDest_queenDeath_lastTile) ;$95
             jr z, .break
       .nextClear:
         dec c
@@ -3992,7 +3992,7 @@ queen_disintegrate: ;{ 03:7B69
         ; Keep clearing things unless we're on the last tile
         ld a, l
         and $f0
-        cp LOW(queenDeath_lastTile) ;$70
+        cp LOW(vramDest_queenDeath_lastTile) ;$70
             jr nz, .nextClear
         ; Clear bitmask to indicate we're done with it
         xor a
@@ -4014,13 +4014,13 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
         ; Wait for HBlank twice and write, to ensure the write goes through
         .waitLoop_A:
             ld a, [rSTAT]
-            and $03
+            and STAT_MODE
         jr nz, .waitLoop_A
         ld [hl], $ff
     
         .waitLoop_B:
             ld a, [rSTAT]
-            and $03
+            and STAT_MODE
         jr nz, .waitLoop_B
         ld [hl], $ff
 
@@ -4036,7 +4036,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
     ; Check if we're at the end
     ;  Note: this check relies on the fact that the queen's body is less than 128 pixels tall (i.e. contained in a range of less than 256 tiles from top to bottom)
     ld a, l
-    cp LOW(queenDeath_bodyEnd)
+    cp LOW(vramDest_queenDeath_bodyEnd)
     jr z, .else
         ; Save pointer for next frame
         ld [queen_pDeleteBodyLow], a

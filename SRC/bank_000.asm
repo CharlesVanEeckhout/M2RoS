@@ -5435,14 +5435,14 @@ samus_getTileIndex: ;{ 00:1FF5
     ; Wait for HBlank and read once
     .waitLoop_A:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_A
     ld b, [hl]
 
     ; Wait for HBlank and read again
     .waitLoop_B: ; Wait for h-blank
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_B
     ld a, [hl]
     
@@ -5649,14 +5649,14 @@ getTileIndex: ;{ 00:2250 - Called by enemy routines
     ; Wait for HBlank and read once
     .waitLoop_A:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_A
     ld b, [hl]
 
     ; Wait for HBlank and try reading again
     .waitLoop_B:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_B
     ld a, [hl]
 
@@ -5666,19 +5666,19 @@ ret ;}
 
 main_readInput: ;{ 00:2287
     ; Select d-pad to read
-    ld a, $20
+    ld a, JOYP_GET_CTRL_PAD
     ldh [rP1], a
     ; Read d-pad
     ldh a, [rP1]
     ldh a, [rP1]
     ; Invert, swap to other nybble, store in B
     cpl
-    and $0f
+    and JOYP_INPUTS
     swap a
     ld b, a
     
     ; Select buttons to read
-    ld a, $10
+    ld a, JOYP_GET_BUTTONS
     ldh [rP1], a
     ; Read buttons
     ldh a, [rP1]
@@ -5691,7 +5691,7 @@ main_readInput: ;{ 00:2287
     ldh a, [rP1]
     ; Invert, mask out upper bits, and OR with B
     cpl
-    and $0f
+    and JOYP_INPUTS
     or b
     ; Store in C as temp
     ld c, a
@@ -5705,7 +5705,7 @@ main_readInput: ;{ 00:2287
     ld a, c
     ldh [hInputPressed], a
     ; Deselect reading both input types
-    ld a, $30
+    ld a, JOYP_GET_NONE
     ldh [rP1], a
 ret ;}
 

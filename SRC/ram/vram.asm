@@ -26,6 +26,10 @@ def vramDest_enemies = $8B00 ; 64 tiles
     
 def vramDest_creditsNumbers = $8F00 ; 16 tiles
 
+; First and last tiles to be cleared by disintegration animation
+def vramDest_queenDeath_firstTile = $8B10
+def vramDest_queenDeath_lastTile = $9570
+
 ; BG Only Tiles - $9000
 def vramDest_theEnd = $9000 ; 16 tiles
 
@@ -33,20 +37,15 @@ def vramDest_bgTiles = $9000 ; 128 tiles
     def vramDest_creditsFont = $9200 ; 32 tiles
 
 ; Background Tilemap - $9800-$9BFF - $20 bytes/row
+
+def vramDest_queenDeath_bodyStart = $99A0
 def vramDest_queenFeet = $9A00
+def vramDest_queenDeath_bodyEnd = $9A80
+
+def vramDest_queenCloseFloor = $9800 + $20*24 + 14 ; $9B0E
 def vramDest_queenStatusBar = $9BE0
 
 ; Window Tilemap - $9C00-9FFF - $20 bytes/row
 def vramDest_statusBar = $9C00
+def vramDest_queenHead = $9C00
 def vramDest_itemText  = $9C20
-; Queen's head row 3
-; Queen's head row 4
-
-
-; Queen related constants
-
-; First and last tiles to be clear by disintegration animation
-def queenDeath_firstTile = $8B10
-def queenDeath_lastTile = $9570
-def queenDeath_bodyStart = $99A0
-def queenDeath_bodyEnd = $9A80

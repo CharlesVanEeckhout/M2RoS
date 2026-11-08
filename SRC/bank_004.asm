@@ -365,7 +365,7 @@ startEndingSongInterruption:
         ld [de], a
         inc e
         ld a, e
-        cp $24 ; Low byte of end of audio channel options ($FF24 & $FF)
+        cp LOW(rAUD1SWEEP + AUDRAM_SIZE*4) ; Low byte of end of audio channel options ($FF24 & $FF)
     jr nz, .copyOptionsLoop
 
     xor a
@@ -1091,7 +1091,7 @@ writeToWavePatternRam:
 ;{
     push bc
     push de
-    ld c, _AUD3WAVERAM & $FF
+    ld c, LOW(AUD3WAVERAM)
 
     .loop:
         ld a, [de]
@@ -1099,7 +1099,7 @@ writeToWavePatternRam:
         inc de
         inc c
         ld a, c
-        cp (_AUD3WAVERAM + $10) & $FF
+        cp LOW(AUD3WAVERAM + $10)
     jr nz, .loop
 
     pop de

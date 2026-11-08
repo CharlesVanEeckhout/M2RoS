@@ -2745,11 +2745,11 @@ destroyBlock: ;{ 01:56E9
     ; Wait for HBlank twice to ensure sync
     .waitLoop_A:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_A
     .waitLoop_B:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_B
 
     ; Destroy block (turn to blank)
@@ -2784,11 +2784,11 @@ ret ;}
     ; Wait for HBlank twice to ensure sync
     .waitLoop_C:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_C
     .waitLoop_D:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_D
 
     ; Set to tiles $00-$03
@@ -2824,11 +2824,11 @@ ret ;}
     ; Wait for HBlank twice to ensure sync
     .waitLoop_E:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_E
     .waitLoop_F:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_F
     
     ; Set to tiles $04-$07
@@ -2858,11 +2858,11 @@ ret ;}
     ; Wait for HBlank twice to ensure sync
     .waitLoop_G:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_G
     .waitLoop_H:
         ldh a, [rSTAT]
-        and $03
+        and STAT_MODE
     jr nz, .waitLoop_H
     
     ; Set to tiles $08-$0B
