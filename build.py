@@ -43,6 +43,11 @@ def main():
     run_or_exit("rgbfix -Weverything -v -t METROID2 -l 0x01 -m MBC1+RAM+BATTERY -r 0x02 -p 0x00 -j out/M2RoS.gb", "RGBFIX Error.")
     print('Done\n')
 
+    with open("out/M2RoS.sym", "r") as f:
+        for line in f.readlines():
+            if line.endswith("_freespace\n"):
+                print(line[:-1])
+
     with open("out/M2RoS.gb", "rb") as f:
         md5_hash_generated = hashlib.md5(f.read())
     print('MD5 hash: ' + md5_hash_generated.hexdigest())

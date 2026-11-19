@@ -517,43 +517,6 @@ drawSamusSprite: ;{ 01:4B62
     .exit:
 ret ;}
 
-clearUnusedOamSlots: ;{ 01:4BB3
-    ; Compare max index of previous and current frames
-    ldh a, [hOamBufferIndex]
-    ld b, a
-    ld a, [maxOamPrevFrame]
-    ld c, a
-    cp b
-    ; Jump ahead if we used more sprites on the current frame
-    jr c, .endIf
-        ; If the previous frame used more sprites, then clear those sprites out
-        ld h, HIGH(wram_oamBuffer)
-        ldh a, [hOamBufferIndex]
-        ld l, a
-        ; Loop until we reach the max index from the previous frame
-        .loop:
-            xor a
-            ld [hl+], a
-            ld a, l
-            cp c
-        jr c, .loop
-    .endIf:
-    ; Update max index
-    ldh a, [hOamBufferIndex]
-    ld [maxOamPrevFrame], a
-ret ;}
-
-clearAllOam: ;{ 00:4BCE
-    ; Write 0 to all OAM data
-    ld hl, wram_oamBuffer
-    .clearLoop:
-        xor a
-        ld [hl+], a
-        ld a, l
-        cp OAM_SIZE
-    jr c, .clearLoop
-ret ;}
-
 ; Draw Samus function and sub-routines {
 
 ; Function has two entry points (one ignores invulnerability frame blinking)
@@ -1034,7 +997,7 @@ createNewSave: ;{ 01:4E1C
     jr nz, .loadLoop
     
     ; Set game mode
-    ld a, $02 ; "gameMode_LoadA"
+    ld a, _id_gameMode_LoadA
     ldh [gameMode], a
 ret ;}
 
@@ -1076,7 +1039,7 @@ loadSaveFile: ;{ 01:4E33
     ; Load the save flags for enemies
     call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
     
-    ld a, $02 ; for "gameMode_LoadA"
+    ld a, _id_gameMode_LoadA
     ldh [gameMode], a
 ret ;}
 
@@ -2996,7 +2959,7 @@ miscIngameTasks: ;{ 01:57F2
                 cp PAD_START
                 jr nz, .endIf_E
                     ; Save!
-                    ld a, $09
+                    ld a, _id_gameMode_saveGame
                     ldh [gameMode], a
                     ; Let the "Completed" message show
                     ld a, $ff
@@ -4377,7 +4340,7 @@ saveFileToSRAM: ;{ 01:7ADF
     ld [sfxRequest_square1], a
     
     ; Turn game mode back to main
-    ld a, $04
+    ld a, _id_gameMode_Main
     ldh [gameMode], a
 ret ;}
 

@@ -21,8 +21,7 @@ credits_drawTimerDigits: ;{ 05:4000
     ldh a, [hTemp.b]
     and $0f ; Isolate the ones digit
     add $f0 ; Adjust the value for display
-    call credits_drawOneDigit
-ret ;}
+    ; fallthrough
 
 ;------------------------------------------------------------------------------
 ; Draw one digit of ending timer
@@ -54,20 +53,8 @@ credits_drawOneDigit: ;{ 05:4015
 ret ;}
 
 ;------------------------------------------------------------------------------
-; Load credits character tiles
-credits_loadFont: ;{ 05:4030
-    ld bc, $0200
-    ld hl, gfx_creditsFont
-    ld de, vramDest_creditsFont
-    call copyToVram
-ret ;}
-
-;------------------------------------------------------------------------------
 ; VBlank subroutine called during credits
 VBlank_drawCreditsLine: ;{ 05:403D
-    ; Redundant bank write
-    ld a, $05
-    ld [rMBC_BANK_REG], a
     ; Load credits text pointer
     ld a, [credits_textPointerLow]
     ld l, a
@@ -134,7 +121,10 @@ reti ;}
 ;------------------------------------------------------------------------------
 ; called by gameMode_boot
 loadTitleScreen: ;{ 05:408F
-    call title_loadGraphics
+    ld bc, $1000
+    ld hl, gfx_titleScreen
+    ld de, vramDest_titleChr
+    call copyToVram
     ; Load HUD
     ld hl, hudBaseTilemap
     ld de, vramDest_statusBar
@@ -198,7 +188,7 @@ loadTitleScreen: ;{ 05:408F
     ld [countdownTimerHigh], a
     ld [countdownTimerLow], a
     ; Set game mode to title
-    ld a, $01
+    ld a, _id_gameMode_Title
     ldh [gameMode], a
 ret ;}
 
@@ -210,7 +200,7 @@ saveTextTilemap: ; 05:4104
 ;------------------------------------------------------------------------------
 titleScreenRoutine: ;{ 05:4118
 ;{ Title display logic
-    call OAM_clearTable
+    call OAMClear
 
 ; Handle flashing
     ; Set default palette
@@ -343,7 +333,7 @@ titleScreenRoutine: ;{ 05:4118
         ldh [hSpriteId], a
         call drawNonGameSprite_longCall
     .endIf_E:
-    call title_clearUnusedOamSlots
+    call OAMClear.unused
 ;} End of display logic for title
     
 ;{ Title input logic
@@ -512,14 +502,14 @@ titleScreenRoutine: ;{ 05:4118
     ld a, $00
     ld [$0000], a
     ; New game
-    ld a, $0b
+    ld a, _id_gameMode_newGame
     ldh [gameMode], a
     ; If loading from a file, ignore the game mode being set to new game
     ld a, [loadingFromFile]
     and a
         ret z
     ; Load from file
-    ld a, $0c
+    ld a, _id_gameMode_loadSave
     ldh [gameMode], a
 ret
 
@@ -552,30 +542,6 @@ ret
 ;}
 
 ;------------------------------------------------------------------------------
-title_loadGraphics: ;{ 5:42C7
-    ld bc, $1000
-    ld hl, gfx_titleScreen
-    ld de, vramDest_titleChr
-    call copyToVram
-ret ;}
-
-;------------------------------------------------------------------------------
-; Note: This doesn't contain the weird bookkeeping optimization that the OAM clearing routine in bank 1 has
-title_clearUnusedOamSlots: ;{ 05:42D4
-    ; Zero out all OAM values
-    ld h, HIGH(wram_oamBuffer)
-    ldh a, [hOamBufferIndex]
-    ld l, a
-    .clearLoop:
-        xor a
-        ld [hl+], a
-        ld a, l
-        cp OAM_SIZE
-    jr c, .clearLoop
-ret
-;}
-
-;------------------------------------------------------------------------------
 ; Used by title
 titleCursorTable: ; 05:42E1
     db SPRITE_TITLE_CURSOR_1 ;$02
@@ -604,7 +570,7 @@ creditsRoutine:: ;{ 05:55A3
     call credits_drawTimer
     call credits_moveStars
     call credits_drawStars
-    call title_clearUnusedOamSlots
+    call OAMClear.unused
 ret
 ;}
 
@@ -1181,7 +1147,10 @@ prepareCredits: ;{ 05:587F
     jr nz, .loop_A
 
     ; Load various graphics
-    call credits_loadFont
+    ld bc, $0200
+    ld hl, gfx_creditsFont
+    ld de, vramDest_creditsFont
+    call copyToVram
     
     ld bc, $1000
     ld hl, gfx_creditsSprTiles
@@ -1245,8 +1214,7 @@ prepareCredits: ;{ 05:587F
     xor a
     ld [credits_samusAnimState], a
     ; Move to credits game mode
-    ldh a, [gameMode]
-    inc a
+    ld a, _id_gameMode_Credits
     ldh [gameMode], a
 ret
 ;}
@@ -1302,19 +1270,7 @@ credits_scrollHandler: ;{ 05:593E
 ;} end proc
 
 ;------------------------------------------------------------------------------
-; Unused routine - Perhaps this was meant to allow you to return to the title screen after the ending
-credits_rebootGame: ;{ 05:5985
-    xor a
-    ldh [gameMode], a
-ret
-;}
-
-;------------------------------------------------------------------------------
 credits_drawSamus: ;{ 05:5989
-    call credits_drawSamusJumpTable
-ret ;}
-
-credits_drawSamusJumpTable: ;{ 05:598D
     rst LOW(RST_28)
         dw .run_frameA ; 00 - Samus running
         dw .run_frameB ; 01 - Samus running

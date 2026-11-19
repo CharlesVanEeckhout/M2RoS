@@ -2,25 +2,19 @@
 
 ; Call a function in another bank
 MACRO callFar
-    ld a, BANK(\1)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank \1
     call \1
 ENDM
 
 ; Jump to a function in another bank
 MACRO jpLong
-    ld a, BANK(\1)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank \1
     jp \1
 ENDM
 
 ; Switch active bank to another bank (based off of label)
 MACRO switchBank
-    ld a, BANK(\1)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar BANK(\1)
 ENDM
 
 ; Switch to another bank (based off some other expression)
@@ -30,6 +24,10 @@ MACRO switchBankVar
     ld [rMBC_BANK_REG], a
 ENDM
 
+macro tableEntry
+    def _id_\1 = (@ - .) / 2
+    dw \1
+endm
 
 macro LengthDutyOptions ; [sound length], [wave duty]
     static_assert \1 < $40, "Invalid sound length"
