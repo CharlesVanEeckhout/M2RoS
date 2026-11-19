@@ -7359,7 +7359,7 @@ waitOneFrame: ;{ 00:2C5E
     push hl
     call handleAudio_longJump
     pop hl
-    db $76 ; halt
+    halt
     ; Wait for VBlank to finish
     .vBlankNotDone:
         ldh a, [hVBlankDoneFlag]

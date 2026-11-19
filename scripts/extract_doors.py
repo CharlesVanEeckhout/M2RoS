@@ -6,7 +6,7 @@ FILE_PATH = "./SRC/maps/doors.asm"
 gb2rom = lambda gb_bank, gb_address: (gb_bank * 0x4000) + (gb_address & 0x3fff)
 
 # Source Pointers
-pointer_src_dict = {
+POINTER_SRC_DICT = {
     gb2rom(0x6,0x5920): "gfx_enemiesA",
     gb2rom(0x6,0x5D20): "gfx_enemiesB",
     gb2rom(0x6,0x6120): "gfx_enemiesC",
@@ -38,13 +38,13 @@ pointer_src_dict = {
 }
 
 # Destination Pointers
-pointer_dest_dict = {
+POINTER_DEST_DICT = {
     0x8B00: "vramDest_enemies",
     0x8F00: "vramDest_commonItems",
-    0x9C00: "_SCRN1",
-    0x9C20: "(_SCRN1+$20)",
-    0x9C40: "(_SCRN1+$40)",
-    0x9C60: "(_SCRN1+$60)"
+    0x9C00: "vramDest_queenHead",
+    0x9C20: "(vramDest_queenHead+$20)",
+    0x9C40: "(vramDest_queenHead+$40)",
+    0x9C60: "(vramDest_queenHead+$60)"
 }
 
 
@@ -89,8 +89,8 @@ def extract(vanilla_rom_path):
         
         door_opcode = rom_read(1)
         if door_opcode >> 4 == 0x0:
-            src_label = pointer_src_dict[gb2rom(rom_read(1),rom_read(2))]
-            dest_label = pointer_dest_dict[rom_read(2)]
+            src_label = POINTER_SRC_DICT[gb2rom(rom_read(1),rom_read(2))]
+            dest_label = POINTER_DEST_DICT[rom_read(2)]
             move_length = rom_read(2)
             macro_name = ["COPY_DATA", "COPY_BG", "COPY_SPR"][door_opcode & 0x0F]
             file_content += f"    {macro_name} {src_label}, {dest_label}, ${move_length:04X}\n"
@@ -129,7 +129,7 @@ def extract(vanilla_rom_path):
         elif door_opcode >> 4 == 0xA:
             file_content += "    FADEOUT\n"
         elif door_opcode >> 4 == 0xB:
-            src_label = pointer_src_dict[gb2rom(rom_read(1),rom_read(2))]
+            src_label = POINTER_SRC_DICT[gb2rom(rom_read(1),rom_read(2))]
             macro_name = [None, "LOAD_BG", "LOAD_SPR"][door_opcode & 0x0F]
             file_content += f"    {macro_name} {src_label}\n"
         elif door_opcode >> 4 == 0xC:

@@ -11,7 +11,7 @@ class GfxEntry:
         self.size = size
         self.path = "./SRC/" + path + ".chr"
 
-gfx_list = [
+GFX_LIST = [
     GfxEntry(0x5,0x5f34, 0xA00, "gfx/titleCredits/titleScreen"),
     GfxEntry(0x5,0x6934, 0x300, "gfx/titleCredits/creditsFont"),
     GfxEntry(0x5,0x6c34, 0x200, "gfx/titleCredits/itemFont"),
@@ -66,7 +66,7 @@ gfx_list = [
 
 def extract(vanilla_rom_path):
     rom = open(vanilla_rom_path, "rb")
-    for gfx in gfx_list:
+    for gfx in GFX_LIST:
         rom.seek(gfx.rom_address)
         chr = rom.read(gfx.size)
         with open(gfx.path, "wb") as f:
@@ -74,7 +74,7 @@ def extract(vanilla_rom_path):
     rom.close()
 
 def clean():
-    for gfx in gfx_list:
+    for gfx in GFX_LIST:
         if os.path.exists(gfx.path):
             os.remove(gfx.path)
 

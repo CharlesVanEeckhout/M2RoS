@@ -32,15 +32,15 @@ def main():
 
     print('RGBDS detected')
     print('Assembling .asm files')
-    run_or_exit("rgbasm -o out/game.o -Weverything -I SRC/ SRC/game.asm", "Assembler Error.")
+    run_or_exit("rgbasm -Weverything -o out/game.o -I SRC/ SRC/game.asm", "Assembler Error.")
     print('Success\n')
 
     print('Linking .o files')
-    run_or_exit("rgblink -n out/M2RoS.sym -Weverything -m out/M2RoS.map -o out/M2RoS.gb out/game.o", "Linker Error.")
+    run_or_exit("rgblink -Weverything -n out/M2RoS.sym -m out/M2RoS.map -o out/M2RoS.gb out/game.o", "Linker Error.")
     print('Success\n')
 
     print('Writing header')
-    run_or_exit("rgbfix -v -t METROID2 -l 0x01 -m MBC1+RAM+BATTERY -r 0x02 -p 0x00 -j out/M2RoS.gb", "RGBFIX Error.")
+    run_or_exit("rgbfix -Weverything -v -t METROID2 -l 0x01 -m MBC1+RAM+BATTERY -r 0x02 -p 0x00 -j out/M2RoS.gb", "RGBFIX Error.")
     print('Done\n')
 
     with open("out/M2RoS.gb", "rb") as f:

@@ -113,8 +113,8 @@ hBeam_waveIndex:  ; $FFBA: Working projectile wave index
 hHUD_tank4:       ; $FFBA: Energy tank 4
 hCollision_enTop: ds 1 ;$FFBA: Working enemy top boundary       in $30EA/$31F1. Working projectile wave index in $1:500D
 
-hBeam_frameCouter: ; $FFBB: Working projectile frame counter
-hHUD_tank5:        ; $FFBB: Energy tank 5
+hBeam_frameCounter: ; $FFBB: Working projectile frame counter
+hHUD_tank5:         ; $FFBB: Energy tank 5
 hCollision_enBottom: ds 1 ;$FFBB: Working enemy bottom boundary    in $30EA/$31F1. Working projectile frame counter in $1:500D
 hCollision_enLeft:   ds 1 ;$FFBC: Working enemy left boundary      in $30EA/$31F1.
 hCollision_enRight:  ds 1 ;$FFBD: Working enemy right boundary     in $30EA/$31F1.

@@ -31,7 +31,7 @@ ds 3 ; $C200..$C202 - Unused
 tileY: ds 1 ; $C203 - Tile Y (see $22BC)
 tileX: ds 1 ; $C204 - Tile X (see $22BC)
 
-; Written to the hardward scroll registers
+; Written to the hardware scroll registers
 scrollY: ds 1 ; $C205 - Scroll Y
 scrollX: ds 1 ; $C206 - Scroll X
 

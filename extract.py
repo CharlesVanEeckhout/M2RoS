@@ -1,6 +1,6 @@
 import os
 import importlib
-modules = [importlib.import_module("scripts." + m) for m in [
+MODULES = [importlib.import_module("scripts." + m) for m in [
     "extract_chr",
     "extract_maps",
     "extract_credits",
@@ -13,7 +13,7 @@ VANILLA_ROM_PATH = "./Metroid2.gb"
 
 def main():
     print('Removing previous resources from disassembly')
-    for module in modules:
+    for module in MODULES:
         module.clean()
     print('Success\n')
 
@@ -21,7 +21,7 @@ def main():
     if not os.path.exists(VANILLA_ROM_PATH):
         print(f"Vanilla ROM file {VANILLA_ROM_PATH} was not found")
         exit()
-    for module in modules:
+    for module in MODULES:
         module.extract(VANILLA_ROM_PATH)
     print('Success')
 

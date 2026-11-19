@@ -1457,7 +1457,7 @@ handleProjectiles: ;{ 01:500D
     ; Load and increment frame counter
     ld a, [hl+]
     inc a
-    ldh [hBeam_frameCouter], a
+    ldh [hBeam_frameCounter], a
     
     ; Branch according to beam type
     ldh a, [hBeam_type]
@@ -1526,7 +1526,7 @@ jp .commonBranch
 
 .spazer_splitVertically: ;{ Spazer subroutine
     ; Limit spread to first few frames
-    ldh a, [hBeam_frameCouter]
+    ldh a, [hBeam_frameCounter]
     cp $05
         ret nc
     ; Middle beam doesn't move sideways
@@ -1552,7 +1552,7 @@ jp .commonBranch
 
 .spazer_splitHorizontally: ;{ Spazer subroutine
     ; Limit spread to first few frames
-    ldh a, [hBeam_frameCouter]
+    ldh a, [hBeam_frameCounter]
     cp $05
         ret nc
     ; Middle beam doesn't move sideways
@@ -1728,7 +1728,7 @@ jp .commonBranch
 
 .missileBranch: ;{ Missile
     ; Use projectile frame counter as index into table
-    ldh a, [hBeam_frameCouter]
+    ldh a, [hBeam_frameCounter]
     ld e, a
     ld d, $00
     ld hl, .missileSpeedTable
@@ -1738,9 +1738,9 @@ jp .commonBranch
     cp $ff
     jr nz, .endif_J
         ; Decrement value so it doesn't overflow on the next tick
-        ldh a, [hBeam_frameCouter]
+        ldh a, [hBeam_frameCounter]
         dec a
-        ldh [hBeam_frameCouter], a
+        ldh [hBeam_frameCounter], a
         ; Load second to last value from table
         ld a, [.missileSpeedTable_end - 2]
     .endif_J:
@@ -1892,7 +1892,7 @@ jp .commonBranch
     ldh a, [hBeam_waveIndex]
     ld [hl+], a
     ; Save projectile frame counter
-    ldh a, [hBeam_frameCouter]
+    ldh a, [hBeam_frameCounter]
     ld [hl], a
     
     ; Only check BG collision every other frame
