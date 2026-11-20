@@ -4,7 +4,7 @@
 MACRO callFar
     ld a, BANK(\1)
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     call \1
 ENDM
 
@@ -12,7 +12,7 @@ ENDM
 MACRO jpLong
     ld a, BANK(\1)
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     jp \1
 ENDM
 
@@ -20,14 +20,14 @@ ENDM
 MACRO switchBank
     ld a, BANK(\1)
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
 ENDM
 
 ; Switch to another bank (based off some other expression)
 MACRO switchBankVar
     ld a, \1
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
 ENDM
 
 

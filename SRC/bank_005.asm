@@ -66,8 +66,8 @@ ret ;}
 ; VBlank subroutine called during credits
 VBlank_drawCreditsLine: ;{ 05:403D
     ; Redundant bank write
-    ld a, $05
-    ld [rMBC_BANK_REG], a
+    ld a, BANK(VBlank_drawCreditsLine)
+    ld [rROM2B], a
     ; Load credits text pointer
     ld a, [credits_textPointerLow]
     ld l, a
@@ -79,8 +79,8 @@ VBlank_drawCreditsLine: ;{ 05:403D
     ld a, [pTilemapDestHigh]
     ld d, a
     ; Enable SRAM to access credits text
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     ; Check if newline
     ld a, [hl]
     cp $f1
@@ -109,8 +109,8 @@ VBlank_drawCreditsLine: ;{ 05:403D
     .endIf:
 
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
     ; Store new value of credits text pointer
     ld a, l
     ld [credits_textPointerLow], a
@@ -453,8 +453,8 @@ titleScreenRoutine: ;{ 05:4118
     xor a
     ld [loadingFromFile], a
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
 
 ; Check magic number
     ; WARNING: THIS CODE IS COMPLETELY BUSTED AND ONLY WORKS ON ACCIDENT.
@@ -509,8 +509,8 @@ titleScreenRoutine: ;{ 05:4118
     ld a, [activeSaveSlot]
     ld [saveLastSlot], a
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
     ; New game
     ld a, $0b
     ldh [gameMode], a
@@ -537,14 +537,14 @@ ret
     ld l, a
     ld h, HIGH(saveData_baseAddr) ; $A0
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     ; Erase first two bytes (part w/the magic number)
     xor a
     ld [hl+], a
     ld [hl], a
     ; Disable SRAM
-    ld [$0000], a
+    ld [rRAMG], a
     ; Get rid of the clear option
     xor a
     ld [title_showClearOption], a
@@ -1260,14 +1260,14 @@ credits_scrollHandler: ;{ 05:593E
     ld a, [credits_textPointerHigh]
     ld h, a
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     ; Load character
     ld a, [hl]
     ld b, a
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
     ; Check if we're at the end of the credits
     ld a, b
     cp $f0

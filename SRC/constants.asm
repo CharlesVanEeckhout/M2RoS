@@ -1,9 +1,5 @@
 ; Constants
 
-; Hardware related constants (not covered by hardware.inc)
-def rMBC_BANK_REG = $2100 ; Dunno why it just doesn't use $2000
-
-
 def METASPRITE_END = $FF ; I recommend setting this to $80 (-128) if you plan on doing your own sprite editing
 
 ; Map related memory locations (fixed in each bank)

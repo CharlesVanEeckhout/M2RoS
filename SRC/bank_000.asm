@@ -131,18 +131,18 @@ VBlankHandler: ;{ 00:0154
     and a
     jr z, .else_B
         ld a, [currentLevelBank]
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         call VBlank_updateMap
         jr .endIf_B
     .else_B:
         ld a, BANK(VBlank_updateStatusBar)
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         call VBlank_updateStatusBar
     .endIf_B:
 ; End vblank
     call OAM_DMA ; Sprite DMA
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
@@ -153,16 +153,16 @@ reti
 
 .queenBranch:
     ld a, BANK(VBlank_updateStatusBar)
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     call VBlank_updateStatusBar
     call OAM_DMA
     
     ld a, BANK(VBlank_drawQueen)
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     call VBlank_drawQueen
     
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ; Return from interrupt
@@ -219,8 +219,8 @@ bootRoutine: ;{ 00:01FB
     ld sp, stack.bottom ; $DFFF
     call initializeAudio_longJump
     ; Enable SRAM (?)
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     
     ; Clear $DF00-$DF00 (stack)
     xor a
@@ -309,8 +309,8 @@ bootRoutine: ;{ 00:01FB
     ldh [rTMA], a
 
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     ; Set active save slot based on SRAM
     xor a
     ld [activeSaveSlot], a
@@ -323,8 +323,8 @@ bootRoutine: ;{ 00:01FB
     ld a, $00
     ldh [gameMode], a
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
 ;}
 
 mainGameLoop: ;{ 00:02CD
@@ -348,7 +348,7 @@ mainGameLoop: ;{ 00:02CD
 jp mainGameLoop
 ;}
 
-main_handleGameMode: ;{ 0:02F0
+main_handleGameMode: ;{ 00:02F0
     ldh a, [gameMode]
     rst LOW(RST_28)
         dw gameMode_Boot           ; $00
@@ -663,6 +663,7 @@ gameMode_LoadB: ;{ 00:0464
     ldh [hCameraXScreen], a
 
     ; Adjust virtual camera position to real scroll position
+    ; (why arent those adjustments the same as convertCameraToScroll?)
     ldh a, [hCameraYPixel]
     sub $78
     ld [scrollY], a
@@ -6339,7 +6340,7 @@ executeDoorScript: ;{ 00:239C
         ld a, BANK(gfx_items)
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         ; Load lower nybble of token (minus 1)
         ld a, [hl] ; Note: this is not [HL+]
         push hl
@@ -6400,7 +6401,7 @@ executeDoorScript: ;{ 00:239C
             ld a, BANK(gfx_itemFont)
             ld [bankRegMirror], a
             ld [vramTransfer_srcBank], a
-            ld [rMBC_BANK_REG], a
+            ld [rROM2B], a
             ; Set source address
             ld a, LOW(gfx_itemFont) ;$34
             ldh [hVramTransfer.srcAddrLow], a
@@ -6426,7 +6427,7 @@ executeDoorScript: ;{ 00:239C
         ld a, BANK(itemTextPointerTable)
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         ; Read lower nybble of token
         ld a, [hl+]
         push hl
@@ -6496,7 +6497,7 @@ door_loadGraphics: ;{ 00:26EB
         ld a, [hl+]
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         ; Load source address (and save result to save buffer as enemy graphics)
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrLow], a
@@ -6521,7 +6522,7 @@ door_loadGraphics: ;{ 00:26EB
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
         ld [saveBuf_bgGfxSrcBank], a
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         ; Load source address (and save result to save buffer as background graphics)
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrLow], a
@@ -6558,7 +6559,7 @@ loadGraphics: ;{ 00:2753
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [vramTransfer_srcBank], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ; Load source address
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
@@ -6583,7 +6584,7 @@ jr beginGraphicsTransfer
     ld [bankRegMirror], a
     ld [vramTransfer_srcBank], a
     ld [saveBuf_bgGfxSrcBank], a ; Save bank as BG graphics source
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ; Load source address (and save it as the BG graphics source)
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
@@ -6609,7 +6610,7 @@ jr beginGraphicsTransfer ;}
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [vramTransfer_srcBank], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ; Load source address (and save address as enemy graphics source)
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
@@ -6658,7 +6659,7 @@ animateGettingVaria: ;{ 00:27E3
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [vramTransfer_srcBank], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
     ld a, [hl+]
@@ -6772,7 +6773,7 @@ door_queen: ;{ 00:2887
     ld [currentLevelBank], a
     ld [saveBuf_currentLevelBank], a
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ; Load camera y position (pixel/screen)
     ld a, [hl+]
     ldh [hCameraYPixel], a
@@ -7215,7 +7216,7 @@ VBlank_vramDataTransfer: ;{ 00:2BA3
 
     ; Load transfer parameters
     ld a, [vramTransfer_srcBank]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ldh a, [hVramTransfer.sizeLow]
     ld c, a
     ldh a, [hVramTransfer.sizeHigh]
@@ -7264,7 +7265,7 @@ VBlank_vramDataTransfer: ;{ 00:2BA3
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     pop hl
     pop de
     pop bc
@@ -7279,7 +7280,7 @@ VBlank_variaAnimation: ;{ 00:2BF4
     jr nz, .endIf_A
         ; Set HL to the source byte of the data transfer
         ld a, [vramTransfer_srcBank]
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         ldh a, [hVramTransfer.destAddrLow]
         ld l, a
         ldh a, [hVramTransfer.destAddrHigh]
@@ -7345,7 +7346,7 @@ VBlank_variaAnimation: ;{ 00:2BF4
     ldh [rSCX], a
     call OAM_DMA
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
@@ -8036,14 +8037,14 @@ VBlank_deathSequence: ;{ 00:2FE1
 
     ; Queen vblank handler if necessary
     ld a, BANK(VBlank_drawQueen)
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, [queen_roomFlag]
     cp $11
         call z, VBlank_drawQueen
 
     ; Return from interrupt
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
@@ -8125,7 +8126,7 @@ unusedDeathAnimation: ;{ 00:3062
     call OAM_DMA
     ; Return from interrupt
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
@@ -10325,7 +10326,7 @@ loadGame_copyItemToVram: ;{ 00:3C3F
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [vramTransfer_srcBank], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ; Read source address of transfer to temp
     ld a, [hl+]
     ldh [hTemp.a], a
@@ -10371,8 +10372,8 @@ loadCreditsText: ;{
     ld hl, creditsText ;$7920
     ld de, creditsTextBuffer
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
 
     ; Load text until $F0 is found
     .loadLoop:
@@ -10383,8 +10384,8 @@ loadCreditsText: ;{
     jr nz, .loadLoop
 
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
 
     switchBank prepareCredits
 ret ;}
@@ -10445,11 +10446,11 @@ ret
 LCDCInterruptHandler_farCall: ; 00:3D5C
     push af
         ; Presuming this non-standard convention is because this is an interrupt handler
-        ld a, $03
-        ld [rMBC_BANK_REG], a
+        ld a, BANK(LCDCInterruptHandler)
+        ld [rROM2B], a
         call LCDCInterruptHandler
         ld a, [bankRegMirror]
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
     pop af
 reti
 
@@ -10652,7 +10653,7 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     call OAM_DMA
     ; Return from interrupt
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
