@@ -1010,8 +1010,8 @@ loadSaveFile: ;{ 01:4E33
         jr z, createNewSave
 
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     
     ; HL = saveData_baseAddr + activeSaveSlot*64
     ld a, [activeSaveSlot]
@@ -1033,8 +1033,8 @@ loadSaveFile: ;{ 01:4E33
     jr nz, .loadLoop
 
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
     
     ; Load the save flags for enemies
     call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
@@ -3915,7 +3915,7 @@ drawNonGameSprite: ;{ 01:73F7
     ld a, [hl]
     ld d, a
     ; Prep HL
-    ld h, $c0
+    ld h, HIGH(wram_oamBuffer)
     ldh a, [hOamBufferIndex]
     ld l, a
     ; Store x and y offsets of sprite in B and C
@@ -4130,8 +4130,8 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
 
 ; Copy saveBuffer to SRAM {
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     
 ; Copy over 7 banks of save flags
     ; Set destination pointer
@@ -4159,15 +4159,15 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
 
     ; Disable SRAM
     xor a
-    ld [$0000], a
+    ld [rRAMG], a
 ;}
 ret ;}
 
 ; Loads enemy save flags from SRAM to a WRAM buffer.
 loadEnemySaveFlags: ;{ 01:7AB9
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     
 ; Copy over 7 banks of save flags
     ; Set destination pointer
@@ -4196,8 +4196,8 @@ loadEnemySaveFlags: ;{ 01:7AB9
     jr nz, .loadLoop
     
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
     
     ; Clear flag
     xor a
@@ -4206,8 +4206,8 @@ ret ;}
 
 saveFileToSRAM: ;{ 01:7ADF
     ; Enable SRAM
-    ld a, $0a
-    ld [$0000], a
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     
 ; Copy magic number to save file
     ; Set source pointer
@@ -4326,8 +4326,8 @@ saveFileToSRAM: ;{ 01:7ADF
     ld [hl], a
     
     ; Disable SRAM
-    ld a, $00
-    ld [$0000], a
+    ld a, RAMG_SRAM_DISABLE
+    ld [rRAMG], a
 
     ; Save enemy flags
     call saveEnemyFlagsToSRAM

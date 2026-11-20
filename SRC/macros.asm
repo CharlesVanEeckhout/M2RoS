@@ -21,7 +21,7 @@ ENDM
 MACRO switchBankVar
     ld a, \1
     ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
 ENDM
 
 macro tableEntry
