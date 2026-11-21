@@ -278,7 +278,34 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     ld [hl+], a
     ld [hl], a
     ; Reload blob thrower sprite
-    call blobThrower_loadSprite
+    ; fallthrough
+;}
+
+; Loads the Blob Thrower sprite and hitbox into RAM
+blobThrower_loadSprite: ;{ 02:4DB1
+    ; Load the sprite
+    ld hl, enAI_blobThrower.sprite ;$4ffe
+    ld de, enSprite_blobThrower
+    ld b, $3e
+    .loop_A:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .loop_A
+    ; Load the hitbox
+    ld hl, enAI_blobThrower.hitbox
+    ld de, hitboxC360
+    ld b, $04
+    .loop_B:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .loop_B
+    ; Clear timer
+    ld a, $00
+    ld [blobThrower_actionTimer], a
 ret
 ;}
 
@@ -390,7 +417,7 @@ deactivateAllEnemies: ;{ 02:4217
     ; Deactivate all 10 enemy data slots
     ld a, $ff
     ld hl, enemyDataSlots
-    ld c, enemyDataSlotSize ; $20
+    ld bc, enemyDataSlotSize ; $20
     ld d, $10
     .loop_A:
         ld [hl], a
@@ -680,17 +707,10 @@ jr .transferCollisionResults ; Exit
     ; Play noise
     ld a, sfx_noise_enemyKilled
     ld [sfxRequest_noise], a
-.unusedJump:
     call .transferCollisionResults ; Clear stuff
 pop af
 jp processEnemies.doneProcessingEnemy ; Skip to next enemy
 
-; 02:4386 - Unused branch
-    call enemy_deleteSelf_farCall
-    ld a, $ff
-    ldh [hEnemy.spawnFlag], a
-    jr .unusedJump
-; }
 
 ; Common exit for this function (called as a function by a couple exits)
 .transferCollisionResults:
@@ -1217,1131 +1237,394 @@ updateScrollHistory: ;{ 02:45CA
     ld [hl], a
 ret ;}
 
-; Gets X direction of Samus
-unused_getSamusDirection: ;{ 02:45E4 - Unreferenced
-    ld a, [samus_onscreenXPos]
-    ld b, a
-    ld hl, hEnemy.xPos
-    ld a, [hl]
-    cp b
-    jr nc, .else
-        ; Samus to right
-        xor a
-        ld [unused_samusDirectionFromEnemy], a ; Variable appears to be unused
-        ret
-    .else:
-        ; Samus to left
-        ld a, $02
-        ld [unused_samusDirectionFromEnemy], a
-        ret
-;} end proc
-
-; Sets x-flip in sprite attributes based on the directional flags
-unused_setXFlip: ;{ 02:45FA - Unreferenced
-    ld hl, hEnemy.attr
-    ldh a, [hEnemy.directionFlags]
-    and a
-    jr z, .else
-        ld [hl], $00
-        ret
-    .else:
-        ld [hl], OAM_XFLIP
-        ret
-;} end proc
-
 ;------------------------------------------------------------------------------
 ; Beginning of enemy tilemap collision routines
 ;
 ; "$11 routines" = Check right side of object
 ; 8 routines (2 unused)
-enCollision_right: ;{ 02:4608
-.nearSmall:
-;(3,-3)
-;(3, 3)
+
+; a: collision flags
+; b: tile id
+; hl: collision points table
+
+; returns
+; a: en_bgCollisionResult
+; carry: "did we collide?" boolean
+enCollision:
+    ld [en_bgCollisionResult], a
+    
+    ldh a, [hEnemy.xPos]
+    add [hl]
+    inc hl
+    ld [enemy_testPointXPos], a
+
+    ldh a, [hEnemy.yPos]
+    add [hl]
+    inc hl
+    ld [enemy_testPointYPos], a
+    
+    .loop:
+        push hl
+            call getTileIndex.enemy
+            ld b, a
+            ld hl, enemySolidityIndex
+            cp [hl]
+        pop hl
+        ld a, [en_bgCollisionResult]
+        ret c ; collision happens if carry is set
+        
+        ld a, [hl+]
+        sra a
+        jr z, .exit
+        
+        ld b, a
+        jr c, .yBranch
+        
+        ;xBranch
+        ld a, [enemy_testPointXPos]
+        add b
+        ld [enemy_testPointXPos], a
+    jr .loop
+        
+        .yBranch:
+        ld a, [enemy_testPointYPos]
+        add b
+        ld [enemy_testPointYPos], a
+    jr .loop
+    
+    .exit:
+        ld a, [en_bgCollisionResult]
+        and $f0 ; unset carry flag
+        ld [en_bgCollisionResult], a
+        ret
+    
+enCollision_right:
+    .nearSmall:
+    ld hl, .nearSmallTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $03
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
-
-.midSmall: ; 02:4635 - Unused
-;(7,-3)
-;(7, 3)
+    jp enCollision
+    .nearSmallTable:
+    ;(  3, -3)
+    ;(  3,  3)
+        db   3, -3, 6<<1 + 1, $00
+    
+    .midSmall:
+    ld hl, .midSmallTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
-
-.midMedium: ; 02:4662 - Note: saves tile number to metroid_babyTouchingTile
-;(7,-6)
-;(7, 0)
-;(7, 6)
+    jp enCollision
+    .midSmallTable:
+    ;(  7, -3)
+    ;(  7,  3)
+        db   7, -3, 6<<1 + 1, $00
+    
+    .midMedium:
+    ld hl, .midMediumTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $06
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .midMediumTable:
+    ;(  7, -6)
+    ;(  7,  0)
+    ;(  7,  6)
+        db   7, -6, 6<<1 + 1, 6<<1 + 1, $00
 
-.exitA:
-    ld hl, en_bgCollisionResult
-    res 0, [hl]
-    ret
-
-.farMedium: ; 02:46AC
-;(11,-7)
-;(11, 0)
-;(11, 7)
+    .farMedium:
+    ld hl, .farMediumTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    jp enCollision
+    .farMediumTable:
+    ;( 11, -7)
+    ;( 11,  0)
+    ;( 11,  7)
+        db  11, -7, 7<<1 + 1, 7<<1 + 1, $00
 
-.midWide: ; 02:46E9 - Unused
-;(7,-11)
-;(7, -3)
-;(7,  3)
-;(7, 11)
+    .midWide:
+    ld hl, .midWideTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .midWideTable:
+    ;(  7,-11)
+    ;(  7, -3)
+    ;(  7,  3)
+    ;(  7, 11)
+        db   7,-11, 8<<1 + 1, 6<<1 + 1, 8<<1 + 1, $00
 
-.farWide: ; 02:4736
-;(11,-11)
-;(11. -3)
-;(11,  3)
-;(11, 11)
+    .farWide:
+    ld hl, .farWideTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .farWideTable:
+    ;( 11,-11)
+    ;( 11. -3)
+    ;( 11,  3)
+    ;( 11, 11)
+        db  11,-11, 8<<1 + 1, 6<<1 + 1, 8<<1 + 1, $00
 
-.crawlA: ; 02:4783
-;(7,-8)
-;(7, 7)
+    .crawlA:
+    ld hl, .crawlATable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $08
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $0f
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .crawlATable:
+    ;(  7, -8)
+    ;(  7,  7)
+        db   7, -8,15<<1 + 1, $00
 
-.exitB:
-    ld hl, en_bgCollisionResult
-    res 0, [hl]
-    ret
-
-.crawlB: ; 02:47B4
-;(7,-7)
-;(7, 8)
+    .crawlB:
+    ld hl, .crawlBTable
     ld a, $11
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $0f
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
-;}
+    jp enCollision
+    .crawlBTable:
+    ;(  7, -7)
+    ;(  7,  8)
+        db   7, -7,15<<1 + 1, $00
 
-; "$44 functions" = Check left edge of object
-; 8 functions (2 unused)
-enCollision_left: ;{ 02:47E1
-.nearSmall:
-;(-3,-3)
-;(-3, 3)
+enCollision_left:
+    .nearSmall:
+    ld hl, .nearSmallTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $03
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
-
-.midSmall: ; 02:480E - Unused
-;(-7,-3)
-;(-7, 3)
+    jp enCollision
+    .nearSmallTable:
+    ;( -3, -3)
+    ;( -3,  3)
+        db  -3, -3, 6<<1 + 1, $00
+    
+    .midSmall:
+    ld hl, .midSmallTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
-
-.midMedium: ; 02:483B - Note: saves tile number to metroid_babyTouchingTile
-;(-7,-6)
-;(-7, 0)
-;(-7, 6)
+    jp enCollision
+    .midSmallTable:
+    ;( -7, -3)
+    ;( -7,  3)
+        db  -7, -3, 6<<1 + 1, $00
+    
+    .midMedium:
+    ld hl, .midMediumTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $06
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .midMediumTable:
+    ;( -7, -6)
+    ;( -7,  0)
+    ;( -7,  6)
+        db  -7, -6, 6<<1 + 1, 6<<1 + 1, $00
 
-.exitA:
-    ld hl, en_bgCollisionResult
-    res 2, [hl]
-    ret
-
-.farMedium: ; 02:4885
-;(-11,-7)
-;(-11, 0)
-;(-11, 7)
+    .farMedium:
+    ld hl, .farMediumTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    jp enCollision
+    .farMediumTable:
+    ;(-11, -7)
+    ;(-11,  0)
+    ;(-11,  7)
+        db -11, -7, 7<<1 + 1, 7<<1 + 1, $00
 
-.midWide: ; 02:48C2 - Unused
-;(-7,-11)
-;(-7, -3)
-;(-7,  3)
-;(-7, 11)
+    .midWide:
+    ld hl, .midWideTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .midWideTable:
+    ;( -7,-11)
+    ;( -7, -3)
+    ;( -7,  3)
+    ;( -7, 11)
+        db  -7,-11, 8<<1 + 1, 6<<1 + 1, 8<<1 + 1, $00
 
-.farWide: ; 02:490F
-;(-11,-11)
-;(-11, -3)
-;(-11,  3)
-;(-11, 11)
+    .farWide:
+    ld hl, .farWideTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $06
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .farWideTable:
+    ;(-11,-11)
+    ;(-11, -3)
+    ;(-11,  3)
+    ;(-11, 11)
+        db -11,-11, 8<<1 + 1, 6<<1 + 1, 8<<1 + 1, $00
 
-.crawlA: ; 02:495C
-;(-9,-7)
-;(-9, 8)
+    .crawlA:
+    ld hl, .crawlATable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $09
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $0f
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .crawlATable:
+    ;( -9, -7)
+    ;( -9,  8)
+        db  -9, -7,15<<1 + 1, $00
 
-.exitB:
-    ld hl, en_bgCollisionResult
-    res 2, [hl]
-    ret
-
-.crawlB: ; 02:498D
-;(-9,-8)
-;(-9, 7)
+    .crawlB:
+    ld hl, .crawlBTable
     ld a, $44
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $08
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $09
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointYPos]
-    add $0f
-    ld [enemy_testPointYPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
-;}
+    jp enCollision
+    .crawlBTable:
+    ;( -9, -8)
+    ;( -9,  7)
+        db  -9, -8,15<<1 + 1, $00
 
-; "$22 functions" - Check bottom edge of object
-; 9 functions (2 unused)
-enCollision_down: ;{ 02:49BA
-.nearSmall:
-;(-3,3)
-;( 3,3)
+enCollision_down:
+    .nearSmall:
+    ld hl, .nearSmallTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $03
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    jp enCollision
+    .nearSmallTable:
+    ;( -3,  3)
+    ;(  3,  3)
+        db  -3,  3, 6<<1 + 0, $00
 
-.nearMedium: ; 02:49E7 - Unused
-;(-7,3)
-;( 0,3)
-;( 7,3)
+    .nearMedium:
+    ld hl, .nearMediumTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .nearMediumTable:
+    ;( -7,  3)
+    ;(  0,  3)
+    ;(  7,  3)
+        db  -7,  3, 7<<1 + 0, 7<<1 + 0, $00
 
-.exitA:
-    ld hl, en_bgCollisionResult
-    res 1, [hl]
-ret
-
-.midMedium: ; 02:4A28 - Note: saves tile number to metroid_babyTouchingTile
-;(-6,7)
-;( 0,7)
-;( 6,7)
+    .midMedium:
+    ld hl, .midMediumTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    jp enCollision
+    .midMediumTable:
+    ;( -6,  7)
+    ;(  0,  7)
+    ;(  6,  7)
+        db  -6,  7, 6<<1 + 0, 6<<1 + 0, $00
 
-.midWide: ; 02:4A6E - Unused
-;(-11,7)
-;( -3,7)
-;(  3,7)
-;( 11,7)
+    .midWide:
+    ld hl, .midWideTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .midWideTable:
+    ;(-11,  7)
+    ;( -3,  7)
+    ;(  3,  7)
+    ;( 11,  7)
+        db -11,  7, 8<<1 + 0, 6<<1 + 0, 8<<1 + 0, $00
 
-.onePoint: ; 02:4ABB
-;(0,11)
+    .onePoint:
+    ld hl, .onePointTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .onePointTable:
+    ;(  0, 11)
+        db 0, 11, $00
 
-.farMedium: ; 02:4AD6
-;(-7,11)
-;( 0,11)
-;( 7,11)
+    .farMedium:
+    ld hl, .farMediumTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .farMediumTable:
+    ;( -7, 11)
+    ;(  0, 11)
+    ;(  7, 11)
+        db  -7, 11, 7<<1 + 0, 7<<1 + 0, $00
 
-.exitB:
-    ld hl, en_bgCollisionResult
-    res 1, [hl]
-    ret
-
-.farWide: ; 02:4B17
-;(-11,11)
-;( -3,11)
-;(  3,11)
-;( 11,11)
+    .farWide:
+    ld hl, .farWideTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    jp enCollision
+    .farWideTable:
+    ;(-11, 11)
+    ;( -3, 11)
+    ;(  3, 11)
+    ;( 11, 11)
+        db -11, 11, 8<<1 + 0, 6<<1 + 0, 8<<1 + 0, $00
 
-.crawlA: ; 02:4B64
-;(-8,8)
-;( 7,8)
+    .crawlA:
+    ld hl, .crawlATable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $0f
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitC
+    jp enCollision
+    .crawlATable:
+    ;( -8,  8)
+    ;(  7,  8)
+        db  -8,  8,15<<1 + 0, $00
 
-.crawlB: ; 02:4B19
-;(-9,8)
-;( 6,8)
+    .crawlB:
+    ld hl, .crawlBTable
     ld a, $22
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    add $08
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $09
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $0f
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    jp enCollision
+    .crawlBTable:
+    ;( -9,  8)
+    ;(  6,  8)
+        db  -9,  8,15<<1 + 0, $00
 
-.exitC:
-    ld hl, en_bgCollisionResult
-    res 1, [hl]
-    ret
-;}
+enCollision_up:
+    .nearSmall:
+    ld hl, .nearSmallTable
+    ld a, $22
+    jp enCollision
+    .nearSmallTable:
+    ;( -3, -3)
+    ;(  3, -3)
+        db  -3, -3, 6<<1 + 0, $00
 
-; "$88 functions" - Check top edge of object
-; 8 functions (3 unused)
-enCollision_up: ;{ 02:4BC2
-.nearSmall:
-;(-3,-3)
-;( 3,-3)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $03
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    .nearMedium:
+    ld hl, .nearMediumTable
+    ld a, $22
+    jp enCollision
+    .nearMediumTable:
+    ;( -7, -3)
+    ;(  0, -3)
+    ;(  7, -3)
+        db  -7, -3, 7<<1 + 0, 7<<1 + 0, $00
 
-.nearMedium: ; 02:4BEF - Unused
-;(-7,-3)
-;( 0,-3)
-;( 7,-3)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $03
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    .midMedium:
+    ld hl, .midMediumTable
+    ld a, $22
+    jp enCollision
+    .midMediumTable:
+    ;( -6, -7)
+    ;(  0, -7)
+    ;(  6, -7)
+        db  -6, -7, 6<<1 + 0, 6<<1 + 0, $00
 
-.exitA:
-    ld hl, en_bgCollisionResult
-    res 3, [hl]
-    ret
+    .midWide:
+    ld hl, .midWideTable
+    ld a, $22
+    jp enCollision
+    .midWideTable:
+    ;(-11, -7)
+    ;( -3, -7)
+    ;(  3, -7)
+    ;( 11, -7)
+        db -11, -7, 8<<1 + 0, 6<<1 + 0, 8<<1 + 0, $00
 
-.midMedium: ; 02:4C30 - Note: saves tile number to metroid_babyTouchingTile
-;(-6,-7)
-;( 0,-7)
-;( 6,-7)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld [metroid_babyTouchingTile], a
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitA
+    .farMedium:
+    ld hl, .farMediumTable
+    ld a, $22
+    jp enCollision
+    .farMediumTable:
+    ;( -7,-11)
+    ;(  0,-11)
+    ;(  7,-11)
+        db  -7,-11, 7<<1 + 0, 7<<1 + 0, $00
 
-.midWide: ; 02:4C76 - Unused
-;(-11,-7)
-;( -3,-7)
-;(  3,-7)
-;( 11,-7)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $07
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
+    .farWide:
+    ld hl, .farWideTable
+    ld a, $22
+    jp enCollision
+    .farWideTable:
+    ;(-11,-11)
+    ;( -3,-11)
+    ;(  3,-11)
+    ;( 11,-11)
+        db -11,-11, 8<<1 + 0, 6<<1 + 0, 8<<1 + 0, $00
 
-.farMedium: ; 02:4CC3 - Unused
-;(-7,-11)
-;( 0,-11)
-;( 7,-11)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $07
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
+    .crawlA:
+    ld hl, .crawlATable
+    ld a, $22
+    jp enCollision
+    .crawlATable:
+    ;( -9, -8)
+    ;(  6, -8)
+        db  -9, -8,15<<1 + 0, $00
 
-.exitB:
-    ld hl, en_bgCollisionResult
-    res 3, [hl]
-    ret
-
-.farWide: ; 02:4D04
-;(-11,-11)
-;( -3,-11)
-;(  3,-11)
-;( 11,-11)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $0b
-    ld [enemy_testPointYPos], a
-    ldh a, [hEnemy.xPos]
-    sub $0b
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $06
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitB
-
-.crawlA: ; 02:4D51
-;(-9,-8)
-;( 6,-8)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $08
-    ld [enemy_testPointYPos], a
-    ld a, [enemy_xPosMirror]
-    sub $09
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $0f
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    jr .exitC
-
-.crawlB: ; 02:4D7F
-;(-8,-8)
-;( 7,-8)
-    ld a, $88
-    ld [en_bgCollisionResult], a
-    ldh a, [hEnemy.yPos]
-    sub $08
-    ld [enemy_testPointYPos], a
-    ld a, [enemy_xPosMirror]
-    sub $08
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-    ld a, [enemy_testPointXPos]
-    add $0f
-    ld [enemy_testPointXPos], a
-    call getTileIndex.enemy
-    ld hl, enemySolidityIndex
-    cp [hl]
-        ret c
-
-.exitC:
-    ld hl, en_bgCollisionResult
-    res 3, [hl]
-    ret
-;}
+    .crawlB:
+    ld hl, .crawlBTable
+    ld a, $22
+    jp enCollision
+    .crawlBTable:
+    ;( -8, -8)
+    ;(  7, -8)
+        db  -8, -8,15<<1 + 0, $00
 
 ; End of enemy tilemap collision routines
-;------------------------------------------------------------------------------
-
-; Loads the Blob Thrower sprite and hitbox into RAM
-blobThrower_loadSprite: ;{ 02:4DB1
-    ; Load the sprite
-    ld hl, enAI_blobThrower.sprite ;$4ffe
-    ld de, enSprite_blobThrower
-    ld b, $3e
-    .loop_A:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .loop_A
-    ; Load the hitbox
-    ld hl, enAI_blobThrower.hitbox
-    ld de, hitboxC360
-    ld b, $04
-    .loop_B:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .loop_B
-    ; Clear timer
-    ld a, $00
-    ld [blobThrower_actionTimer], a
-ret
-;}
-
 ;------------------------------------------------------------------------------
 ; Item Orb and Item AI
 ;  Note 1: Orbs have even enemy IDs, items have odd enemy IDs
@@ -2638,8 +1921,7 @@ ret
     ld de, .blobHeader_C
     call .spewBlob
     ld de, .blobHeader_D
-    call .spewBlob
-ret
+    jp .spewBlob
 
 .getFacingDirection: ; 02:4F87 - Shared with Arachnus
     ld a, [samus_onscreenXPos]
@@ -3303,8 +2585,7 @@ enAI_glowFly: ;{ 02:54A1
         jr z, .case_launch
     cp $45
         jr z, .case_windUpFrame
-    call .animateIdle
-ret
+    jp .animateIdle
 
 .case_windUpFrame:
     ; Animate wind-up frame before movement
@@ -3329,8 +2610,7 @@ ret
     ld a, SPRITE_GLOWFLY_MOVING ; $2F
     ldh [hEnemy.spriteType], a
     call .move
-    call .tryFlip
-ret
+    jr .tryFlip
 
 .move:
     ld hl, hEnemy.xPos
@@ -3460,6 +2740,8 @@ ret
     cp $0b
         ret c
 
+    ; clear the animation counter
+    ld [hl], $00
     ; inc the state
     ldh a, [hEnemy.state]
     inc a
@@ -3467,11 +2749,6 @@ ret
     ; set the next sprite ID
     ld a, SPRITE_ROCKICICLE_IDLE_2 ; $35
     ldh [hEnemy.spriteType], a
-    ; clear the counter
-    ld hl, hEnemy.counter
-    ld a, [hl]
-    xor a
-    ld [hl], a
 ret
 
 
@@ -3484,15 +2761,12 @@ ret
     cp $07
         ret c
 
+    ; clear the animation counter
+    ld [hl], $00
     ; inc the state
     ldh a, [hEnemy.state]
     inc a
     ldh [hEnemy.state], a
-    ; clear the animation counter
-    ld hl, hEnemy.counter
-    ld a, [hl]
-    xor a
-    ld [hl], a
 ret
 
 
@@ -3514,8 +2788,6 @@ ret
     ldh [hEnemy.state], a
 ret
 
-    ret ; Unreferenced return
-
 .moveOnePixel:
     ; Move one pixel
     ld hl, hEnemy.yPos
@@ -3526,8 +2798,7 @@ ret
     ldh a, [hEnemy.generalVar]
     inc a
     ldh [hEnemy.generalVar], a
-    ; Return distance travelled
-    ldh a, [hEnemy.generalVar]
+    ; Return distance travelled in A
 ret
 
 
@@ -3540,9 +2811,8 @@ ret
     cp $10 ; Wait until 16 frames have elapsed
         ret nz
 
-    ; clear animation counter
-    xor a
-    ld [hl], a
+    ; clear the animation counter
+    ld [hl], $00
     ; inc the state
     ldh a, [hEnemy.state]
     inc a
@@ -10229,8 +9499,6 @@ ret
 ret
 
 .fireballHit:
-    ld a, [en_bgCollisionResult]
-    ld [unknown_C42D], a
     xor a
     ldh [hEnemy.counter], a
     ldh [hEnemy.state], a
@@ -11071,7 +10339,7 @@ baby_checkBlocks: ;{ 02:7D2A - Check if blocks need to be cleared
             jr z, .endIf_A
 
         .clearBlockY:
-        ld a, [metroid_babyTouchingTile]
+        ld a, b
         cp $64 ; Tile ID of the block the baby can clear
         call z, baby_clearBlock
     
@@ -11102,7 +10370,7 @@ baby_checkBlocks: ;{ 02:7D2A - Check if blocks need to be cleared
             ret z
     
         .clearBlockX:
-        ld a, [metroid_babyTouchingTile]
+        ld a, b
         cp $64 ; Tile ID of the block the baby can clear
             call z, baby_clearBlock
     

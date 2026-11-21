@@ -3470,7 +3470,7 @@ ret ;}
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 alpha_getSpeedVector: ;{ 01:71CB - Called from bank 2
     ; Use angle to index into jump table
-    ld hl, .jumpTable
+    ld hl, .angleTable
     ld a, [hEnemy.state] ; [$EA] - Metroid angle
     add a
     ld e, a
@@ -3478,71 +3478,28 @@ alpha_getSpeedVector: ;{ 01:71CB - Called from bank 2
     add hl, de
     ; Load target address
     ld a, [hl+]
-    ld d, [hl]
-    ld h, d
-    ld l, a
-    ; Jump!
-    jp hl
-    
-    .jumpTable: ; 01:71DB
-        dw .angle_0 ; $00 - Right                 (3,0)
-        dw .angle_1 ; $01 - Left                 (-3,0)
-        dw .angle_2 ; $02 - Down                  (0,3)
-        dw .angle_3 ; $03 - Up                    (0,-3)
-        dw .angle_4 ; $04 - Bottom-right quadrant (3,1)
-        dw .angle_5 ; $05 -  ""                   (2,2)
-        dw .angle_6 ; $06 -  ""                   (1,3)
-        dw .angle_7 ; $07 - Bottom-left quadrant (-3,1)
-        dw .angle_8 ; $08 -  ""                  (-2,2)
-        dw .angle_9 ; $09 -  ""                  (-1,3)
-        dw .angle_A ; $0A - Upper-right quadrant (3,-1)
-        dw .angle_B ; $0B -  ""                  (2,-2)
-        dw .angle_C ; $0C -  ""                  (1,-3)
-        dw .angle_D ; $0D - Upper-left quadrant (-3,-1)
-        dw .angle_E ; $0E -  ""                 (-2,-2)
-        dw .angle_F ; $0F -  ""                 (-1,-3)
+    ld c, [hl]
+    ld b, a
+ret
 
-; Cardinal directions
-.angle_0: ld bc, $0003
-    ret
-.angle_1: ld bc, $0083
-    ret
-.angle_2: ld bc, $0300
-    ret
-.angle_3: ld bc, $8300
-    ret
+.angleTable: ; 01:71DB
+    dw $0003 ; $00 - Right                 (3,0)
+    dw $0083 ; $01 - Left                 (-3,0)
+    dw $0300 ; $02 - Down                  (0,3)
+    dw $8300 ; $03 - Up                    (0,-3)
+    dw $0103 ; $04 - Bottom-right quadrant (3,1)
+    dw $0202 ; $05 -  ""                   (2,2)
+    dw $0301 ; $06 -  ""                   (1,3)
+    dw $0183 ; $07 - Bottom-left quadrant (-3,1)
+    dw $0282 ; $08 -  ""                  (-2,2)
+    dw $0381 ; $09 -  ""                  (-1,3)
+    dw $8103 ; $0A - Upper-right quadrant (3,-1)
+    dw $8202 ; $0B -  ""                  (2,-2)
+    dw $8301 ; $0C -  ""                  (1,-3)
+    dw $8183 ; $0D - Upper-left quadrant (-3,-1)
+    dw $8282 ; $0E -  ""                 (-2,-2)
+    dw $8381 ; $0F -  ""                 (-1,-3)
 
-; Bottom-right quadrant
-.angle_4: ld bc, $0103
-    ret
-.angle_5: ld bc, $0202
-    ret
-.angle_6: ld bc, $0301
-    ret
-
-; Bottom-left quadrant
-.angle_7: ld bc, $0183
-    ret
-.angle_8: ld bc, $0282
-    ret
-.angle_9: ld bc, $0381
-    ret
-
-; Upper-right quadrant
-.angle_A: ld bc, $8103
-    ret
-.angle_B: ld bc, $8202
-    ret
-.angle_C: ld bc, $8301
-    ret
-
-; Upper-left quadrant
-.angle_D: ld bc, $8183
-    ret
-.angle_E: ld bc, $8282
-    ret
-.angle_F: ld bc, $8381
-    ret
 ;}
 
 ;------------------------------------------------------------------------------
@@ -3550,8 +3507,7 @@ alpha_getSpeedVector: ;{ 01:71CB - Called from bank 2
 ;  Also used by the Omega Metroids' fireballs
 gamma_getAngle: ;{ 01:723B
     call metroid_getDistanceAndDirection
-    call gamma_getAngleFromTable
-ret ;}
+    ; fallthrough
 
 gamma_getAngleFromTable: ;{ 01:7242
     ; If vertically aligned, picked a vertical direction
@@ -3708,7 +3664,7 @@ ret ;}
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 gamma_getSpeedVector: ;{ 01:7319
     ; Use angle to index into jump table
-    ld hl, .jumpTable
+    ld hl, .angleTable
     ld a, [hEnemy.state] ; [$EA] - Metroid angle
     add a
     ld e, a
@@ -3716,95 +3672,35 @@ gamma_getSpeedVector: ;{ 01:7319
     add hl, de
     ; Load target address
     ld a, [hl+]
-    ld d, [hl]
-    ld h, d
-    ld l, a
-    ; Jump!
-    jp hl
+    ld c, [hl]
+    ld b, a
+ret
 
-    .jumpTable: ; 01:7329
-        dw .angle_00 ; $00 - Right
-        dw .angle_01 ; $01 - Left
-        dw .angle_02 ; $02 - Down
-        dw .angle_03 ; $03 - Up
-        dw .angle_04 ; $04 - Bottom-right quadrant
-        dw .angle_05 ; $05
-        dw .angle_06 ; $06
-        dw .angle_07 ; $07
-        dw .angle_08 ; $08
-        dw .angle_09 ; $09 - Bottom-left quadrant
-        dw .angle_0A ; $0A
-        dw .angle_0B ; $0B
-        dw .angle_0C ; $0C
-        dw .angle_0D ; $0D
-        dw .angle_0E ; $0E - Top-right quadrant
-        dw .angle_0F ; $0F
-        dw .angle_10 ; $10
-        dw .angle_11 ; $11
-        dw .angle_12 ; $12
-        dw .angle_13 ; $13 - Top-left quadrant
-        dw .angle_14 ; $14
-        dw .angle_15 ; $15
-        dw .angle_16 ; $16
-        dw .angle_17 ; $17
-
-; Cardinal directions
-.angle_00: ld bc, $0004
-    ret
-.angle_01: ld bc, $0084
-    ret
-.angle_02: ld bc, $0400
-    ret
-.angle_03: ld bc, $8400
-    ret
-
-; Bottom-right quadrant
-.angle_04: ld bc, $0104
-    ret
-.angle_05: ld bc, $0204
-    ret
-.angle_06: ld bc, $0303
-    ret
-.angle_07: ld bc, $0402
-    ret
-.angle_08: ld bc, $0401
-    ret
-
-; Bottom-left quadrant
-.angle_09: ld bc, $0184
-    ret
-.angle_0A: ld bc, $0284
-    ret
-.angle_0B: ld bc, $0383
-    ret
-.angle_0C: ld bc, $0482
-    ret
-.angle_0D: ld bc, $0481
-    ret
-
-; Upper-right quadrant
-.angle_0E: ld bc, $8104
-    ret
-.angle_0F: ld bc, $8204
-    ret
-.angle_10: ld bc, $8303
-    ret
-.angle_11: ld bc, $8402
-    ret
-.angle_12: ld bc, $8401
-    ret
-
-; Upper-left quadrant
-.angle_13: ld bc, $8184
-    ret
-.angle_14: ld bc, $8284
-    ret
-.angle_15: ld bc, $8383
-    ret
-.angle_16: ld bc, $8482
-    ret
-.angle_17: ld bc, $8481
-    ret
+.angleTable: ; 01:7329
+    dw $0004 ; $00 - Right
+    dw $0084 ; $01 - Left
+    dw $0400 ; $02 - Down
+    dw $8400 ; $03 - Up
+    dw $0104 ; $04 - Bottom-right quadrant
+    dw $0204 ; $05
+    dw $0303 ; $06
+    dw $0402 ; $07
+    dw $0401 ; $08
+    dw $0184 ; $09 - Bottom-left quadrant
+    dw $0284 ; $0A
+    dw $0383 ; $0B
+    dw $0482 ; $0C
+    dw $0481 ; $0D
+    dw $8104 ; $0E - Top-right quadrant
+    dw $8204 ; $0F
+    dw $8303 ; $10
+    dw $8402 ; $11
+    dw $8401 ; $12
+    dw $8184 ; $13 - Top-left quadrant
+    dw $8284 ; $14
+    dw $8383 ; $15
+    dw $8482 ; $16
+    dw $8481 ; $17
 ;}
 
 ; HL = B * E

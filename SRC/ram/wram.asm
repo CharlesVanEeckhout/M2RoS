@@ -251,8 +251,6 @@ loadEnemies_oscillator: ds 1 ; $C401 - Oscillates between 0 and 1 every frame. $
 
 en_bgCollisionResult: ds 1 ; $C402 - Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
 
-ds 4 ; $C403..$C406 - Unused
-
 enemySolidityIndex: ds 1 ;$C407: Copy of enemySolidityIndex_canon (actually used by enemy code)
 
 ; This copy of the scrolling history appears to be used in the function that adjusts enemy positions due to scrolling
@@ -276,23 +274,15 @@ rightEdge_pixel:   ds 1 ; $C414
 leftEdge_screen:   ds 1 ; $C415
 leftEdge_pixel:    ds 1 ; $C416
 
-metroid_babyTouchingTile: ds 1 ; $C417 - The tile index the baby metroid is touching, according to the enemy BG collision function
-
 unused_romBankPlusOne: ds 1 ; $C418 - Set to [room bank+1] in $2:4000, never read
-
-ds 2 ; $C419..$C41A - Unused
 
 metroid_postDeathTimer: ds 1 ; $C41B - 90h*2 frame timer for waiting to restore the room's normal music
 metroid_state: ds 1 ; $C41C - General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
-
-ds 1 ;$C41D - Unused
 
 ; Initial Y,X position for the current working enemy for the current frame
 ;  Used for reverting the enemy's position in the case of a solid collision
 enemy_yPosMirror: ds 1 ; $C41E
 enemy_xPosMirror: ds 1 ; $C41F
-
-ds 2 ; $C420..$C421 - Unused
 
 samus_hurtFlag: ds 1 ; $C422 - Samus damage flag
 samus_damageBoostDirection: ds 1 ; $C423 - Damage boost direction
@@ -308,10 +298,6 @@ numEnemies:
 .total:     ds 1 ; $C425 - Number of enemies (both currently active and offscreen)
 .active:    ds 1 ; $C426 - Number of currently active enemies (used to exit drawEnemies early).
 .offscreen: ds 1 ; $C427 - Number of offscreen enemies loaded in.
-
-ds 5 ; $C428..$C42C - Unused
-
-unknown_C42D: ds 1 ; $C42D - en_bgCollisionResult for the Omega Metroid's fireball. Written to, but never read
 
 drawEnemy_yPos:   ds 1 ; $C42E - Set to enemy Y position in $1:5A9A
 drawEnemy_xPos:   ds 1 ; $C42F - Set to enemy X position in $1:5A9A
@@ -343,8 +329,6 @@ seekSamusTemp:
 .enemyX: ds 1 ; $C43D: enemy X pos + $10
 .samusY: ds 1 ; $C43E: samus Y pos + $10
 .samusX: ds 1 ; $C43F: samus X pos + $10
-
-ds 11 ; $C440..$C44A - Unused
 
 saveLoadSpawnFlagsRequest: ds 1 ; $C44B - Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 
@@ -394,8 +378,6 @@ enSprCollision:
 
 gamma_stunCounter: ds 1 ; $C46A - Gamma Metroid stun counter
 
-ds 1 ; $C46B - Unused
-
 zeta_stunCounter: ds 1 ; $C46C - Zeta Metroid stun counter
 
 enemy_weaponType: ds 1 ; $C46D - Set to FFh in $2:412F. Value for $D06F in $2:4DD3
@@ -416,13 +398,9 @@ omega_samusPrevHealth: ds 1 ; $C470 - Samus's previous health value (low byte on
 
 metroid_screwKnockbackDone: ds 1 ; $C471 - Set to 1 when a Metroid's screw attack knockback is finished.
 
-ds 1 ; $C472: Unused
-
 larva_hurtAnimCounter: ds 1 ; $C473 - Set to 3, counts down to 0 before resetting sprite type to $CE
 larva_bombState: ds 1 ; $C474 - Weird variable. Set to $02 when a metroid is bombed to prevent others from latching on to you for a bit. Set to $01 when touched normally, but never acknowledged elsewhere.
 larva_latchState: ds 1 ; $C475 - Larva Metroid variable: $02: Latched, $01: Flying away, $00: Unlatch
-
-ds 1 ;  $C476 - Unused
 
 enemy_tempSpawnFlag: ds 1 ; $C477 - Spawn flag for child object to be spawned
 

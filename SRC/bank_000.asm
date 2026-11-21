@@ -57,10 +57,10 @@ LCDCInterruptHandler_farCall: ; 00:3D5C
     push af
         ; Presuming this non-standard convention is because this is an interrupt handler
         ld a, BANK(LCDCInterruptHandler)
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         call LCDCInterruptHandler
         ld a, [bankRegMirror]
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
     pop af
 reti
 
@@ -79,7 +79,7 @@ SECTION "ROM Bank $000 - Main Section", ROM0[$0150]
 
 bootRoutine: ;{ 00:01FB
     di
-    
+
     ; Initialize registers
     ld a, $01
     ldh [rIF], a
@@ -110,60 +110,45 @@ bootRoutine: ;{ 00:01FB
     ; Init stack pointer before calling a function
     ld sp, stack.bottom ; $DFFF
     callFar initializeAudio
-    ; Enable SRAM (?)
-    ld a, RAMG_SRAM_ENABLE
-    ld [rRAMG], a
     
-    ; Clear $DF00-$DF00 (stack)
     xor a
-    ld hl, stack.bottom ; $DFFF
-    ld b, $00
-    .clearLoop_B:
-        ld [hl-], a
-        dec b
-    jr nz, .clearLoop_B
-    
-    ; Clear $C000-$CFFF
+    ; Clear $C000-$DFFF
     ld hl, $dfff
-    ld c, $20
-    ld b, $00
+    ld bc, $2000
     .clearLoop_C:
             ld [hl-], a
-            dec b
+            dec c
             jr nz, .clearLoop_C
-        dec c
+        dec b
     jr nz, .clearLoop_C
     
     ; Fill $C500-$CAFF with $FF
     ld a, $ff
     ld hl, $caff
-    ld c, $06
-    ld b, $00
+    ld bc, $0600
     .clearLoop_D:
             ld [hl-], a
-            dec b
+            dec c
             jr nz, .clearLoop_D
-        dec c
+        dec b
     jr nz, .clearLoop_D
 
     ; Clear $8000-$9FFF (VRAM)
     xor a
     ld hl, $9fff
-    ld c, $20
-    ld b, $00
+    ld bc, $2000
     .clearLoop_E:
             ld [hl-], a
-            dec b
+            dec c
             jr nz, .clearLoop_E
-        dec c
+        dec b
     jr nz, .clearLoop_E
 
     ; Clear OAM
-    ld hl, $feff
-    ld b, $00
+    ld hl, $fea0
     .clearLoop_F:
-        ld [hl-], a
-        dec b
+        dec l
+        ld [hl], a
     jr nz, .clearLoop_F
 
     ; Clear HRAM
@@ -314,18 +299,18 @@ VBlankHandler: ;{ 00:0154
     and a
     jr z, .else_B
         ld a, [currentLevelBank]
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         call VBlank_updateMap
         jr .endIf_B
     .else_B:
         ld a, BANK(VBlank_updateStatusBar)
-        ld [rMBC_BANK_REG], a
+        ld [rROM2B], a
         call VBlank_updateStatusBar
     .endIf_B:
 ; End vblank
     call OAM_DMA ; Sprite DMA
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     pop hl
@@ -336,16 +321,16 @@ reti
 
 .queenBranch:
     ld a, BANK(VBlank_updateStatusBar)
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     call VBlank_updateStatusBar
     call OAM_DMA
     
     ld a, BANK(VBlank_drawQueen)
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     call VBlank_drawQueen
     
     ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+    ld [rROM2B], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ; Return from interrupt
@@ -408,9 +393,6 @@ waitForNextFrame: ;{ 00:031C
     
     xor a
     ldh [hVBlankDoneFlag], a
-    ld a, $c0
-    ldh [hUnusedFlag_1], a
-    xor a
     ldh [hOamBufferIndex], a
 ret
 ;}
@@ -4770,8 +4752,6 @@ samus_moveRightInAir: ;{ 00:1CF5
     adc $00
     and $0f
     ldh [hSamusXScreen], a
-    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
-    ld [tileX], a
     
     ; Perform collision test
     call collision_samusHorizontal.right
@@ -4808,8 +4788,6 @@ samus_moveLeftInAir: ;{ 00:1D22
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
-    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
-    ld [tileX], a
     
     ; Perform collision test
     call collision_samusHorizontal.left
@@ -5608,15 +5586,6 @@ getTileIndex: ;{ 00:2250 - Called by enemy routines
 .projectile: ; 00:2266 - Entry point for beam routines
     ; Get address of tile
     call getTilemapAddress
-    ; Adjust address based on which tilemap is active (unused functionality?)
-    ld a, [gameOver_LCDC_copy]
-    and $08
-    jr z, .endIf
-        ld a, $04
-        add h
-        ld h, a
-        ld [pTilemapDestHigh], a
-    .endIf:
 
     ; Wait for HBlank and read once
     .waitLoop_A:
@@ -5712,124 +5681,6 @@ getTilemapAddress: ;{ 00:22BC
     ld [pTilemapDestHigh], a
 ret ;}
 
-; Given a particular tilemap address, possibly returns the XY pixel coordinates of the tile
-;  Function is unused
-getTilemapCoordinates: ;{ 00:22E1
-    ; DE = pTilemapDest
-    ; format is %100110YY YYYXXXXX
-    ld a, [pTilemapDestHigh]
-    ld d, a
-    ld a, [pTilemapDestLow]
-    ld e, a
-    ; Can't entirely make sense of this math that calculates tileY
-    ; essentially DE/16 (D is discarded so the rotated-in bits don't matter)
-    ld b, $04
-    .loop:
-        rr d
-        rr e
-        dec b
-    jr nz, .loop
-    ; now E is %10YYYYYX
-    ld a, e
-    ; The $8x part adjusts for the $9800 base address
-    ; The $x4 seems to adjust for 2 rows of tiles
-    sub $84
-    ; Mask out lowest bit containing X pos MSB
-    and $fe
-    ; now A is %00YYYYY0 - 4
-    ; tileY = A*4 + 8 = (%00YYYYY0 - 4)*4 + 8 = %YYYYY000 - 8
-    ; this is wrong, it should be %YYYYY000 + OAM_Y_OFS
-    rlca
-    rlca
-    add $08
-    ld [tileY], a
-    ; tileX = (low mod 32)*8 + OAM_X_OFS
-    ld a, [pTilemapDestLow]
-    and $1f
-    rla
-    rla
-    rla
-    add OAM_X_OFS
-    ld [tileX], a
-ret ;}
-
-; Unused function - no idea what this could have been used for
-;  Seems to assume HL, DE, and C227 were set before entry
-unknownProc_230C: ;{ 00:230C
-    ; Exit if zero
-    ld a, [unknown_C227]
-    and a
-        ret z
-    
-    ; Set loop counter
-    ld c, $03
-    ; Clear value
-    xor a
-    ld [unknown_C227], a
-    .loop:
-        ; Branch if upper nybble is nonzero
-        ld a, [de]
-        ld b, a
-        swap a
-        and $0f
-            jr nz, .branch_A
-    
-        ; Load 0 to HL if unknown var is non-zero
-        ld a, [unknown_C227]
-        and a
-        ld a, $00
-        jr nz, .endIf_A
-            ; Else load $FF to HL
-            ld a, $ff
-        .endIf_A:
-    .reentry_A:
-        ld [hl+], a
-        
-        ; Branch is lower nybble is nonzero
-        ld a, b
-        and $0f
-            jr nz, .branch_B
-    
-        ; Load 0 to HL if var is non-zero
-        ld a, [unknown_C227]
-        and a
-        ld a, $00
-        jr nz, .endIf_B
-            ; Write FF to HL if this is the last loop iteration
-            ld a, $01
-            cp c
-            ld a, $00
-            jr z, .endIf_B
-                ld a, $ff
-        .endIf_B:
-    .reentry_B:
-        ld [hl+], a
-        ; Get address of next source byte
-        dec e
-        ; Decrement loop counter
-        dec c
-    jr nz, .loop
-    ; Clear variable
-    xor a
-    ld [unknown_C227], a
-ret
-
-.branch_A:
-    push af
-    ; Set variable to 1
-    ld a, $01
-    ld [unknown_C227], a
-    pop af
-jr .reentry_A
-
-.branch_B:
-    push af
-    ; Set variable to 1
-    ld a, $01
-    ld [unknown_C227], a
-    pop af
-jr .reentry_B
-;}
 
 ;------------------------------------------------------------------------------
 oamDMA_routine: ;{ 00:235C Copied to $FFA0 in HRAM
@@ -6442,8 +6293,6 @@ executeDoorScript: ;{ 00:239C
     ld [doorIndexLow], a
     ld [doorIndexHigh], a
     ld [doorExitStatus], a
-    ; Otherwise unused variable
-    ld [wramUnknown_D0A8], a
 ret ;}
 
 ; Door script load graphics routine
@@ -6847,8 +6696,6 @@ ret
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
     add SCREEN_WIDTH_PX / 2 + $00
@@ -6876,8 +6723,6 @@ ret
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     add SCREEN_WIDTH_PX / 2 + $10
@@ -6897,8 +6742,6 @@ ret
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     add SCREEN_WIDTH_PX / 2 + $20
@@ -6921,8 +6764,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $10
@@ -6950,8 +6791,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $20
@@ -6971,8 +6810,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $30
@@ -6995,8 +6832,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $30
@@ -7024,8 +6859,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add SCREEN_HEIGHT_PX / 2 + $20
@@ -7045,8 +6878,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add SCREEN_HEIGHT_PX / 2 + $10
@@ -7066,8 +6897,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add SCREEN_HEIGHT_PX / 2 + $00
@@ -7090,8 +6919,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $30
@@ -7119,8 +6946,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     sub SCREEN_HEIGHT_PX / 2 + $20
@@ -7140,8 +6965,6 @@ ret ;}
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     sub SCREEN_HEIGHT_PX / 2 + $10
@@ -7246,8 +7069,6 @@ VBlank_variaAnimation: ;{ 00:2BF4
         ld l, a
         ldh a, [hVramTransfer.destAddrHigh]
         ld h, a
-        ; Unused line since DE is immediately overwritten
-        ld de, $0010
         .loop:
             ; Update DE
             push hl
@@ -7335,9 +7156,6 @@ waitOneFrame: ;{ 00:2C5E
     xor a
     ldh [hVBlankDoneFlag], a
     ; Reset OAM buffer index
-    ld a, $c0
-    ldh [hUnusedFlag_1], a ; Likely the unused high-byte of the OAM buffer index/pointer
-    xor a
     ldh [hOamBufferIndex], a
 ret ;}
 
@@ -7391,7 +7209,6 @@ tryPausing: ;{ 00:2C79
     ; Clear variables
     xor a
     ld [debugItemIndex], a
-    ld [unused_D011], a
     
     ; Set HL to align with sprite tile byte
     ld hl, wram_oamBuffer + $2
@@ -7457,6 +7274,7 @@ gameMode_Paused: ;{ 00:2CED
     bit B_PAD_START, a
         ret z
 
+.unpause:
     ; Return to main game mode if start is pressed
     ld a, $93
     ld [bg_palette], a
@@ -7475,20 +7293,10 @@ ret
     cp PAD_START
         jr nz, debugPauseMenu
 
-    ; Return to main game mode if start is pressed
-    ; Reset palette
-    ld a, $93
-    ld [bg_palette], a
-    ld [ob_palette0], a
     ; Clear sprites
     call OAMClear.unused
-    ; Play unpause sound effect
-    ld a, $02
-    ld [audioPauseControl], a
-    ; Set game mode
-    ld a, _id_gameMode_Main
-    ldh [gameMode], a
-ret ;}
+    jr gameMode_Paused.unpause
+;}
 
 debugPauseMenu: ;{ 00:2D39
 ;{ Main input logic for debug menu
@@ -7914,32 +7722,8 @@ killSamus: ;{ 00:2FA2
     ldh [gameMode], a
 ret ;}
 
-prepUnusedDeathAnimation: ;{ 00:2FC8 - Unused
-    ; Force Samus to face screen for 160 frames
-    ld a, $a0
-    ld [samus_turnAnimTimer], a
-    ; Set pose to standing, in turnaround state
-    ld a, $80 | pose_standing
-    ld [samusPose], a
-    ; Set timer
-    ; Note: The reason it is suspected that this function pertains to
-    ;  "unusedDeathAnimation" is because it sets deathAnimTimer but
-    ;  not deathFlag.
-    ld a, $20
-    ld [deathAnimTimer], a
-    ; Set base address of tile effect
-    xor a
-    ld [pDeathAltAnimBaseLow], a
-    ld a, $80
-    ld [pDeathAltAnimBaseHigh], a
-ret ;}
-
 ; Vblank routine for death
 VBlank_deathSequence: ;{ 00:2FE1
-    ld a, [deathFlag]
-    and a
-        jr z, unusedDeathAnimation
-
     ; Animate once every 4 frames
     ldh a, [frameCounter]
     and $03
@@ -8010,84 +7794,6 @@ deathAnimationTable:: ; 00:3042
     db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
     db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
-; Only jumped to if the death animation vblank handler is called, but the death flag is not set
-;  which is impossible
-; Possibly not intended as a death animation
-unusedDeathAnimation: ;{ 00:3062
-    ; Animate every other frame
-    ldh a, [frameCounter]
-    and $01
-    jr nz, .endIf_A
-        ; Get pointer for starting offset
-        ld a, [pDeathAltAnimBaseLow]
-        ld l, a
-        ld a, [pDeathAltAnimBaseHigh]
-        ld h, a
-        
-        ; Set increment value for loop
-        ld de, $0010
-        .eraseLoop:
-            ; Clear byte
-            xor a
-            ld [hl], a
-            ; Iterate to next byte
-            add hl, de
-            ; Exit loop once $xx0x is reached
-            ld a, l
-            and $f0
-        jr nz, .eraseLoop
-        ; Iterate to next row of pixels to clear
-        ; HL-$00FF (to get to the next byte of the starting tile)
-        ld a, l
-        sub $ff
-        ld l, a
-        ld a, h
-        sbc $00
-        ld h, a
-        ; If HL points to the second tile in a row
-        ld a, l
-        cp $10
-        jr nz, .endIf_B
-            ; Then add $F0 to HL so it points to the first tile of the next row
-            add $f0
-            ld l, a
-            ld a, h
-            adc $00
-            ld h, a
-        .endIf_B:
-        ; Save the pointer
-        ld a, l
-        ld [pDeathAltAnimBaseLow], a
-        ld a, h
-        ld [pDeathAltAnimBaseHigh], a
-        ; Stop animating once 5 rows have been cleared
-        cp $85
-        jr nz, .endIf_A
-            ; Clear timer
-            xor a
-            ld [deathAnimTimer], a
-            ; Note: This does not set deathFlag
-            ;  or gameMode like it should.
-    .endIf_A:
-
-    ; Set scroll values
-    ld a, [scrollY]
-    ldh [rSCY], a
-    ld a, [scrollX]
-    ldh [rSCX], a
-    ; DMA sprites
-    call OAM_DMA
-    ; Return from interrupt
-    ld a, [bankRegMirror]
-    ld [rROM2B], a
-    ld a, $01
-    ldh [hVBlankDoneFlag], a
-    pop hl
-    pop de
-    pop bc
-    pop af
-reti ;}
-
 ; Sprite-sprite collision routines {
 
 ; 00:30BB - Bomb-enemy collision detection
@@ -8128,43 +7834,10 @@ ret ;}
 collision_bombOneEnemy: ;{ 00:30EA
     ; push the enemy base address on the stack
     push hl
-    inc hl ; Iterate past status byte
-    ; Load enemy Y
-    ld a, [hl+]
-    ; Skip collision if offscreen vertically
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enY], a
+    call collision_OneEnemy.start
 
-    ; Load enemy X
-    ld a, [hl+]
-    ; Skip collision if offscreen horizontally
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enX], a
+    call collision_OneEnemy.hitboxHL
 
-    ; Load enemy sprite type
-    ld a, [hl+]
-    ldh [hCollision_enSprite], a
-    ; Load enemy attributes
-    inc hl
-    ld a, [hl+]
-    ldh [hCollision_enAttr], a
-
-    ; Load hitbox pointer of enemy
-    ldh a, [hCollision_enSprite]
-    sla a
-    ld e, a
-    ld d, $00
-    rl d
-    ld hl, enemyHitboxPointers
-    add hl, de
-    ; Load pointer to HL
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld l, e
     ; Save enY to B
     ldh a, [hCollision_enY]
     ld b, a
@@ -8361,18 +8034,16 @@ collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
     switchBank handleProjectiles
 ret ;}
 
-; Projectile-enemy single collision (beams/missile)
-collision_projectileOneEnemy: ;{ 00:31F1
-    ; push the enemy base address on the stack
-    push hl
-    inc hl ; Iterate HL past enemy status byte
-    
-    ; Load enemy Y, and skip collision if offscreen
+
+collision_OneEnemy:
+.start:
+    ; Load enemy Y, exit if offscreen
+    inc hl
     ld a, [hl+]
     cp $e0
         jp nc, .exit_noHit
     ldh [hCollision_enY], a
-    ; Load enemy X, and skip collision if offscreen
+    ; Load enemy X, exit if offscreen
     ld a, [hl+]
     cp $e0
         jp nc, .exit_noHit
@@ -8381,10 +8052,44 @@ collision_projectileOneEnemy: ;{ 00:31F1
     ; Load enemy sprite type
     ld a, [hl+]
     ldh [hCollision_enSprite], a
+    
     ; Load enemy attributes
     inc hl
-    ld a, [hl]
+    ld a, [hl+]
     ldh [hCollision_enAttr], a
+    ret
+
+.hitboxHL:
+    ; Load hitbox pointer of enemy
+    ldh a, [hCollision_enSprite]
+    sla a
+    ld e, a
+    ld d, $00
+    rl d
+    ld hl, enemyHitboxPointers
+    add hl, de
+    ; Load pointer to HL
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ret
+
+.exit_noHit:
+    ; double return
+    pop hl
+    ; pop the enemy base address off the stack
+    pop hl
+    ; Clear carry flag (no solid collision occurred)
+    scf
+    ccf
+ret ;}
+
+
+; Projectile-enemy single collision (beams/missile)
+collision_projectileOneEnemy: ;{ 00:31F1
+    ; push the enemy base address on the stack
+    push hl
+    call collision_OneEnemy.start
 
     ; Exit if enemy damage is zero
     ldh a, [hCollision_enSprite]
@@ -8396,20 +8101,7 @@ collision_projectileOneEnemy: ;{ 00:31F1
     and a
         jp z, .exit_noHit
 
-    ; Load hitbox pointer of enemy
-    ldh a, [hCollision_enSprite]
-    sla a
-    ld e, a
-    ld d, $00
-    rl d
-    ld hl, enemyHitboxPointers
-    add hl, de
-    ; Load pointer to HL
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld l, e
+    call collision_OneEnemy.hitboxHL
     
     ; Save enY to B
     ldh a, [hCollision_enY]
@@ -8632,26 +8324,7 @@ ret ;}
 collision_samusOneEnemy: ;{ 00:3324
     ; push the enemy base address on the stack
     push hl
-    ; Load enemy Y, exit if offscreen
-    inc hl
-    ld a, [hl+]
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enY], a
-    ; Load enemy X, exit if offscreen
-    ld a, [hl+]
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enX], a
-    
-    ; Load enemy sprite type
-    ld a, [hl+]
-    ldh [hCollision_enSprite], a
-    
-    ; Load enemy attributes
-    inc hl
-    ld a, [hl+]
-    ldh [hCollision_enAttr], a
+    call collision_OneEnemy.start
     
     ; Load enemy ice counter
     inc hl
@@ -8662,20 +8335,7 @@ collision_samusOneEnemy: ;{ 00:3324
     ld a, [hl]
     ldh [hCollision_enIce], a
     
-    ; Get hitbox pointer of enemy
-    ldh a, [hCollision_enSprite]
-    sla a
-    ld e, a
-    ld d, $00
-    rl d
-    ld hl, enemyHitboxPointers
-    add hl, de
-    ; Load pointer to HL
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld l, e
+    call collision_OneEnemy.hitboxHL
     
     ; Save enY to B
     ldh a, [hCollision_enY]
@@ -8769,6 +8429,7 @@ collision_samusOneEnemy: ;{ 00:3324
     ; Samus Y - Top
     ldh a, [hTemp.a]
     sub b
+.common:
     ; exit if (Bottom - Top) <= (Y - Top)
     cp c
         jp nc, .exit_noHit
@@ -8957,6 +8618,7 @@ ret
 .exit_noHit:
     ; pop the enemy base address off the stack
     pop hl
+collision_exitNoHit:
     ; Clear carry flag (no solid collision occurred)
     scf
     ccf
@@ -9110,26 +8772,7 @@ ret ;}
 collision_samusOneEnemyVertical: ;{ 00:3545
     ; push the enemy base address on the stack
     push hl
-    ; Load enemy Y, exit if offscreen
-    inc hl
-    ld a, [hl+]
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enY], a
-    ; Load enemy X, exit if offscreen
-    ld a, [hl+]
-    cp $e0
-        jp nc, .exit_noHit
-    ldh [hCollision_enX], a
-    
-    ; Load enemy sprite type
-    ld a, [hl+]
-    ldh [hCollision_enSprite], a
-    
-    ; Load enemy attributes
-    inc hl
-    ld a, [hl+]
-    ldh [hCollision_enAttr], a
+    call collision_OneEnemy.start
     
     ; Load enemy ice counter
     inc hl
@@ -9140,20 +8783,7 @@ collision_samusOneEnemyVertical: ;{ 00:3545
     ld a, [hl]
     ldh [hCollision_enIce], a
     
-    ; Get hitbox pointer of enemy
-    ldh a, [hCollision_enSprite]
-    sla a
-    ld e, a
-    ld d, $00
-    rl d
-    ld hl, enemyHitboxPointers
-    add hl, de
-    ; Load pointer to HL
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld l, e
+    call collision_OneEnemy.hitboxHL
     
     ; Save enY to B
     ldh a, [hCollision_enY]
@@ -9231,209 +8861,7 @@ collision_samusOneEnemyVertical: ;{ 00:3545
     ldh a, [hTemp.a]
     sub b
     ldh [hTemp.c], a ; Save vertical distance
-    ; exit if (Bottom - Top) <= (Y - Top)
-    cp c
-        jp nc, .exit_noHit
-    
-    ; Set default damage boost direction (right)
-    ld a, $01
-    ld [samus_damageBoostDirection], a
-    
-    ; Samus X - Left
-    ldh a, [hCollision_enLeft]
-    ld b, a
-    ldh a, [hTemp.b]
-    sub b
-    ld c, a
-    ; Right - Left
-    ldh a, [hCollision_enRight]
-    sub b
-    ld d, a
-    ; D = (R - L)/2 (center of the hitbox)
-    srl d
-    ; exit if (Right - Left) <= (X - Left)
-    sub c
-        jp c, .exit_noHit
-    
-; A collision has happened
-    ; If Samus was on the left side of the enemy
-    ; (checks if (Samus X - Left < half the width of the hitbox)
-    ld a, d
-    cp c
-    jr c, .endIf_C
-        ; If so, change the damage boost value to the left
-        ld a, $ff
-        ld [samus_damageBoostDirection], a
-    .endIf_C:
-
-    ; Check if screw attack is active
-    ld a, [samusItems]
-    bit itemBit_screw, a
-        jr z, .iceCase
-    ld a, [samusPose]
-    cp pose_spinJump
-        jr z, .screwCase
-    ld a, [samusPose]
-    cp pose_spinStart
-        jr nz, .iceCase
-
-.screwCase: ; { Screw is active
-    ; Don't screw if ice counter is greater than zero and even
-    ldh a, [hCollision_enIce]
-    and a
-    jr z, .endIf_D
-        bit 0, a
-        jr z, .solidCase
-    .endIf_D:
-
-    ; Load enemy's damage from table
-    ldh a, [hCollision_enSprite]
-    ld e, a
-    ld d, $00
-    ld hl, enemyDamageTable
-    add hl, de
-    ld a, [hl]
-    
-    ; Don't screw if damage is $FF (enemy is solid)
-    cp $ff
-        jr z, .solidCase
-    
-    ; Screw attack the enemy
-    ; Save the damage value (unnecessary)
-    ld [samus_damageValue], a
-    ; Hurt flag is not set here, so Samus will not be damaged by this
-    
-    ; pop the enemy base address off the stack
-    pop hl
-    
-    ; Save weapon type to Screw Attack
-    ld a, $10
-    ld [collision_weaponType], a
-    ; Save enemy base pointer
-    ld a, l
-    ld [collision_pEnemyLow], a
-    ld a, h
-    ld [collision_pEnemyHigh], a
-    ; Clear carry flag (no solid collision occurred)
-    scf
-    ccf
-ret ;}
-
-.iceCase:
-    ; Assume enemy is not solid if not frozen (ice == 0)
-    ldh a, [hCollision_enIce]
-    and a
-        jr z, .hurtCase
-.solidCase: ;{
-    ; pop the enemy base address off the stack
-    pop hl
-    ; Note: the caller is expected to save the enemy address, etc. in this case (why?)
-    
-    ; Special Queen logic {
-    ; Check if touching the queen's stunned mouth
-    ldh a, [hCollision_enSprite]
-    cp QUEEN_ACTOR_MOUTH_STUNNED ; $F7
-    jr nz, .endIf_E
-        ; Check if Samus' pose is (morph OR morphJump OR morphFall)
-        ld a, [samusPose]
-        cp pose_morph
-            jr z, .then
-        cp pose_morphJump
-            jr z, .then
-        cp pose_morphFall
-            jr nz, .endIf_E
-        .then:
-            ; Set state to Samus entering the Queen's mouth
-            ld a, $01
-            ld [queen_eatingState], a
-            ; Set pose
-            ld a, pose_beingEaten ; $18
-            ld [samusPose], a
-    .endIf_E: ;}
-    ; Set carry flag (to indicate a solid collision)
-    scf
-ret ;}
-
-.hurtCase: ;{
-    ; Sprite 0 (tsumuri, horizontal frame 1) is solid? What?
-    ldh a, [hCollision_enSprite]
-    and a
-        jr z, .solidCase
-
-    ; Load damage value for sprite
-    ld e, a
-    ld d, $00
-    ld hl, enemyDamageTable
-    add hl, de
-    ld a, [hl]
-    
-    ; Check if enemy is solid
-    cp $ff
-        jr z, .solidCase
-    ; Check if enemy drains health
-    cp $fe
-        jr z, .healthDrain
-    ; Check if enemy is intangible (damage == 0)
-    and a
-        jr z, .touchNoDamage
-
-    ; Save damage value
-    ld [samus_damageValue], a
-    ; Actually hurt Samus
-    ld a, $01
-    ld [samus_hurtFlag], a
-    
-    ; pop the enemy base address off the stack
-    pop hl
-    
-    ; Save the enemy base address
-    ld a, l
-    ld [collision_pEnemyLow], a
-    ; Set "weapon" type to touch
-    ld a, h
-    ld [collision_pEnemyHigh], a
-    ld a, $20
-    ld [collision_weaponType], a
-    
-    ; Set the carry flag (a solid collision occurred)
-    scf
-ret ;}
-
-.healthDrain:
-    ; Drain health
-    call applyDamage.larvaMetroid
-.touchNoDamage:
-    ; pop the enemy base address off the stack
-    pop hl
-    ; Save the enemy base address
-    ld a, l
-    ld [collision_pEnemyLow], a
-    ld a, h
-    ld [collision_pEnemyHigh], a
-    ; Set "weapon" type to touch
-    ld a, $20
-    ld [collision_weaponType], a
-    ; Clear carry flag (no solid collision occurred)
-    scf
-    ccf
-ret
-
-; Exit that clears the carry flag (indicates no collision happened)
-.exit_noHit:
-    ; pop the enemy base address off the stack
-    pop hl
-    ; Clear carry flag (no solid collision occurred)
-    scf
-    ccf
-ret ;}
-
-; Common exit for collision-loop routines that preemptively skip collision checks
-collision_exitNoHit: ; { 00:3698
-    ; We do not pop the enemy address
-    ; Clear carry flag (no solid collision occurred)
-    scf
-    ccf
-ret ;}
+    jp collision_samusOneEnemy.common
 
 collision_samusSpriteHitboxTopTable: ;{ 00:369B - Offset for the top of Samus's hitbox per pose (for sprite collisions)
     ; Table Generated from samus/samus.csv
