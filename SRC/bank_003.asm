@@ -1256,7 +1256,7 @@ queenHandler: ;{ 03:6E36
     .endIf_A:
 
     ; Change palette of neck sprites when hurt
-    ld a, [frameCounter]
+    ld a, [hFrameCounter]
     and $03
     jr nz, .endIf_B
         ld a, [queen_bodyPalette]
@@ -2299,7 +2299,7 @@ jr .saveNeckPointer ; Save Neck Pattern and Exit
 
 .retract: ; Retracting case {
     ; Only act every other frame
-    ld a, [frameCounter]
+    ld a, [hFrameCounter]
     and $01
         ret z
     

@@ -223,7 +223,7 @@ jr mainGameLoop
 ;}
 
 main_handleGameMode: ;{ 00:02F0
-    ldh a, [gameMode]
+    ldh a, [hGameMode]
     rst LOW(RST_28)
 gameModeTable:
     tableEntry gameMode_Title          ; $01
@@ -287,6 +287,7 @@ VBlankHandler: ;{ 00:0154
     and a
         jp nz, VBlank_vramDataTransfer
     ; Handle map updates during door transitions
+    ; the queen door transitions need this to update the map successfully
     ld a, [doorIndexLow]
     and a
         jp nz, VBlank_updateMapDuringTransition
@@ -298,6 +299,7 @@ VBlankHandler: ;{ 00:0154
     ld a, [mapUpdateFlag]
     and a
     jr z, .else_B
+        ; this bankswitch is not needed, because the map data is already in mapUpdateBuffer
         ld a, [currentLevelBank]
         ld [rROM2B], a
         call VBlank_updateMap
@@ -351,14 +353,14 @@ waitForNextFrame: ;{ 00:031C
     jr z, .vBlankNotDone
 
     ; Increment frame counter
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     inc a
-    ldh [frameCounter], a
+    ldh [hFrameCounter], a
     and a
     jr nz, .endIf
         ; Increment in-game timer
         ; Check if ingame
-        ldh a, [gameMode]
+        ldh a, [hGameMode]
         cp _id_gameMode_Main
         jr nz, .endIf
             ; Increment "seconds" (actually 256-frame periods (not saved))
@@ -561,7 +563,7 @@ gameMode_LoadA: ;{ 00:03B5
     callFar inGame_saveAndLoadEnemySaveFlags
     ; Increment gameMode to gameMode_loadB
     ld a, _id_gameMode_LoadB
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 ;}
 
@@ -636,7 +638,7 @@ gameMode_LoadB: ;{ 00:0464
     ld [unused_D011], a
     ; Increment game mode to main
     ld a, _id_gameMode_Main
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 ;}
 
@@ -866,7 +868,7 @@ prepMapUpdate: ;{ 00:0698
     xor a
     ld [mapUpdate_unusedVar], a
     ; Choose direction based on frame counter
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $03 ; Up
         jr z, .up
     cp $01 ; Down
@@ -1775,7 +1777,7 @@ handleCamera_door: ;{ 00:0B44
         ld a, scrollDir_up
         ld [camera_scrollDirection], a
         ; Move Samus up 1.5 px/frame
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $01
         add $01
         ld b, a
@@ -1813,7 +1815,7 @@ handleCamera_door: ;{ 00:0B44
         ld a, scrollDir_down
         ld [camera_scrollDirection], a
         ; Move Samus down 1.5 px/frame
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $01
         add $01
         ld b, a
@@ -4063,7 +4065,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
         bit B_PAD_UP, a
         jr z, .endIf_G
             ; Exit every 3 out of 4 frames (fall slowly)
-            ldh a, [frameCounter]
+            ldh a, [hFrameCounter]
             and $03
                 ret nz
     .endIf_G:
@@ -4166,7 +4168,7 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
     bit B_PAD_A, a
     jr z, .endIf_A
         ; Move up 2 pixel/frame, with an extra pixel 2 out of 4 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $02
         srl a
         ld b, a
@@ -4564,7 +4566,7 @@ samus_walkRight: ;{ 00:1C0D
             jr .endIf
         .else:
             ; Normal walking speed (1.5 px/f)
-            ldh a, [frameCounter]
+            ldh a, [hFrameCounter]
             and $01
             add $01
             ld b, a
@@ -4618,7 +4620,7 @@ samus_walkLeft: ;{ 00:1C51
             jr .endIf
         .else:
             ; Normal walking speed (1.5 px/f)
-            ldh a, [frameCounter]
+            ldh a, [hFrameCounter]
             and $01
             add $01
             ld b, a
@@ -6986,7 +6988,8 @@ VBlank_updateMapDuringTransition: ;{ 00:2B8F
     ld a, [mapUpdateFlag]
     and a
         jr z, VBlank_vramDataTransfer.exit
-    ; Pretty sure this bankswitch is not needed
+    ; this bankswitch is not needed, because the map data is already in mapUpdateBuffer
+    ; what's more, it is a bug to update the bankRegMirror during the vblank interrupt
     switchBankVar [currentLevelBank]
     ; Update map
     call VBlank_updateMap
@@ -7059,7 +7062,7 @@ reti ;}
 ; Varia animation case
 VBlank_variaAnimation: ;{ 00:2BF4
     ; Animate every other frame
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $01
     jr nz, .endIf_A
         ; Set HL to the source byte of the data transfer
@@ -7149,9 +7152,9 @@ waitOneFrame: ;{ 00:2C5E
         and a
     jr z, .vBlankNotDone
     ; Increment frame counter
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     inc a
-    ldh [frameCounter], a
+    ldh [hFrameCounter], a
     ; Clear VBlank flag
     xor a
     ldh [hVBlankDoneFlag], a
@@ -7249,13 +7252,13 @@ tryPausing: ;{ 00:2C79
     ld [audioPauseControl], a
     ; Set game mode
     ld a, _id_gameMode_Paused
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 gameMode_Paused: ;{ 00:2CED
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
     ld b, $e7
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     bit 4, a
     jr z, .endIf
         ld b, $93
@@ -7284,7 +7287,7 @@ gameMode_Paused: ;{ 00:2CED
     ld [audioPauseControl], a
     ; Switch game mode
     ld a, _id_gameMode_Main
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 
 .debugBranch:
@@ -7552,7 +7555,7 @@ debugPauseMenu: ;{ 00:2D39
         
 .save:
     ld a, _id_gameMode_saveGame
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 hurtSamus: ;{ 00:2EE3
@@ -7608,13 +7611,13 @@ applyDamage: ;{ This procedure has multiple entry points
     .queenStomach: ; 00:2F29
         ; Apply queen stomach damage
         ; Make noise once every 8 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $07
             ret nz
         ld a, sfx_noise_acidDamage
         ld [sfxRequest_noise], a
         ; Damage once every 16 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $0f
             ret nz
         ; Set damage to 2
@@ -7627,7 +7630,7 @@ applyDamage: ;{ This procedure has multiple entry points
         ; Set damage to 3
         ld b, $03
         ; Damage once every 8 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $07
             ret nz
         ; Make noise
@@ -7639,7 +7642,7 @@ applyDamage: ;{ This procedure has multiple entry points
         ; Damage is set by caller
         ld b, a
         ; Damage once every 16 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $0f
             ret nz
         ; Make noise
@@ -7719,13 +7722,13 @@ killSamus: ;{ 00:2FA2
     ld a, $01
     ld [deathFlag], a
     ld a, _id_gameMode_dying
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 ; Vblank routine for death
 VBlank_deathSequence: ;{ 00:2FE1
     ; Animate once every 4 frames
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $03
     jr nz, .endIf
     
@@ -7761,7 +7764,7 @@ VBlank_deathSequence: ;{ 00:2FE1
             ld a, $ff
             ld [deathFlag], a
             ld a, _id_gameMode_dead
-            ldh [gameMode], a
+            ldh [hGameMode], a
     .endIf:
 
     ; Set scroll values
@@ -8928,7 +8931,7 @@ gameMode_dead: ;{ 00:36B0
     ld a, $ff
     ld [countdownTimerLow], a
     ld a, _id_gameMode_gameOver
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 
 gameOverText: ; 00:3711 - "GAME OVER"
@@ -9312,7 +9315,7 @@ pickup_missileRefill: ;{
         ld [songInterruptionRequest], a
         ; Set game mode to prep credits
         ld a, _id_gameMode_prepareCredits
-        ldh [gameMode], a
+        ldh [hGameMode], a
         ret
     .else:
         ; Set current missiles to max
@@ -9767,7 +9770,7 @@ ret
 ; Unused (duplicate of the routine at 00:3062)
 unusedDeathAnimation_copy: ;{ 00:3F07
     ; Animate every other frame
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $01
     jr nz, .endIf_A
         ; Get pointer for starting offset
@@ -9819,7 +9822,7 @@ unusedDeathAnimation_copy: ;{ 00:3F07
             xor a
             ld [deathAnimTimer], a
             ; Note: This does not set deathFlag
-            ;  or gameMode like it should.
+            ;  or hGameMode like it should.
     .endIf_A:
 
     ; Set scroll values

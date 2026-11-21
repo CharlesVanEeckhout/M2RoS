@@ -56,7 +56,7 @@ enemyHandler: ;{ 02:4000
         cp $90
         jr z, .else_B
             ; Increment timer every other frame
-            ld a, [frameCounter]
+            ld a, [hFrameCounter]
             and $01
                 jr nz, .endIf_B
             inc [hl]
@@ -1634,7 +1634,7 @@ enAI_itemOrb: ;{ 02:4DD3
     bit 0, a ; Jump ahead if orb, not item
     jr z, .endIf_A
         ; Animate item
-        ld a, [frameCounter]
+        ld a, [hFrameCounter]
         and $06
         jr nz, .endIf_A
             ldh a, [hEnemy.stunCounter]
@@ -1791,7 +1791,7 @@ ret
 ; Blob Thrower AI (plant that spits out spores)
 enAI_blobThrower: ;{ 02:4EA1
     ; Make stem blink periodically by changing tile numbers
-    ld a, [frameCounter]
+    ld a, [hFrameCounter]
     and $0e
     jr nz, .endIf_A
         ; Blink the first three tiles
@@ -2144,7 +2144,7 @@ ret
     ld [hl], a
     ; Animate
   .flipSpriteId: ; 02:5161
-    ld a, [frameCounter]
+    ld a, [hFrameCounter]
     and $06
         ret nz
     ldh a, [hEnemy.spriteType]
@@ -2414,7 +2414,7 @@ ret
     add b
     ld [hl], a
     ; Animate
-    ld a, [frameCounter]
+    ld a, [hFrameCounter]
     and $06
         ret nz
     ldh a, [hEnemy.spriteType]
