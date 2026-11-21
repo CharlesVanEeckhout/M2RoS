@@ -22,7 +22,7 @@ hOamBufferIndex:: ds 1 ; FF8D: OAM buffer index
 
 ds 9 ; $FF8E-$FF96 - 9 more unused bytes!?
 
-frameCounter::    ds 1 ; $FF97: Frame counter (used by IGT, but not tied to IGT)
+hFrameCounter::    ds 1 ; $FF97: Frame counter (used by IGT, but not tied to IGT)
 
 hTemp:: ; Temp variables? Uncertain. Don't use these names in code until we have a better understanding of them
 .a:: ds 1 ;$FF98:
@@ -51,7 +51,7 @@ hTemp:: ; Temp variables? Uncertain. Don't use these names in code until we have
 ;    Working projectile X position (see $1:500D)
 ;    Projectile Y offset from Samus (see $1:4E8A)
 ;}
-gameMode:: ds 1 ; $FF9B ; Game mode
+hGameMode:: ds 1 ; $FF9B ; Game mode
 ;{
 ;    0: Boot
 ;    1: Title screen

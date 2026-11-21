@@ -136,7 +136,7 @@ VBlank_updateStatusBar: ;{ 01:493E
 
 ; Draw Metroid counter in corner {
     ; Check if paused
-    ldh a, [gameMode]
+    ldh a, [hGameMode]
     cp $08
     jr z, .else_C
         ld a, [metroidCountShuffleTimer]
@@ -260,7 +260,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     and a
     jr nz, .checkMissileHighByte
         ; Play sound every 4 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $03
         jr nz, .checkMissileHighByte
             ld a, sfx_square1_samusHealthChange
@@ -284,7 +284,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     and a
     jr nz, .checkMissileHighByte
         ; Play sound every 4 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $03
         jr nz, .checkMissileHighByte
             ld a, sfx_square1_samusHealthChange
@@ -325,7 +325,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     ld [samusDispMissilesHigh], a
 
     ; Play sound every 4 frames
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $03
     ret nz
         ld a, sfx_square1_pickedUpMissileDrop
@@ -426,7 +426,7 @@ drawHudMetroid:: ;{ 01:4B2C
     ld [samus_screenSpritePriority], a
     
     ; Animate the metroid every 16 frames
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $10
     swap a
     add SPRITE_SAMUS_HUD_METROID_1
@@ -566,7 +566,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
         dec a
         ld [samusInvulnerableTimer], a
         ; 4 frames on, 4 frames off
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         bit 2, a
             ret z
     .endIf_A:
@@ -576,7 +576,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
     and a
     jr z, .endIf_B
         ; 4 frames on, 4 frames off
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         bit 2, a
             ret z
     .endIf_B:
@@ -815,7 +815,7 @@ drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
     and a
     jr z, .endIf
         ; Skip rendering 1 out of 4 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $03
         ret z
     .endIf:
@@ -1035,7 +1035,7 @@ createNewSave: ;{ 01:4E1C
     
     ; Set game mode
     ld a, $02 ; "gameMode_LoadA"
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 ; Copies savegame from SRAM to save buffer in WRAM
@@ -1077,7 +1077,7 @@ loadSaveFile: ;{ 01:4E33
     call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
     
     ld a, $02 ; for "gameMode_LoadA"
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 ;------------------------------------------------------------------------------
@@ -1260,7 +1260,7 @@ samusShoot: ;{ 01:4E8A
     add b
     ld [hl+], a
     ; Write wave index
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $10
     srl a
     ld [hl+], a
@@ -1348,7 +1348,7 @@ ret
         add b
         ld [hl+], a
         ; Save wave index (?)
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $10
         srl a
         ld [hl+], a
@@ -1683,7 +1683,7 @@ jp .commonBranch
     ld [hl], a
     
     ; Only check background collision every other frame
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $01
         jp z, .checkEnemies
     
@@ -1896,7 +1896,7 @@ jp .commonBranch
     ld [hl], a
     
     ; Only check BG collision every other frame
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $01
     jr z, .else_Q
         ; Perform BG collision
@@ -2997,7 +2997,7 @@ miscIngameTasks: ;{ 01:57F2
                 jr nz, .endIf_E
                     ; Save!
                     ld a, $09
-                    ldh [gameMode], a
+                    ldh [hGameMode], a
                     ; Let the "Completed" message show
                     ld a, $ff
                     ld [saveMessageCooldownTimer], a
@@ -3021,7 +3021,7 @@ miscIngameTasks: ;{ 01:57F2
                 xor a
                 ld [saveContactFlag], a
                 ; Draw blinking "Press Start" sprite
-                ldh a, [frameCounter]
+                ldh a, [hFrameCounter]
                 bit 3, a
                 jr z, .endIf_B
                     ld a, $98
@@ -3035,7 +3035,7 @@ miscIngameTasks: ;{ 01:57F2
 
 ;{ Earthquake stuff
     ; Only do this stuff once every 256 frames
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and a
     jr nz, .endIf_G
         ; Check if this is non-zero
@@ -3110,7 +3110,7 @@ miscIngameTasks: ;{ 01:57F2
     and a
     jr z, .else_J
         ; Only roar every 128 frames
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $7f
         jr nz, .else_J
             ld a, sfx_noise_babyMetroidCry
@@ -4043,7 +4043,7 @@ earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
     ld [scrollY], a
 
     ; Decrement earthquake timer every two frames
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $01
         ret nz
     ld a, [earthquakeTimer]
@@ -4378,7 +4378,7 @@ saveFileToSRAM: ;{ 01:7ADF
     
     ; Turn game mode back to main
     ld a, $04
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 bank1_freespace: ; 1:7B87 - Freespace (filled with $00)

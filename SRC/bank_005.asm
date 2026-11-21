@@ -199,7 +199,7 @@ loadTitleScreen: ;{ 05:408F
     ld [countdownTimerLow], a
     ; Set game mode to title
     ld a, $01
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 hudBaseTilemap:  ; 05:40F0
@@ -249,10 +249,10 @@ titleScreenRoutine: ;{ 05:4118
     .endIf_B:
 
     ; Try respawning the title star
-    ; if rDIV != frameCounter, skip ahead
+    ; if rDIV != hFrameCounter, skip ahead
     ldh a, [rDIV]
     ld b, a
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     cp b
     jr nz, .endIf_C
         ; If frame is odd, skip ahead
@@ -277,7 +277,7 @@ titleScreenRoutine: ;{ 05:4118
     ldh [hSpriteId], a
     ; Toggle the lower bit of the sprite priority bit regularly -- but this does nothing??
     ;  Perhaps the original intent was to have the sprite flicker between sprites $06 and $05
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and %00000010
     srl a
     ldh [hSpriteAttr], a
@@ -302,7 +302,7 @@ titleScreenRoutine: ;{ 05:4118
     ldh [hSpriteAttr], a
     ; Get animation frame for cursor
     ;  Animate every 4 frames using two bits from the frame counter
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and %00001100
     srl a
     srl a
@@ -513,14 +513,14 @@ titleScreenRoutine: ;{ 05:4118
     ld [rRAMG], a
     ; New game
     ld a, $0b
-    ldh [gameMode], a
+    ldh [hGameMode], a
     ; If loading from a file, ignore the game mode being set to new game
     ld a, [loadingFromFile]
     and a
         ret z
     ; Load from file
     ld a, $0c
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 
 ; Clear file
@@ -634,7 +634,7 @@ credits_moveStars: ;{ 05:55DC - Move the stars during the credits
     ld b, $10
     .starLoop:
         ; Move down every 4th frame
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $03
         jr nz, .endIf_A
             ; move down one pixel
@@ -730,7 +730,7 @@ credits_animateSamus: ;{ 05:5620
 ; Animation state functions {
 .hairWaving: ; $15 - Animate Suitless Samus's hair flowing
     ; Animate every 16th frame
-    ldh a, [frameCounter]
+    ldh a, [hFrameCounter]
     and $10
     swap a
     ; Add 0 or 1 to this base index of the hair waving animation
@@ -985,8 +985,8 @@ ret
     ldh a, [hSamusYPixel]
     add $03
     ldh [hSamusYPixel], a
-    ; Frame to Render = 4 + (frameCounter mod 4)
-    ldh a, [frameCounter]
+    ; Frame to Render = 4 + (hFrameCounter mod 4)
+    ldh a, [hFrameCounter]
     and $03
     add $04
     call credits_drawSamus
@@ -1026,8 +1026,8 @@ ret
         sub $03
         ldh [hSamusYPixel], a
     .endIf_B:
-    ; Frame to Render = 4 + (frameCounter mod 4)
-    ldh a, [frameCounter]
+    ; Frame to Render = 4 + (hFrameCounter mod 4)
+    ldh a, [hFrameCounter]
     and $03
     add $04
     call credits_drawSamus
@@ -1245,9 +1245,9 @@ prepareCredits: ;{ 05:587F
     xor a
     ld [credits_samusAnimState], a
     ; Move to credits game mode
-    ldh a, [gameMode]
+    ldh a, [hGameMode]
     inc a
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 ;}
 
@@ -1277,7 +1277,7 @@ credits_scrollHandler: ;{ 05:593E
         ret
     .else:
         ; Only scroll every 4th frame
-        ldh a, [frameCounter]
+        ldh a, [hFrameCounter]
         and $03
             ret nz
         ; Scroll a pixel
@@ -1305,7 +1305,7 @@ credits_scrollHandler: ;{ 05:593E
 ; Unused routine - Perhaps this was meant to allow you to return to the title screen after the ending
 credits_rebootGame: ;{ 05:5985
     xor a
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret
 ;}
 
