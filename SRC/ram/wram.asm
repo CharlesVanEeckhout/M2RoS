@@ -211,7 +211,6 @@ queen_headSrcLow:  ds 1 ; $C3F4 - (rare instance of a big-endian variable!!)
 ; Various generic enemy variables
 section "WRAM Bank 0 - C400", wram0[$C400] ;{
 
-loadEnemies_unusedVar:  ds 1 ; $C400 - Written, but never read. Possibly meant to be a direction, but the assigned values don't make sense
 loadEnemies_oscillator: ds 1 ; $C401 - Oscillates between 0 and 1 every frame. $00: Load enemies horizontally, else: Load enemies vertically
 
 en_bgCollisionResult: ds 1 ; $C402 - Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
@@ -227,8 +226,6 @@ scrollHistory_A:
 .y1: ds 1 ;$C40C: Scroll Y one frame ago (according to $2:45CA)
 .x1: ds 1 ;$C40D: Scroll X one frame ago (according to $2:45CA)
 
-unused_samusDirectionFromEnemy: ds 1 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
-
 ; Screen edges used when loading enemies
 bottomEdge_screen: ds 1 ; $C40F
 bottomEdge_pixel:  ds 1 ; $C410
@@ -238,8 +235,6 @@ rightEdge_screen:  ds 1 ; $C413
 rightEdge_pixel:   ds 1 ; $C414
 leftEdge_screen:   ds 1 ; $C415
 leftEdge_pixel:    ds 1 ; $C416
-
-unused_romBankPlusOne: ds 1 ; $C418 - Set to [room bank+1] in $2:4000, never read
 
 metroid_postDeathTimer: ds 1 ; $C41B - 90h*2 frame timer for waiting to restore the room's normal music
 metroid_state: ds 1 ; $C41C - General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
@@ -309,15 +304,9 @@ enemy_pWramHigh: ds 1 ; $C451 -  "" high byte
 enemy_pFirstEnemyLow:  ds 1 ; $C452 - Pointer of the first enemy to process for the next frame
 enemy_pFirstEnemyHigh: ds 1 ; $C453 - Used for making enemies lag instead of Samus
 
-drawEnemy_pLow:  ds 1 ; $C454 - Enemy data address for draw function (low byte)
-drawEnemy_pHigh: ds 1 ; $C455 - Enemy data address for draw function (high byte)
-
-loadEnemy_unusedVar_A: ds 1 ; $C456 - Set to the lower screen in the horizontal branch
-loadEnemy_unusedVar_B: ds 1 ; $C457 - Set to the right edge of the screen
-
 doorExitStatus: ds 1 ; $C458 - doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose
 previousLevelBank: ds 1 ; $C459 - Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
-;
+
 metroid_samusXDir: ds 1 ; $C45A - Relative X direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
 metroid_samusYDir: ds 1 ; $C45B - Relative Y direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
 metroid_angleTableIndex: ds 1 ; $C45C - Used as index for table at $1:729C, value for $FFEA
@@ -1017,8 +1006,6 @@ samus_unmorphJumpTimer: ds 1 ; $D049 - Timer for allowing an unmorph jump. Decre
 bomb_mapYPixel: ds 1 ; $D04A - Bomb Y position in map-space (for BG collision)
 bomb_mapXPixel: ds 1 ; $D04B - Bomb X position in map-space (for BG collision)
 
-mapUpdate_unusedVar: ds 1 ; $D04C - Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
-
 samusActiveWeapon: ds 1 ; $D04D - Weapon equipped.  See also $D055
 ;{
 ;    0: Normal
@@ -1057,8 +1044,6 @@ samus_screenSpritePriority: ds 1 ; $D057 - Room sprite priority
 currentLevelBank: ds 1 ; $D058 - Bank for current room
 
 deathAnimTimer: ds 1 ; $D059 - Death sequence timer
-pDeathAltAnimBaseLow:  ds 1 ; $D05A - Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
-pDeathAltAnimBaseHigh: ds 1 ; $D05B
 
 samusSpriteCollisionProcessedFlag: ds 1 ; $D05C - Flag set when collision_samusEnemies ($32AB) is executed to prevent it from being executed unnecessarily
 

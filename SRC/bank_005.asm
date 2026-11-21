@@ -8,51 +8,6 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
 titleCreditsBank:
 
 ;------------------------------------------------------------------------------
-; Draw two digits of ending timer
-credits_drawTimerDigits: ;{ 05:4000
-    ; Temp storage for timer number
-    ldh [hTemp.b], a
-    ; Extract the tens digit
-    swap a
-    and $0f
-    add $f0 ; Adjust the value for display
-    call credits_drawOneDigit
-    ; Reload timer value from temp
-    ldh a, [hTemp.b]
-    and $0f ; Isolate the ones digit
-    add $f0 ; Adjust the value for display
-    ; fallthrough
-
-;------------------------------------------------------------------------------
-; Draw one digit of ending timer
-credits_drawOneDigit: ;{ 05:4015
-    ; Temp storage for the digit to be displayed
-    ldh [hTemp.a], a
-    ; HL = oam buffer pointer
-    ld h, HIGH(wram_oamBuffer)
-    ldh a, [hOamBufferIndex]
-    ld l, a
-    ; Write y pixel
-    ldh a, [hSpriteYPixel]
-    ld [hl+], a
-    ; Write x pixel
-    ldh a, [hSpriteXPixel]
-    ld [hl+], a
-    ; Increment X pixel position for next digit
-    add $08
-    ldh [hSpriteXPixel], a
-    ; Reload tile number from temp, write tile number
-    ldh a, [hTemp.a]
-    ld [hl+], a
-    ; Write sprite attribute
-    ldh a, [hSpriteAttr]
-    ld [hl+], a
-    ; Store final value of oam index
-    ld a, l
-    ldh [hOamBufferIndex], a
-ret ;}
-
-;------------------------------------------------------------------------------
 ; VBlank subroutine called during credits
 VBlank_drawCreditsLine: ;{ 05:403D
     ; Load credits text pointer
@@ -569,8 +524,7 @@ creditsRoutine:: ;{ 05:55A3
     call credits_drawTimer
     call credits_moveStars
     call credits_drawStars
-    call OAMClear.unused
-ret
+    jp OAMClear.unused
 ;}
 
 credits_drawTimer: ;{ 05:55BE
@@ -589,9 +543,51 @@ credits_drawTimer: ;{ 05:55BE
     ld a, $56
     ldh [hSpriteXPixel], a
     ld a, [gameTimeMinutes]
-    call credits_drawTimerDigits
-ret
+    ; fallthrough
 ;}
+
+; Draw two digits of ending timer
+credits_drawTimerDigits: ;{ 05:4000
+    ; Temp storage for timer number
+    ldh [hTemp.b], a
+    ; Extract the tens digit
+    swap a
+    and $0f
+    add $f0 ; Adjust the value for display
+    call credits_drawOneDigit
+    ; Reload timer value from temp
+    ldh a, [hTemp.b]
+    and $0f ; Isolate the ones digit
+    add $f0 ; Adjust the value for display
+    ; fallthrough
+
+; Draw one digit of ending timer
+credits_drawOneDigit: ;{ 05:4015
+    ; Temp storage for the digit to be displayed
+    ldh [hTemp.a], a
+    ; HL = oam buffer pointer
+    ld h, HIGH(wram_oamBuffer)
+    ldh a, [hOamBufferIndex]
+    ld l, a
+    ; Write y pixel
+    ldh a, [hSpriteYPixel]
+    ld [hl+], a
+    ; Write x pixel
+    ldh a, [hSpriteXPixel]
+    ld [hl+], a
+    ; Increment X pixel position for next digit
+    add $08
+    ldh [hSpriteXPixel], a
+    ; Reload tile number from temp, write tile number
+    ldh a, [hTemp.a]
+    ld [hl+], a
+    ; Write sprite attribute
+    ldh a, [hSpriteAttr]
+    ld [hl+], a
+    ; Store final value of oam index
+    ld a, l
+    ldh [hOamBufferIndex], a
+ret ;}
 
 credits_moveStars: ;{ 05:55DC - Move the stars during the credits
     ; Iterate through all 16 stars
@@ -1021,13 +1017,9 @@ ret
     ; Initialize counters for running animation
     xor a
     ld [credits_runAnimCounter], a
-    xor a
     ld [credits_runAnimFrame], a
-    ; Pointlessly reset the scrolling done value
-    ld [credits_scrollingDone], a
     ; Set timer to $1200 (4608 frames, or 76.8 seconds)
-    ld a, $00
-    ld [countdownTimerHigh], a ; Shouldn't this be countdownTimerLow?
+    ld [countdownTimerLow], a ; Shouldn't this be countdownTimerLow?
     ld a, $12
     ld [countdownTimerHigh], a
     ; Increment state to running
@@ -1071,7 +1063,7 @@ ret
 
     ; Set timer for next state to $0040
     xor a
-    ld [countdownTimerLow], a ; Should be countdownTimerHigh
+    ld [countdownTimerHigh], a
     ld a, $40
     ld [countdownTimerLow], a
     ; Set anim state to jumping
@@ -1127,7 +1119,6 @@ prepareCredits: ;{ 05:587F
     ; Reset palette
     ld a, $93
     ld [bg_palette], a
-    ld a, $93
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
@@ -1175,7 +1166,7 @@ prepareCredits: ;{ 05:587F
     ; Initialize star array
     ld hl, credits_starPositions
     ld de, credits_starArray
-    ld b, $10 ; Should be $20, however, this causes some stars to visibly drop in and out
+    ld b, $10
     .loop_B:
         ld a, [hl+]
         ld [de], a
@@ -1389,15 +1380,7 @@ ret
 
 .suitless_frameA:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_1 ;$0e
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .suitless_frameB:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_1 ;$0e
@@ -1422,78 +1405,31 @@ ret
 
 .suitless_frameD:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_2 ;$15
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .suitless_frameE:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_3 ;$16
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .suitless_frameF:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_4 ;$17
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .suitless_frameG:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_5 ;$18
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .suitless_frameH:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_6 ;$19
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .hairWaving_frameA:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_5 ;$18
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-    ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jr .suitless_common
 
 .hairWaving_frameB:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_7 ;$1a
+.suitless_common:
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITLESS_ARM_1 ;$0f
@@ -1501,8 +1437,7 @@ ret
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 ;}
 ;}
 
@@ -1517,15 +1452,6 @@ credits_starPositions: ;{ 05:5B14
     db $18, $20
     db $90, $68
     db $48, $40
-    ; Due to a bug (?), only the first half of this table gets read
-    db $88, $18
-    db $80, $88
-    db $28, $50
-    db $60, $10
-    db $98, $38
-    db $58, $68
-    db $78, $58
-    db $38, $70
 ;}
 
 ; 05:5B34 -- Title screen tilemap

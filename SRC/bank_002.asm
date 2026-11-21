@@ -8,9 +8,6 @@ SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 enemyHandler: ;{ 02:4000
     ; Initialize flag to not force metroid music to end
     ld e, $00
-    ld a, [currentLevelBank]
-    inc a
-    ld [unused_romBankPlusOne], a
     ; Clear some variables if a screen transition just started
     ld a, [justStartedTransition]
     and a

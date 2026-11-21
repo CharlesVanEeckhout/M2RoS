@@ -162,8 +162,6 @@ loadEnemies_vertical: ;{ 03:40BE
 
     jr c, .else_A
         ; Get bottom left corner
-        ld a, $01
-        ld [loadEnemies_unusedVar], a
         ld a, [bottomEdge_screen]
         ld b, a
         ld a, [leftEdge_screen]
@@ -175,8 +173,6 @@ loadEnemies_vertical: ;{ 03:40BE
         jr .endIf_A
     .else_A:
         ; Get top-left corner
-        ld a, $03
-        ld [loadEnemies_unusedVar], a
         ld a, [topEdge_screen]
         ld b, a
         ld a, [leftEdge_screen]
@@ -311,13 +307,10 @@ loadEnemies_horizontal: ;{ 03:416A
 
     jr c, .else_A
         ; Get top-right corner
-        ld a, $00
-        ld [loadEnemies_unusedVar], a
         ld a, [topEdge_screen]
         ld b, a
         ld a, [rightEdge_screen]
         ld c, a
-        ld [loadEnemy_unusedVar_B], a
         ld a, [rightEdge_pixel]
         ld [hTemp.a], a
         call loadEnemy_getBankOffset
@@ -325,8 +318,6 @@ loadEnemies_horizontal: ;{ 03:416A
         jr .endIf_A
     .else_A:
         ; Get top-left corner
-        ld a, $01
-        ld [loadEnemies_unusedVar], a
         ld a, [topEdge_screen]
         ld b, a
         ld a, [leftEdge_screen]
@@ -410,8 +401,6 @@ jr .top_skipToNext ;}
     cp b
         ret nz
     ; Iterate to the bottom screen (properly)
-    ld a, c
-    ld [loadEnemy_unusedVar_A], a
     call loadEnemy_getBankOffset
     call loadEnemy_getPointer.screen
 

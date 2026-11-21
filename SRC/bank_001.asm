@@ -2769,8 +2769,8 @@ ret ;}
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
-    call .hurtSamus
-ret ;}
+    jp .hurtSamus
+;}
 
 .frame_A: ; Destroy block (frames 1, 5) {
     ; Get address of tile
@@ -2861,7 +2861,7 @@ ret ;}
     add OAM_Y_OFS + samusOriginY_toCrouchCheck
     sub c
     cp b
-        jr nc, .exit
+        ret nc
     
     ; Bounds checking for x position
     ld a, [tileX]
@@ -2873,7 +2873,7 @@ ret ;}
     add OAM_X_OFS + samusOriginX_toLeft + 1
     sub b
     cp $18
-        jr nc, .exit
+        ret nc
     
     ; Set damage boosting direction depending of x position
     cp $0c
@@ -2893,10 +2893,7 @@ ret ;}
     ld [samus_damageValue], a
     
     ; Re-destroy block (to avoid being trapped)
-    call destroyRespawningBlock
-
-    .exit:
-ret
+    jp destroyRespawningBlock
 
 .samusHeightTable: ; 01:57DF
     ; Table Generated from samus/samus.csv
@@ -2971,14 +2968,8 @@ miscIngameTasks: ;{ 01:57F2
             and a
             jr z, .else_F
                 ; Draw save "Completed" sprite
-                ld a, $98
-                ldh [hSpriteYPixel], a
-                ld a, $44
-                ldh [hSpriteXPixel], a
                 ld a, SPRITE_SAMUS_SAVE_COMPLETED
-                ldh [hSpriteId], a
-                call drawSamusSprite
-                jr .endIf_B
+                jr .common_F
             .else_F:
                 ; Clear flag
                 xor a
@@ -2987,12 +2978,13 @@ miscIngameTasks: ;{ 01:57F2
                 ldh a, [hFrameCounter]
                 bit 3, a
                 jr z, .endIf_B
+                    ld a, SPRITE_SAMUS_SAVE_PRESS_START
+                .common_F:
+                    ldh [hSpriteId], a
                     ld a, $98
                     ldh [hSpriteYPixel], a
                     ld a, $44
                     ldh [hSpriteXPixel], a
-                    ld a, SPRITE_SAMUS_SAVE_PRESS_START
-                    ldh [hSpriteId], a
                     call drawSamusSprite
     .endIf_B: ;}
 
@@ -3093,29 +3085,19 @@ drawEnemies: ;{ 01:5A11
         
     ; Initialize enemy pointer
     ld hl, enemyDataSlots ;$c600
-    ld a, l
-    ld [drawEnemy_pLow], a
-    ld a, h
-    ld [drawEnemy_pHigh], a
     .loop:
+        push hl
         ; Render sprite if active (status == 0)
         ld a, [hl]
         and a
             call z, drawEnemySprite
         ; Reload enemy pointer
-        ld a, [drawEnemy_pLow]
-        ld l, a
-        ld a, [drawEnemy_pHigh]
-        ld h, a
+        pop hl
         ; Iterate to next enemy
         ld de, enemyDataSlotSize ; $0020
         add hl, de
-        ; Save enemy pointer
-        ld a, l
-        ld [drawEnemy_pLow], a
-        ld a, h
-        ld [drawEnemy_pHigh], a
         ; Exit if at end of enemy array
+        ld a, h
         cp HIGH(enemyDataSlots.end) ; $C8
     jr nz, .loop
 ret ;}

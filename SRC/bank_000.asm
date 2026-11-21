@@ -859,8 +859,6 @@ prepMapUpdate: ;{ 00:0698
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
-    xor a
-    ld [mapUpdate_unusedVar], a
     ; Choose direction based on frame counter
     ldh a, [hFrameCounter]
     and $03 ; Up
@@ -877,8 +875,6 @@ prepMapUpdate: ;{ 00:0698
     ld a, [camera_scrollDirection]
     bit scrollDirBit_up, a
         ret z
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
   .forceRow: ; Alternate call point used when loading the game
     ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
@@ -907,8 +903,6 @@ jp .row
     ld a, [camera_scrollDirection]
     bit scrollDirBit_down, a
         ret z
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $30
@@ -936,8 +930,6 @@ jr .row
     ld a, [camera_scrollDirection]
     bit scrollDirBit_left, a
         ret z
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     sub SCREEN_WIDTH_PX / 2 + $30
@@ -965,8 +957,6 @@ jp .column
     ld a, [camera_scrollDirection]
     bit scrollDirBit_right, a
         ret z
-    ld a, $ff
-    ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     add SCREEN_WIDTH_PX / 2 + $20
@@ -7694,12 +7684,6 @@ killSamus: ;{ 00:2FA2
     ; Set timer
     ld a, $20
     ld [deathAnimTimer], a
-    ; Set base address of tile manipulation
-    ;  Note: the actual death animation does not use this variable
-    xor a
-    ld [pDeathAltAnimBaseLow], a
-    ld a, $80
-    ld [pDeathAltAnimBaseHigh], a
     ld a, $01
     ld [deathFlag], a
     ld a, _id_gameMode_dying
@@ -9738,7 +9722,7 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
     ld a, [hl]
     ; Rotate the relavent bit to the LSB and store it
     swap a
-    rlc a
+    rlca
     and $01
     xor $01
     ld [samus_screenSpritePriority], a
@@ -9746,81 +9730,5 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
     switchBank drawSamus
 ret
 ;}
-
-; Unused (duplicate of the routine at 00:3062)
-unusedDeathAnimation_copy: ;{ 00:3F07
-    ; Animate every other frame
-    ldh a, [hFrameCounter]
-    and $01
-    jr nz, .endIf_A
-        ; Get pointer for starting offset
-        ld a, [pDeathAltAnimBaseLow]
-        ld l, a
-        ld a, [pDeathAltAnimBaseHigh]
-        ld h, a
-        
-        ; Set increment value for loop
-        ld de, $0010
-        .eraseLoop:
-            ; Clear byte
-            xor a
-            ld [hl], a
-            ; Iterate to next byte
-            add hl, de
-            ; Exit loop once $xx0x is reached
-            ld a, l
-            and $f0
-        jr nz, .eraseLoop
-        ; Iterate to next row of pixels to clear
-        ; HL-$00FF (to get to the next byte of the starting tile)
-        ld a, l
-        sub $ff
-        ld l, a
-        ld a, h
-        sbc $00
-        ld h, a
-        ; If HL points to the second tile in a row
-        ld a, l
-        cp $10
-        jr nz, .endIf_B
-            ; Then add $F0 to HL so it points to the first tile of the next row
-            add $f0
-            ld l, a
-            ld a, h
-            adc $00
-            ld h, a
-        .endIf_B:
-        ; Save the pointer
-        ld a, l
-        ld [pDeathAltAnimBaseLow], a
-        ld a, h
-        ld [pDeathAltAnimBaseHigh], a
-        ; Stop animating once 5 rows have been cleared
-        cp $85
-        jr nz, .endIf_A
-            ; Clear timer
-            xor a
-            ld [deathAnimTimer], a
-            ; Note: This does not set deathFlag
-            ;  or hGameMode like it should.
-    .endIf_A:
-
-    ; Set scroll values
-    ld a, [scrollY]
-    ldh [rSCY], a
-    ld a, [scrollX]
-    ldh [rSCX], a
-    ; DMA sprites
-    call OAM_DMA
-    ; Return from interrupt
-    ld a, [bankRegMirror]
-    ld [rROM2B], a
-    ld a, $01
-    ldh [hVBlankDoneFlag], a
-    pop hl
-    pop de
-    pop bc
-    pop af
-reti ;}
 
 bank0_freespace: ; Freespace - 00:3F60 (filled with $00)
