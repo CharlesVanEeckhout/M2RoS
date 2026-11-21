@@ -172,7 +172,6 @@ loadTitleScreen: ;{ 05:408F
     ld [songRequest], a
     ; Clear variables
     xor a
-    ld [title_unusedD039], a
     ld [title_clearSelected], a
     
     ; If loading from a file, have the Clear option be selected? Odd.
@@ -1172,10 +1171,6 @@ prepareCredits: ;{ 05:587F
     ld [credits_textPointerLow], a
     ld a, HIGH(creditsTextBuffer)
     ld [credits_textPointerHigh], a
-    
-    ; Clear unused variable
-    xor a
-    ld [credits_unusedVar], a
     
     ; Initialize star array
     ld hl, credits_starPositions

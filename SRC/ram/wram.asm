@@ -25,8 +25,6 @@ wram_oamBuffer:: ds OAM_SIZE ;{ $C000..9F: OAM Entries
 
 section "WRAM Bank 0 - C200", wram0[$C200] ;{
 
-ds 3 ; $C200..$C202 - Unused
-
 ; Tilemap pixel coordinate of a tile to read
 tileY: ds 1 ; $C203 - Tile Y (see $22BC)
 tileX: ds 1 ; $C204 - Tile X (see $22BC)
@@ -35,34 +33,10 @@ tileX: ds 1 ; $C204 - Tile X (see $22BC)
 scrollY: ds 1 ; $C205 - Scroll Y
 scrollX: ds 1 ; $C206 - Scroll X
 
-ds 14 ; $C207..$C214 - Unused
-
 ; Return value of getTilemapAddress, which takes tileY and tileX as arguments
 ;  Provides the VRAM address of the tile in question
 pTilemapDestLow:  ds 1 ; $C215 - Low Byte
 pTilemapDestHigh: ds 1 ; $C216 - High Byte
-
-ds 2 ; $C217..$C218 - Unused
-
-; LCD control mirror. Only set by death routine.
-; This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
-gameOver_LCDC_copy: ds 1 ;{ $C219
-;    v = emwdMsob
-;
-;    e: Enable LCD
-;    m: Window tilemap base address. 0 = $9800, 1 = $9C00
-;    w: Enable window
-;    d: Tiles base address. 0 = $8800, 1 = $8000
-;    M: BG tilemap base address. 0 = $9800, 1 = $9C00
-;    s: Sprite size. 0 = 8x8, 1 = 8x16
-;    o: Enable sprite
-;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
-;}
-
-ds 13 ; $C21A..$C226 - Unused
-
-; Unknown variable used in unknownProc_230C, where it allows the function to run and acts as some sort of internal control byte
-unknown_C227: ds 1 ; $C227 - Unknown
 
 ; $C228..$C2FF - Unused. Appears safe to use.
 
@@ -93,14 +67,12 @@ section "Special Enemy Variables", wram0[$C380]
 blobThrower_actionTimer: ds 1 ; $C380 - Cleared in $2:4DB1. Used as index in $2:4FD4
 blobThrower_waitTimer: ds 1 ; $C381 - Timer for $2:4EA1
 blobThrower_state: ds 1 ; $C382 - Valid values are 0, 1, 2, 3
-ds 3 ; $C383..$C385 - Unused
 blobThrower_facingDirection: ds 1 ; $C386 - Set to Samus is right of enemy in $2:4F87
 blobThrowerBlob_unknownVar: ds 1 ; $C387 - Clear by the Blow Thrower Projectile, but never read
 ;}
 
 temp_spriteType: ds 1 ; $C388 - Used by the Item AI to temporarily store what sprite it is.
 
-ds 7 ; $C389..$C38F - Unused
 
 ; Arachnus variables {
 arachnus_jumpCounter: ds 1 ; $C390
@@ -108,11 +80,8 @@ arachnus_actionTimer: ds 1 ; $C391 - Set to 20h, 10h, and 04h
 arachnus_unknownVar:  ds 1 ; $C392 - Set to 5 by Arachnus' AI but never read
 arachnus_jumpStatus:  ds 1 ; $C393 - $00 - in jump arc, $80 - At the end of an arc, $81 - At the end of the last arc
 arachnus_health:      ds 1 ; $C394 - Set by Arachnus AI
-ds 1 ; $C395 - Unused, but cleared by Arachnus' init state
-ds 1 ; $C396 - Unused, but cleared by Arachnus' init state
 ;}
 
-ds 9 ; $C397..$C39F - Unused
 
 ; Queen Variables {
 
@@ -122,8 +91,6 @@ queen_bodyHeight: ds 1 ; $C3A2 - Queen body height? (used for timing the bottom 
 
 queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation (never written to?)
 queen_walkCounter: ds 1 ; $C3A4 - Index into the queen's walk speed table
-ds 1 ; $C3A5 - Unused? (perhaps the walk counter used to be a pointer?)
-
 queen_pNeckPatternLow:  ds 1 ; $C3A6 - Pointer to the current working byte of the current neck pattern
 queen_pNeckPatternHigh: ds 1 ; $C3A7 - "" (high byte)
 
@@ -220,8 +187,6 @@ queen_deathArray: ds 8 ; $C3D6..$C3DD - Queen table of disintegration bitmasks f
 queen_pDeathChrLow:  ds 1 ; $C3DE - VRAM pointer for Queen's disintegration animation
 queen_pDeathChrHigh: ds 1 ; $C3DF -  "" high byte
 queen_deathBitmask: ds 1 ; $C3E0 - Queen disintegration bitmask - Bitmask is applied if non-zero
-ds 1 ; $C3E1 - Unused
-ds 1 ; $C3E2 - Unused
 queen_projectilesActiveFlag: ds 1 ; $C3E3 - Non-zero when projectiles are active
 queen_projectileTempDirection: ds 1 ; $C3E4 - Temp storage for directional flags of projectile
 queen_projectileChaseTimer: ds 1 ; $C3E5 - Decrementing timer used for keeping track of how often the projectiles change directions
@@ -576,8 +541,6 @@ sfxPlaying_square1: ds 1 ; $CEC1 - Tone/sweep channel sound effect playing
     def sfx_square1_2D                       equ $2D ; Set in $2:79A8 (might be a hack to use 0Fh's sound effect playing routine by overflowing jump table in bank 4)
 ; }
 
-ds 1 ; $CEC2 - Unused?
-
 sfxTimer_square1: ds 1 ; $CEC3 - Tone/sweep channel sound effect timer
 samusHealthChangedOptionSetIndex: ds 1 ; $CEC4 - Samus' health changed option set index. Only 2 is (meaningfully) used due to a bug (see $4:53F7)
 ;        {
@@ -586,8 +549,6 @@ samusHealthChangedOptionSetIndex: ds 1 ; $CEC4 - Samus' health changed option se
 ;            2: Normal option set
 ;        }
 ;    }
-
-ds 2 ; $CEC5..$CEC6 - Unused?
 
 ;    $CEC7: Tone channel sound effect
 ;    {
@@ -604,22 +565,14 @@ sfxPlaying_square2: ds 1 ; $CEC8 - Tone channel sound effect playing
     def sfx_square2_automFlamethrower        equ 7 ; Autom flamethrower
 ; }
 
-ds 1 ; $CEC9 - Unused?
-
 sfxTimer_square2: ds 1 ; $CECA - Tone channel sound effect timer
-
-ds 1 ; $CECB - Unused?
 
 square2_variableFrequency: ds 1 ; $CECC - Variable tone channel frequency. Only the lower byte
 ;    }
 
-ds 1 ; $CECD - Unused?
-
 ;    $CECE..CED4: Would be the wave channel sound effect, but is unused (only cleared) and $CEE6/$CFE5 is used instead.
 sfxRequest_fakeWave: ds 1 ; $CECE
 sfxPlaying_fakeWave: ds 1 ; $CECF
-
-ds 5 ; $CED0..CED4 - Unused?
 
 ;    $CED5: Noise channel sound effect
 ;    {
@@ -654,14 +607,8 @@ sfxPlaying_noise: ds 1 ; $CED6 - Noise channel sound effect playing
     def sfx_noise_19                       equ $19 ; Unused
     def sfx_noise_autoadJump               equ $1A ; Autoad jump
 ; }
-
-ds 1 ; $CED7 - Unused?
-
 sfxTimer_noise: ds 1 ; $CED8 - Noise channel sound effect timer
 ;    }
-
-ds 3 ; $CED9..$CEDB - Unused?
-
 songRequest: ds 1 ; $CEDC - Song request
 songPlaying: ds 1 ; $CEDD - Song playing
 ;{
@@ -712,16 +659,13 @@ songInterruptionPlaying: ds 1 ; $CEDF - Song interruption playing
     def songInterruption_clear         equ $FF ; Clear song interruption
 ;}
 
-ds 4 ; $CEE0..$CEE3 - Unused?
-
 sfxActive_square1: ds 1 ; $CEE4 - Tone/sweep channel sound effect is playing flag (checked by song handler)
 sfxActive_square2: ds 1 ; $CEE5 - Tone channel sound effect is playing flag (checked by song handler)
 sfxActive_wave: ds 1 ; $CEE6 - Wave channel sound effect is playing flag (checked by song handler)
 sfxActive_noise: ds 1 ; $CEE7 - Noise channel sound effect is playing flag (checked by song handler)
 resumeScrewAttackSoundEffectFlag: ds 1 ; $CEE8 - Resume screw attack sound effect flag
 
-ds 23 ; $CEE9..$CEFF - Unused?
-
+section "WRAM Bank 0 - Audio RAM 2", wram0[$CF00] 
 songProcessingState: ; $CF00..60: Song processing state
 ;    {
 songTranspose: ds 1 ; $CF00 - Transpose
@@ -775,7 +719,6 @@ songPolynomialCounter_noise: ds 1 ; $CF22 - Noise channel polynomial counter
 songCounterControl_noise: ds 1 ; $CF23 - Noise channel counter control
 ;        }
 
-ds 2
 
 songChannelInstructionPointer_square1: ds 2 ; $CF26 - Song tone/sweep channel instruction pointer
 songChannelInstructionPointer_square2: ds 2 ; $CF28 - Song tone channel instruction pointer
@@ -865,14 +808,10 @@ songFadeoutTimer: ds 1 ; $CF5C - Song fadeout timer. Set to D0h when initiating 
 ;            70h: Sound envelope / volume = 45h. Disable noise channel. Wave channel volume = 60h
 ;            A0h: Sound envelope / volume = 65h
 ;        }
-ramCF5D: ds 1 ; $CF5D - Set to tone/sweep sound envelope when fading out music. Never read
-ramCF5E: ds 1 ; $CF5E - Set to tone sound envelope when fading out music. Never read
-ramCF5F: ds 1 ; $CF5F - Set to wave volume when fading out music. Never read
 songFrequencyTweak_square2: ds 1 ; $CF60 - Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
 ;    }
-songProcessingStateBackup: ds 97 ; $CF61..C1: Backup of song processing state (during song interruption)
+songProcessingStateBackup: ds songProcessingStateBackup - songProcessingStates ; $CF61..C1: Backup of song processing state (during song interruption)
 
-ds 3 ; $CFC2..$CFC4 - Unused?
 
 songPlayingBackup: ds 2 ; $CFC5 - Backup of song playing (during song interruption)
 
@@ -884,13 +823,8 @@ audioPauseControl: ds 1 ; $CFC7 - Audio pause control
 audioPauseSoundEffectTimer: ds 1 ; $CFC8 - Audio pause sound effect timer
 songSweepBackup_square1: ds 1 ; $CFC9 - Backup of tone/sweep channel sweep (during song interruption)
 
-ds 7 ; $CFCA..$CFD0 - Unused?
-
 sfxVariableFrequency_square1: ds 1 ; $CFD1 - Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
 
-ds 17 ; $CFD2..$CFE2
-
-ramCFE3: ds 2 ; $CFE3 - Set to wave pattern data pointer by song instruction F1h. Never read
 sfxRequest_lowHealthBeep: ; $CFE5 - Low health beep / wave channel sound effect request
 sfxRequest_wave: ds 1 ; $CFE5 - Low health beep / wave channel sound effect request
 sfxPlaying_lowHealthBeep: ; $CFE6 - Low health beep / wave channel sound effect playing
@@ -906,8 +840,6 @@ sfxPlaying_wave: ds 1 ; $CFE6 - Low health beep / wave channel sound effect play
 sfxPlayingBackup_lowHealthBeep: ds 1 ; $CFE7 - Backup of low health beep sound effect playing (during song interruption)
 sfxTimer_wave: ds 1 ; $CFE8 - Wave channel sound effect timer
 sfxLength_wave: ds 1 ; $CFE9 - Wave channel sound effect length
-ds 1 ; $CFEA - Unused
-ramCFEB: ds 1 ; $CFEB - Cleared by $43C4, otherwise unused
 audioChannelOutputStereoFlags: ds 1 ; $CFEC - Audio channel output stereo flags
 audioChannelOutputStereoFlagsBackup: ds 1 ; $CFED - Backup of audio channel output stereo flags (during song interruption)
 loudLowHealthBeepTimer: ds 1 ; $CFEE - Loud low health beep timer
@@ -920,8 +852,6 @@ loudLowHealthBeepTimer: ds 1 ; $CFEE - Loud low health beep timer
 
 ;;;; $D000..DFFF: WRAM bank 1 ;;; {
 section "WRAM bank 0 - D000", wramx[$d000] ;{
-
-ds 8 ; $D000..07: Unused
 
 tempMetatile:
 .topLeft:     ds 1 ; $D008: Metatile top-left
@@ -947,12 +877,7 @@ samusAirDirection: ds 1 ; $D00F - Direction Samus is moving in air, used for spi
 ;    1: Up-right
 ;}
 samus_jumpStartCounter: ds 1 ; $D010 - Counter for the beginning of Samus's jump state (used in the jumpStart pose)
-
-unused_D011: ds 1 ; $D011 - Nothing. Only cleared
-
 weaponDirection: ds 1 ; $D012 - Direction of the projectile currently being processed
-
-ds 13 ; $D013..$D01F - Unused
 
 samusPose: ds 1 ; $D020 - Samus' pose
 ;{
@@ -984,8 +909,6 @@ samusPose: ds 1 ; $D020 - Samus' pose
 ;    1D: Escaped Metroid Queen
 ;}
 
-ds 1 ; $D021 - Unused
-
 ; Used by the running animation.
 ;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
 ; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
@@ -1000,8 +923,6 @@ camera_scrollDirection: ds 1 ; $D023 - Direction of screen movement
 ;}
 
 samus_fallArcCounter: ds 1 ; $D024 - Index into falling velocity arrays. Max value is $16
-
-ds 1 ; $D025 - Unused
 
 samus_jumpArcCounter: ds 1 ; $D026 - Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
 
@@ -1022,7 +943,6 @@ collision_samusYOffset_A: ds 1 ; $D02D
 collision_samusYOffset_B: ds 1 ; $D02E
 collision_samusYOffset_C: ds 1 ; $D02F
 collision_samusYOffset_D: ds 1 ; $D030
-ds 1 ; $D031: Unused. Was likely intended for as a RAM value for the 5th horizontal test point.
 
 projectileIndex: ds 1 ; $D032 - Index of working projectile
 
@@ -1033,10 +953,6 @@ camera_speedRight: ds 1 ; $D035 - Screen right velocity
 camera_speedLeft:  ds 1 ; $D036 - Screen left velocity
 camera_speedUp:    ds 1 ; $D037 - Screen up velocity
 camera_speedDown:  ds 1 ; $D038 - Screen down velocity
-
-title_unusedD039: ds 1 ; $D039 - Set to 0 by load title screen, otherwise unused
-
-ds 1 ; $D03A - Unused
 
 samus_onscreenYPos: ds 1 ; $D03B - Samus' Y position on screen
 samus_onscreenXPos: ds 1 ; $D03C - Samus' X position on screen
@@ -1072,8 +988,6 @@ spiderContactState: ds 1 ; $D03D - Spider ball orientation
 ;    E: Inside corner:  Of right-facing wall and floor
 ;    F: Unused:         Embedded in solid
 ;}
-
-ds 4 ; $D03E..$D041 - Unused
 
 spiderBallDirection: ds 1 ; $D042 - Spider ball translational direction
 ;{
@@ -1155,8 +1069,6 @@ collision_pEnemyLow:  ds 1 ; $D05E - Enemy data pointer of target enemy (if coll
 collision_pEnemyHigh: ds 1 ; $D05F
 collision_weaponDir:  ds 1 ; $D060 - Projectile direction - Set to [$D012] if shot
 
-ds 1 ; $D061 - Unused
-
 acidContactFlag: ds 1 ; $D062 - Flag set every frame if Samus is touching acid.
 
 deathFlag: ds 1 ; $D063 - Dying flag
@@ -1180,14 +1092,7 @@ countdownTimerHigh: ds 1 ; $D067 -  various events
 ;    Set to FFFFh on load title screen. Checked as timer for title screen flashing
 ;    Used in many other places in bank 5
 ;}
-
-ds 1 ; $D068 - Unused
-
 enemySolidityIndex_canon: ds 1 ; $D069 - Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
-
-ds 1 ; $D06A - Unused
-
-unused_D06B: ds 1 ; $D06B - Unused. Cleared by loading save
 
 itemCollected: ds 1 ; $D06C - Item pickup being collected at the moment. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
 ;{
@@ -1213,8 +1118,7 @@ itemCollectionFlag: ds 1 ; $D06D - Item collection flag. Stops the status bar fr
 ;    $FF = Set by Item AI to indicate an item is being collected
 ;    $03 = Set by handleItemPickup (00:372F) to tell the item AI that it's time to delete the item
 ;}
-
-maxOamPrevFrame: ds 1 ; $D06E - OAM slots used in by the previous frame
+itemCollected_copy: ds 1 ; $D093 - Copy of $D06C, used by handleItemPickup (00:372F)
 
 itemOrb_collisionType:  ds 1 ; $D06F - Used (?) to override collision results during item collection
 itemOrb_pEnemyWramLow:  ds 1 ; $D070
@@ -1224,7 +1128,6 @@ samus_spinAnimationTimer: ds 1 ; $D072 - Animation timer for spinning. Increment
 
 credits_textPointerLow:  ds 1 ; $D073 - Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
 credits_textPointerHigh: ds 1 ; $D074
-credits_unusedVar: ds 1 ; $D075 - Cleared, but never read
 credits_nextLineReady: ds 1 ; $D076 - Flag to indicate that the next line of the credits is ready to be uploaded
 
 acidDamageValue:  ds 1 ; $D077 - Acid damage. Saved to SRAM
@@ -1291,9 +1194,6 @@ nextEarthquakeTimer: ds 1 ; $D091 - Time until next Metroid earthquake. Counts d
 
 currentRoomSong: ds 1 ; $D092 - Song for room. Used when restoring song when loading a save and after some other events
 
-itemCollected_copy: ds 1 ; $D093 - Copy of $D06C, used by handleItemPickup (00:372F)
-unused_itemOrb_yPos: ds 1 ; $D094 - Written to by item orb AI, but never read?
-unused_itemOrb_xPos: ds 1 ; $D095 - Written to by item orb AI, but never read?
 
 metroidCountShuffleTimer: ds 1 ; $D096 - Metroids remaining shuffle timer
 
@@ -1326,8 +1226,6 @@ songRequest_afterEarthquake: ds 1 ; $D0A5 - Song to play after earthquake
 sound_playQueenRoar: ds 1 ; $D0A6 - Enable Queen's distant roar as a sound effect
 
 metroidLCounterDisp: ds 1 ; $D0A7 - L Counter value to display (Metroids remaining in area)
-
-wramUnknown_D0A8: ds 1 ; $D0A8 - Set to 0 by $239C
 
 ; $D0A9..$D0FF - Unused
 
@@ -1474,7 +1372,8 @@ bombArray:: ;$DD30..5F: Bomb data. 10h byte slots
 ;    + 2: Y position
 ;    + 3: X position
 ;}
-wramUnused_DD60: ds $100 - $60 ;$DD60..FF: Unused
+
+section "Map Update Buffer", wramx[$de00]
 
 ; List of metatiles from the map to update to VRAM
 mapUpdateBuffer:: ds $100 ; $DE00..FF

@@ -1750,11 +1750,6 @@ ret
     ; Set item number being collected
     ld a, c
     ld [itemCollected], a
-    
-    ldh a, [hEnemy.yPos]
-    ld [unused_itemOrb_yPos], a
-    ldh a, [hEnemy.xPos]
-    ld [unused_itemOrb_xPos], a
     ; Let game know that an item is being collected now
     ld a, $ff
     ld [itemCollectionFlag], a

@@ -16,14 +16,9 @@ externalInitializeAudio:
 
 ; Song processing state size constants
 ;{
-    channelSongProcessingStateSize:
-    db $09 ; Size of channel song processing state ($CF38 - $CF2F)
-
     channelAllSongProcessingStateSizes:
     db $2d ; Size of all channel song processing states ($CF5C - $CF2F)
 
-    songProcessingStateSize:
-    db $61 ; Size of song processing state ($CF61 - songTranspose)
 ;}
 
 musicNotes:
@@ -317,8 +312,7 @@ playSongInterruption:
 
     ld hl, songProcessingStateBackup
     ld de, songProcessingState
-    ld a, [songProcessingStateSize]
-    ld b, a
+    ld b, songProcessingStateBackup - songProcessingStates
 
     .copyLoop:
         ld a, [de]
@@ -345,8 +339,7 @@ startEndingSongInterruption:
     ld [songInterruptionPlaying], a
     ld hl, songProcessingState
     ld de, songProcessingStateBackup
-    ld a, [songProcessingStateSize]
-    ld b, a
+    ld b, songProcessingStateBackup - songProcessingStates
 
     .copyStateLoop:
         ld a, [de]
@@ -401,7 +394,6 @@ finishEndingSongInterruption:
     ld [songSweep_square1], a
     xor a
     ld [songInterruptionPlaying], a
-    ld [ramCFEB], a
     ld a, [songPlayingBackup]
     ld [songPlaying], a
 ret
@@ -412,12 +404,6 @@ handleAudio_initiateFadingOutMusic:
     ld [songInterruptionPlaying], a
     ld a, $d0
     ld [songFadeoutTimer], a
-    ld a, [songNoteEnvelope_square1]
-    ld [ramCF5D], a
-    ld a, [songNoteEnvelope_square2]
-    ld [ramCF5E], a
-    ld a, [songNoteVolume_wave]
-    ld [ramCF5F], a
     jp handleSongAndSoundEffects
 
 ;}
@@ -453,7 +439,6 @@ handleAudio_handleFadingOutMusic:
     ld [songChannelEnable_noise], a
     ld a, $60
     ld [songNoteVolume_wave], a
-    ld [ramCF5F], a
     ld a, $45
     jr .merge
 
@@ -468,8 +453,6 @@ handleAudio_handleFadingOutMusic:
     ld [songNoteEnvelope_square1], a
     ld [songNoteEnvelope_square2], a
     ld [songNoteEnvelope_noise], a
-    ld [ramCF5D], a
-    ld [ramCF5E], a
     jp handleSongAndSoundEffects
 
 .timer0:
@@ -1931,11 +1914,9 @@ songInstruction_setWorkingSoundChannelOptions_wave:
 ;{
     ld a, [hl+]
     ld [songWavePatternDataPointer], a
-    ld [ramCFE3], a
     ld e, a
     ld a, [hl+]
     ld [songWavePatternDataPointer+1], a
-    ld [ramCFE3+1], a
     ld d, a
     ld a, [songInterruptionPlaying]
     cp songInterruption_fadeOutMusic
@@ -2024,16 +2005,13 @@ songInstruction_repeat:
 
 copyChannelSongProcessingState:
 ;{
-    ld a, [channelSongProcessingStateSize]
-    ld b, a
+    ld b, songChannelSongProcessingState_square1 - songChannelSongProcessingState_working
 
     .loopCopy:
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
-        ld a, b
-        and a
     jr nz, .loopCopy
 
     ret

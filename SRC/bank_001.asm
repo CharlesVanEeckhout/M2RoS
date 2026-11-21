@@ -1040,7 +1040,7 @@ loadSaveFile: ;{ 01:4E33
     call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
     
     ld a, _id_gameMode_LoadA
-    ldh [gameMode], a
+    ldh [hGameMode], a
 ret ;}
 
 ;------------------------------------------------------------------------------

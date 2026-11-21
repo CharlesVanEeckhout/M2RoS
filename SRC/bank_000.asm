@@ -299,9 +299,6 @@ VBlankHandler: ;{ 00:0154
     ld a, [mapUpdateFlag]
     and a
     jr z, .else_B
-        ; this bankswitch is not needed, because the map data is already in mapUpdateBuffer
-        ld a, [currentLevelBank]
-        ld [rROM2B], a
         call VBlank_updateMap
         jr .endIf_B
     .else_B:
@@ -541,7 +538,6 @@ gameMode_LoadA: ;{ 00:03B5
     ld [deathAnimTimer], a
     ld [deathFlag], a
     ld [vramTransferFlag], a
-    ld [unused_D06B], a
     ld [itemCollected], a
     ld [itemCollectionFlag], a
 
@@ -634,8 +630,6 @@ gameMode_LoadB: ;{ 00:0464
     ; Enable LCD
     ld a, $e3
     ldh [rLCDC], a
-    xor a
-    ld [unused_D011], a
     ; Increment game mode to main
     ld a, _id_gameMode_Main
     ldh [hGameMode], a
@@ -5374,16 +5368,6 @@ samus_getTileIndex: ;{ 00:1FF5
     ; Get tilemap address based on coordinates provided by the caller
     call getTilemapAddress
 
-    ; Adjust base address for collision depending on the tilemap being used
-    ld a, [gameOver_LCDC_copy]
-    and $08
-    jr z, .endIf_A
-        ld a, $04
-        add h
-        ld h, a
-        ld [pTilemapDestHigh], a
-    .endIf_A:
-
     ; Wait for HBlank and read once
     .waitLoop_A:
         ldh a, [rSTAT]
@@ -6988,9 +6972,6 @@ VBlank_updateMapDuringTransition: ;{ 00:2B8F
     ld a, [mapUpdateFlag]
     and a
         jr z, VBlank_vramDataTransfer.exit
-    ; this bankswitch is not needed, because the map data is already in mapUpdateBuffer
-    ; what's more, it is a bug to update the bankRegMirror during the vblank interrupt
-    switchBankVar [currentLevelBank]
     ; Update map
     call VBlank_updateMap
 jr VBlank_vramDataTransfer.exit ;}
@@ -8924,7 +8905,6 @@ gameMode_dead: ;{ 00:36B0
     ldh [rSCX], a
     ; Re-enable LCD
     ld a, $c3
-    ld [gameOver_LCDC_copy], a
     ldh [rLCDC], a
     
     ; Set timer for Game Over screen
