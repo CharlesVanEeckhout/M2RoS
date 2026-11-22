@@ -79,6 +79,8 @@ SECTION "ROM Bank $000 - Main Section", ROM0[$0150]
 
 bootRoutine: ;{ 00:01FB
     di
+    ; Init stack pointer before calling a function
+    ld sp, stack.bottom ; $DFFF
 
     ; Initialize registers
     ld a, $01
@@ -98,17 +100,10 @@ bootRoutine: ;{ 00:01FB
         ldh a, [rLY]
         cp $94
     jr nz, .waitLoop
-    ; Init LCD parameters
+    ; disable screen
     ld a, $03
     ldh [rLCDC], a
-    ld a, $93
-    ld [bg_palette], a
-    ld [ob_palette0], a
-    ld a, $43
-    ld [ob_palette1], a
     
-    ; Init stack pointer before calling a function
-    ld sp, stack.bottom ; $DFFF
     callFar initializeAudio
     
     xor a
@@ -177,6 +172,11 @@ bootRoutine: ;{ 00:01FB
     ldh [rIE], a
     ld a, $07
     ldh [rWX], a
+    ld a, $93
+    ld [bg_palette], a
+    ld [ob_palette0], a
+    ld a, $43
+    ld [ob_palette1], a
     ld a, $80
     ldh [rLCDC], a
     ei
@@ -274,10 +274,6 @@ VBlankHandler: ;{ 00:0154
     .endIf_A:
 ; Various different update handlers
 ;  Looks like
-    ; Credits drawing routine
-    ld a, [credits_nextLineReady]
-    and a
-        jp nz, VBlank_drawCreditsLine_longJump
     ; Death sequence drawing routine
     ld a, [deathAnimTimer]
     and a
@@ -5679,8 +5675,8 @@ convertCameraToScroll: ;{ 00:2366
     sub SCREEN_WIDTH_PX / 2
     ld [scrollX], a
     ; Handle earthquake
-    call earthquake_adjustScroll_longJump
-ret ;}
+    jpLong earthquake_adjustScroll
+;}
 
 ;------------------------------------------------------------------------------
 ; Screen Transition decoder
@@ -5706,16 +5702,12 @@ executeDoorScript: ;{ 00:239C
     ld e, a
     ld a, [doorIndexHigh]
     ld d, a
-    sla e
-    rl d
     ld hl, doorPointerTable
+    add hl, de
     add hl, de
     ; Load door script pointer into HL
     ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld a, e
+    ld h, [hl]
     ld l, a
     ; Load door script into buffer
     ld b, doorScriptBufferSize
@@ -6117,8 +6109,6 @@ executeDoorScript: ;{ 00:239C
                 jp .nextToken
             ;}
     ;}
-    
-    .unreferencedTable: db $04, $05, $06, $07, $08, $09, $10, $12 ; 00:260C
 
     .doorToken_item:
     cp $d0 ; ITEM {
@@ -9324,7 +9314,7 @@ pickup_missileTank: ;{
         ld [samusCurMissilesLow], a
         ld a, $09
         ld [samusCurMissilesHigh], a
-    jr handleItemPickup_end
+    ; fallthrough
 ;} end case
 ;}
 
@@ -9492,30 +9482,26 @@ loadGame_samusItemGraphics: ;{ 00:3BB4
         cp $01
         jr nz, .endIf_ice
             ld hl, gfxInfo_ice
-            call loadGame_copyItemToVram
-            jr .endBeamBranch
+            jp loadGame_copyItemToVram
         .endIf_ice:
     
         cp $03
         jr nz, .endIf_spazer
             ld hl, gfxInfo_spazer
-            call loadGame_copyItemToVram
-            jr .endBeamBranch
+            jp loadGame_copyItemToVram
         .endIf_spazer:
     
         cp $02
         jr nz, .endIf_wave
             ld hl, gfxInfo_wave
-            call loadGame_copyItemToVram
-            jr .endBeamBranch
+            jp loadGame_copyItemToVram
         .endIf_wave:
     
         cp $04
         jr nz, .endIf_plasma
             ld hl, gfxInfo_plasma
-            call loadGame_copyItemToVram
+            jp loadGame_copyItemToVram
         .endIf_plasma:
-    .endBeamBranch:
 ret ;}
 
 ; Given a gfxInfo entry pointed to by HL, copies graphics into VRAM
@@ -9595,9 +9581,6 @@ ret
 
 gameMode_saveGame: ; 00:3CE2
     jpLong saveFileToSRAM
-
-earthquake_adjustScroll_longJump: ; 00:3CED
-    jpLong earthquake_adjustScroll
 
 drawNonGameSprite_longCall: ; 00:3CF8
     callFar drawNonGameSprite
@@ -9680,7 +9663,6 @@ gameMode_Credits: ; 00:3E34
     jpLong creditsRoutine
 
 gameMode_Title: ; 00:3E59
-    call OAMClear
     jpLong titleScreenRoutine
 
 gameMode_newGame: ; 00:3E67

@@ -43,8 +43,6 @@ gfx_enemiesF::   incbin "gfx/enemies/enemiesF.chr",0,$400
 gfx_arachnus::   incbin "gfx/enemies/arachnus.chr",0,$400
 gfx_surfaceSPR:: incbin "gfx/enemies/surfaceSPR.chr",0,$400
 
-; 06:7920
-creditsText: include "data/credits.asm"
 
 spiderBallOrientationTable:: ;{ 06:7E03
 ; Given an input and a collision state, this produces a rotational direction for the spider ball

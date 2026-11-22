@@ -8,72 +8,6 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
 titleCreditsBank:
 
 ;------------------------------------------------------------------------------
-; VBlank subroutine called during credits
-VBlank_drawCreditsLine: ;{ 05:403D
-    ; Load credits text pointer
-    ld a, [credits_textPointerLow]
-    ld l, a
-    ld a, [credits_textPointerHigh]
-    ld h, a
-    ; Load tilemap destination pointer
-    ld a, [pTilemapDestLow]
-    ld e, a
-    ld a, [pTilemapDestHigh]
-    ld d, a
-    ; Enable SRAM to access credits text
-    ld a, RAMG_SRAM_ENABLE
-    ld [rRAMG], a
-    ; Check if newline
-    ld a, [hl]
-    cp $f1
-    jr z, .else
-        ; Write normal line
-        ld b, $14
-        .writeLineLoop:
-            ld a, [hl+] ; Load character
-            sub $21 ; Adjust character encoding to ASCII
-            ld [de], a ; Write character
-            inc de
-            dec b
-        jr nz, .writeLineLoop
-        jr .endIf
-    .else:
-        ; Write a blank like
-        ld b, $14
-        .writeBlankLoop:
-            ld a, $ff
-            ld [de], a
-            inc de
-            dec b
-        jr nz, .writeBlankLoop
-        ; Increment credits text pointer to next byte
-        inc hl
-    .endIf:
-
-    ; Disable SRAM
-    ld a, RAMG_SRAM_DISABLE
-    ld [rRAMG], a
-    ; Store new value of credits text pointer
-    ld a, l
-    ld [credits_textPointerLow], a
-    ld a, h
-    ld [credits_textPointerHigh], a
-    ; Clear ready flag
-    xor a
-    ld [credits_nextLineReady], a
-
-    call OAM_DMA
-
-    ld a, $01
-    ldh [hVBlankDoneFlag], a
-    ; Return from interrupt
-    pop hl
-    pop de
-    pop bc
-    pop af
-reti ;}
-
-;------------------------------------------------------------------------------
 ; called by gameMode_boot
 loadTitleScreen: ;{ 05:408F
     ld bc, $1000
@@ -248,8 +182,8 @@ titleScreenRoutine: ;{ 05:4118
     ;  Animate every 4 frames using two bits from the frame counter
     ldh a, [hFrameCounter]
     and %00001100
-    srl a
-    srl a
+    rlca
+    rlca
     ld e, a
     ld d, $00
     ld hl, titleCursorTable
@@ -308,42 +242,36 @@ titleScreenRoutine: ;{ 05:4118
     ldh a, [hInputRisingEdge]
     cp PAD_RIGHT
     jr nz, .endIf_G
-        ldh a, [hInputPressed]
-        cp PAD_RIGHT
+        ; Play sound effect
+        ld a, sfx_square1_select
+        ld [sfxRequest_square1], a
+        ; Increment slot number
+        ld a, [activeSaveSlot]
+        inc a
+        ld [activeSaveSlot], a
+        ; Wrap back to zero
+        cp $03
         jr nz, .endIf_G
-            ; Play sound effect
-            ld a, sfx_square1_select
-            ld [sfxRequest_square1], a
-            ; Increment slot number
-            ld a, [activeSaveSlot]
-            inc a
+            xor a
             ld [activeSaveSlot], a
-            ; Wrap back to zero
-            cp $03
-            jr nz, .endIf_G
-                xor a
-                ld [activeSaveSlot], a
     .endIf_G:
 
     ; If left is pressed, decrement save slot
     ldh a, [hInputRisingEdge]
     cp PAD_LEFT
     jr nz, .endIf_H
-        ldh a, [hInputPressed]
-        cp PAD_LEFT
+        ; Play sound effect
+        ld a, sfx_square1_select
+        ld [sfxRequest_square1], a
+        ; Decrement slot number
+        ld a, [activeSaveSlot]
+        dec a
+        ld [activeSaveSlot], a
+        ; Wrap around to slot 3
+        cp $ff
         jr nz, .endIf_H
-            ; Play sound effect
-            ld a, sfx_square1_select
-            ld [sfxRequest_square1], a
-            ; Decrement slot number
-            ld a, [activeSaveSlot]
-            dec a
+            ld a, $02
             ld [activeSaveSlot], a
-            ; Wrap around to slot 3
-            cp $ff
-            jr nz, .endIf_H
-                ld a, $02
-                ld [activeSaveSlot], a
     .endIf_H:
     
     ; You must hold down for clear to be selected
@@ -552,13 +480,11 @@ credits_drawTimerDigits: ;{ 05:4000
     ldh [hTemp.b], a
     ; Extract the tens digit
     swap a
-    and $0f
-    add $f0 ; Adjust the value for display
+    or $f0 ; Adjust the value for display
     call credits_drawOneDigit
     ; Reload timer value from temp
     ldh a, [hTemp.b]
-    and $0f ; Isolate the ones digit
-    add $f0 ; Adjust the value for display
+    or $f0 ; Adjust the value for display
     ; fallthrough
 
 ; Draw one digit of ending timer
@@ -665,7 +591,7 @@ credits_animateSamus: ;{ 05:5620
     rst LOW(RST_28)
         dw .standingStart     ; 00
         dw .running           ; 01
-        dw .unused            ; 02 - Unused stub
+        dw $0000              ; 02
         dw .spinRising        ; 03
         dw .spinFalling       ; 04
         dw .suitless_kneeling ; 05
@@ -696,14 +622,12 @@ credits_animateSamus: ;{ 05:5620
     swap a
     ; Add 0 or 1 to this base index of the hair waving animation
     add $13
-    call credits_drawSamus
-ret
+    jp credits_drawSamus
 
 .suited_standingEnd: ; $14 - Draw Suited Samus standing
     ; Stand forever
     ld a, $0a
-    call credits_drawSamus
-ret
+    jp credits_drawSamus
 
 .suited_kneeling: ; $13 - Draw Suited Samus kneeling
     ld a, $08
@@ -1073,7 +997,6 @@ ret
     ld [credits_samusAnimState], a
 ret
 
-.unused: ; $02 - Unused. Falls through to this table
 ;}
 ;}
 
@@ -1158,9 +1081,9 @@ prepareCredits: ;{ 05:587F
     call copyToVram
     
     ; Initialize credits text pointer
-    ld a, LOW(creditsTextBuffer)
+    ld a, LOW(creditsText)
     ld [credits_textPointerLow], a
-    ld a, HIGH(creditsTextBuffer)
+    ld a, HIGH(creditsText)
     ld [credits_textPointerHigh], a
     
     ; Initialize star array
@@ -1213,17 +1136,9 @@ credits_scrollHandler: ;{ 05:593E
     ld l, a
     ld a, [credits_textPointerHigh]
     ld h, a
-    ; Enable SRAM
-    ld a, RAMG_SRAM_ENABLE
-    ld [rRAMG], a
     ; Load character
     ld a, [hl]
-    ld b, a
-    ; Disable SRAM
-    ld a, RAMG_SRAM_DISABLE
-    ld [rRAMG], a
     ; Check if we're at the end of the credits
-    ld a, b
     cp $f0
     jr nz, .else
         ld a, $01
@@ -1249,10 +1164,45 @@ credits_scrollHandler: ;{ 05:593E
         ld a, $08 ; Set X cursor position to near the left edge
         ld [tileX], a
         call getTilemapAddress
-        ; Signal that the next line is ready to be drawn
+        ; Queue up the next line to draw
+        ld a, BANK(creditsText)
+        ld [vramTransfer_srcBank], a
+        ld a, [pTilemapDestLow]
+        ldh [hVramTransfer.destAddrLow], a
+        ld a, [pTilemapDestHigh]
+        ldh [hVramTransfer.destAddrHigh], a
+        ld a, $14
+        ldh [hVramTransfer.sizeLow], a
+        xor a
+        ldh [hVramTransfer.sizeHigh], a
+        ; check if newline
+        ld a, [hl]
+        cp $f1
+        jr .isNewline
+            ld a, l
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, h
+            ldh [hVramTransfer.srcAddrHigh], a
+            ld de, $0014
+            add hl, de
+            jr .exit
+        .isNewline:
+            ld a, LOW(.newline)
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, HIGH(.newline)
+            ldh [hVramTransfer.srcAddrHigh], a
+            inc hl
+        .exit:
+        ld a, l
+        ld [credits_textPointerLow], a
+        ld a, h
+        ld [credits_textPointerHigh], a
+
         ld a, $ff
-        ld [credits_nextLineReady], a
+        ld [vramTransferFlag], a
         ret
+.newline:
+    ds 14
 ;} end proc
 
 ;------------------------------------------------------------------------------
@@ -1291,8 +1241,8 @@ credits_drawSamus: ;{ 05:5989
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_1 ;$0b
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
+
 
 .run_frameB:
     ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_2 ;$09
@@ -1300,8 +1250,7 @@ ret
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITED_RUNNING_BOTTOM_2 ;$0c
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .run_frameC:
     ld a, SPRITE_CREDITS_SUITED_RUNNING_TOP_3 ;$0a
@@ -1339,44 +1288,37 @@ ret
 .jump_frameA:
     ld a, SPRITE_CREDITS_SPINJUMP_1 ;$1f
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .jump_frameB:
     ld a, SPRITE_CREDITS_SPINJUMP_2 ;$20
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .jump_frameC:
     ld a, SPRITE_CREDITS_SPINJUMP_3 ;$21
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .jump_frameD:
     ld a, SPRITE_CREDITS_SPINJUMP_4 ;$22
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suited_standing:
     ld a, SPRITE_CREDITS_SUITED_STANDING ;$07
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suited_kneeling:
     ld a, SPRITE_CREDITS_SUITED_KNEELING ;$12
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suitless_kneeling:
     ld a, SPRITE_CREDITS_SUITLESS_KNEELING ;$11
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suitless_frameA:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_1 ;$0e
@@ -1391,8 +1333,7 @@ ret
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suitless_frameC:
     ld a, SPRITE_CREDITS_SUITLESS_ARM_3 ;$14
@@ -1400,8 +1341,7 @@ ret
     call drawNonGameSprite_longCall
     ld a, SPRITE_CREDITS_SUITLESS_BOTTOM ;$10
     ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-ret
+    jp drawNonGameSprite_longCall
 
 .suitless_frameD:
     ld a, SPRITE_CREDITS_SUITLESS_HEAD_2 ;$15
@@ -1470,6 +1410,8 @@ gfx_creditsSprTiles: incbin "gfx/titleCredits/creditsSprTiles.chr"
 ; 05:7E34
 gfx_theEnd: incbin "gfx/titleCredits/theEnd.chr"
 
+; 06:7920
+creditsText: include "data/credits.asm"
 bank5_freespace: ; 05:7F34 -- filled with $00 (nop)
 
 ;EoF

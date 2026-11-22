@@ -41,11 +41,6 @@ saveData3:: ds $40 ;$A080..BF: SRAM slot 3
 
 saveLastSlot: ds 1;$A0C0: Last used save slot
 
-; Over $700 bytes of freespace
-
-section "SRAM Credits", sram[$A800], bank[0]
-creditsTextBuffer:: ds $800 ; Written to in credits from [$6:7920..7E02]
-
 section "SRAM Object Lists", sram[$B000], bank[0]
 ; Object permanence lists (per save file)
 saveData_objList_baseAddr::
