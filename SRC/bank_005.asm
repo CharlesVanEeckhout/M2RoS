@@ -1097,8 +1097,6 @@ prepareCredits: ;{ 05:587F
         dec b
     jr nz, .loop_B
 
-    call loadCreditsText
-
     ; Reset scroll
     xor a
     ld [scrollY], a

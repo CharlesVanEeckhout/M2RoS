@@ -9533,30 +9533,6 @@ loadGame_copyItemToVram: ;{ 00:3C3F
     jp copyToVram
 ;}
 
-; 00:3C6A - Load credits to SRAM
-loadCreditsText: ;{
-    switchBank creditsText
-    ld hl, creditsText ;$7920
-    ld de, creditsTextBuffer
-    ; Enable SRAM
-    ld a, RAMG_SRAM_ENABLE
-    ld [rRAMG], a
-
-    ; Load text until $F0 is found
-    .loadLoop:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        cp $f0
-    jr nz, .loadLoop
-
-    ; Disable SRAM
-    ld a, RAMG_SRAM_DISABLE
-    ld [rRAMG], a
-
-    switchBank prepareCredits
-ret ;}
-
 ; External Calls {
 earthquakeCheck_farCall: ; 00:3C92
     callFar earthquakeCheck
@@ -9652,9 +9628,6 @@ loadEnemySaveFlags_longJump: ; 00:3E0A
     callFar loadEnemySaveFlags
     switchBank loadSaveFile
 ret
-
-VBlank_drawCreditsLine_longJump: ; 00:3E1E
-    jpLong VBlank_drawCreditsLine
 
 gameMode_prepareCredits: ; 00:3E29
     jpLong prepareCredits
