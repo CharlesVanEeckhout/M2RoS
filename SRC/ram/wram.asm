@@ -485,7 +485,189 @@ saveBuf_enemySpawnFlags: ds $40 * 7 ; $C900..CABF: Copied to/from SRAM ($B000 + 
 
 ; $CAC0..$CEBF - Unused ($400 bytes!!)
 
-section "WRAM Bank 0 - Audio RAM", wram0[$CEC0] ;{
+
+section "WRAM Bank 0 - Audio RAM", wram0[$CF00] 
+songProcessingState: ; $CF00..60: Song processing state
+;    {
+songTranspose: ds 1 ; $CF00 - Transpose
+songInstructionTimerArrayPointer: ds 2 ; $CF01 - Instruction timer array pointer
+
+workingSoundChannel: ds 1 ; $CF03 - Working sound channel (1/2/3/4)
+songChannelEnable_square1: ds 1 ; $CF04 - Song tone/sweep channel enable. Set to 1 if [$CF38] != 0 in $48A0
+songChannelEnable_square2: ds 1 ; $CF05 - Song tone channel enable. Set to 2 if [$CF41] != 0 in $48A0
+songChannelEnable_wave: ds 1 ; $CF06 - Song wave channel enable. Set to 3 if [$CF4A] != 0 in $48A0
+songChannelEnable_noise: ds 1 ; $CF07 - Song noise channel enable. Set to 4 if [$CF53] != 0 in $48A0
+songOptionsSetFlag_working: ds 1 ; $CF08 - Working sound channel options set flag. Set by song instruction F1h. Checked to update channel sweep and sound length / wave pattern duty for tone(/sweep) channels
+songWavePatternDataPointer: ds 2 ; $CF09 - Song wave pattern data pointer. 10h bytes
+
+songSweep_working: ; $CF0B - Working sound channel sweep / enable
+songEnable_working: ds 1 ; $CF0B - Working sound channel sweep / enable
+
+songSoundLength_working: ds 1 ; $CF0C - Working sound channel sound length / wave pattern duty
+
+songEnvelope_working: ; $CF0D - Working sound channel envelope / volume
+songVolume_working: ds 1 ; $CF0D - Working sound channel envelope / volume
+
+songFrequency_working: ; $CF0E - Working sound channel frequency / noise channel polynomial counter
+songPolynomialCounter_working: ds 1 ; $CF0E - Working sound channel frequency / noise channel polynomial counter
+
+songCounterControl_working: ds 1 ; $CF0F - Working noise channel counter control (upper byte of working sound channel frequency)
+
+; Apparently some code in bank 4 expects address range of these variables ($CF10..23)
+;  to align with the address range of the registers it corresponds to ($FF10..23)
+ALIGN 8, $10
+audioChannelOptions: ; $CF10..CF23 - Audio channel options (low bytes of addresses correspond with $FF10..23, and code exploits this fact)
+;        {
+songSweep_square1: ds 1 ; $CF10 - Tone/sweep channel sweep
+songSoundLength_square1: ds 1 ; $CF11 - Tone/sweep channel sound length / wave pattern duty
+songEnvelope_square1: ds 1 ; $CF12 - Tone/sweep channel envelope
+songFrequency_square1: ds 2 ; $CF13 - Tone/sweep channel frequency
+ds 1 ; $CF15 - Unused
+
+songSoundLength_square2: ds 1 ; $CF16 - Tone channel sound length / wave pattern duty
+songEnvelope_square2: ds 1 ; $CF17 - Tone channel envelope
+songFrequency_square2: ds 2 ; $CF18 - Tone channel frequency
+
+songEnableOption_wave: ds 1 ; $CF1A - Wave channel enable
+songSoundLength_wave: ds 1 ; $CF1B - Wave channel sound length
+songVolume_wave: ds 1 ; $CF1C - Wave channel volume (0 = mute, 20h = 100%, 40h = 50%, 60h = 25%)
+songFrequency_wave: ds 2 ; $CF1D - Wave channel frequency
+ds 1 ; $CF1F - Unused
+
+songSoundLength_noise: ds 1 ; $CF20 - Noise channel sound length
+songEnvelope_noise: ds 1 ; $CF21 - Noise channel envelope
+songPolynomialCounter_noise: ds 1 ; $CF22 - Noise channel polynomial counter
+songCounterControl_noise: ds 1 ; $CF23 - Noise channel counter control
+;        }
+
+
+songChannelInstructionPointer_square1: ds 2 ; $CF26 - Song tone/sweep channel instruction pointer
+songChannelInstructionPointer_square2: ds 2 ; $CF28 - Song tone channel instruction pointer
+songChannelInstructionPointer_wave: ds 2 ; $CF2A - Song wave channel instruction pointer
+songChannelInstructionPointer_noise: ds 2 ; $CF2C - Song noise channel instruction pointer
+;        {
+;            Instruction format:
+;                00:          End of instruction list
+;                ii:          For 9Fh <= ii <= F0h (only A0h..ACh is usable). Instruction timer = [[$CF01] + (ii & ~A0h)]
+;                F1 ee ss ll: For non-wave channels.
+;                                 Working sound channel envelope = ee
+;                                 Working sound channel sweep = ss
+;                                 Working sound channel wave pattern duty = ll & C0h
+;                                 Working sound channel effect index / sound length = ll & ~C0h
+;                F1 pppp vv:  For the wave channel.
+;                                 Pointer to wave pattern data = pppp
+;                                 Working sound channel volume = vv & 60h
+;                                 Working sound channel effect index = vv & ~60h
+;                F2 pppp:     Set tempo: $CF01 = pppp
+;                F3 oo:       Set transpose: $CF00 = oo. (Add oo to any played music notes)
+;                F4 nn:       Repeat from after this instruction nn times |: (sets $CF31/$CF33)
+;                F5:          Repeat :| (decrements $CF31)
+;                ii:          For ii >= F6h. Clear sound effects and song
+;                ii:          For 00 < ii < 9Fh:
+;                    01:      Rest. Mute working sound channel
+;                    03:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
+;                    05:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
+;                    ii:      Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
+;                    ii:      Otherwise. For the noise channel:
+;                                 Working sound channel sound length       = [$41BB + ii]
+;                                 Working sound channel envelope           = [$41BB + ii + 1]
+;                                 Working sound channel polynomial counter = [$41BB + ii + 2]
+;                                 Working sound channel counter control    = [$41BB + ii + 3]
+;        }
+songSoundChannelEffectTimer: ds 1 ; $CF2E - Song sound channel effect timer. 11h frame timer (bug?) for indexing table at $4263/$4273/$4283. Shared across all sound channels(!)
+
+songProcessingStates: ; $CF2F
+;        {
+;            $CF2F: Section pointer. Big endian(!). A 'section pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list
+;            $CF31: Repeat count
+;            $CF33: Repeat point
+;            $CF34: Instruction length
+;            $CF35: Sound envelope / volume
+;            $CF36: Instruction timer
+;            $CF37: Effect index (non-noise) / sound length (noise)
+;            {
+;                ; Effect indices
+;                2: World's most negligible effect
+;                3: Vibrato
+;                4: Chorus
+;                6: Slide up - slow
+;                7: Slide up - fast
+;                8: Slide down
+;                9: Tiny pitch up
+;                Ah: Small pitch up
+;            }
+;        }
+;        $CF38..40: Tone/sweep channel song processing state
+;        $CF41..49: Tone channel song processing state
+;        $CF4A..52: Wave channel song processing state
+;        $CF53..5B: Noise channel song processing state
+
+; Macro for defining several similar segments of memory
+macro makeChannelSongProcessingState ; [label suffix]
+    songChannelSongProcessingState_\1:
+    songSectionPointer_\1: ds 2
+    songRepeatCount_\1: ds 2
+    songRepeatPoint_\1: ds 1
+    songInstructionLength_\1: ds 1
+    songNoteEnvelope_\1:
+    songNoteVolume_\1: ds 1
+    songInstructionTimer_\1: ds 1
+    songEffectIndex_\1: ds 1
+endm
+
+    makeChannelSongProcessingState working ; $CF2F
+    makeChannelSongProcessingState square1 ; $CF38
+    makeChannelSongProcessingState square2 ; $CF41
+    makeChannelSongProcessingState wave    ; $CF4A
+    makeChannelSongProcessingState noise   ; $CF53
+
+songProcessingStatesEnd:
+
+songFadeoutTimer: ds 1 ; $CF5C - Song fadeout timer. Set to D0h when initiating fading out music
+;        {
+;            0: Song play = song interruption request = 0, disable sound channels
+;            10h: Sound envelope / volume = 13h
+;            30h: Sound envelope / volume = 25h
+;            70h: Sound envelope / volume = 45h. Disable noise channel. Wave channel volume = 60h
+;            A0h: Sound envelope / volume = 65h
+;        }
+songFrequencyTweak_square2: ds 1 ; $CF60 - Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
+;    }
+songProcessingStateBackup: ds songProcessingStateBackup - songProcessingState ; $CF61..C1: Backup of song processing state (during song interruption)
+
+
+songPlayingBackup: ds 2 ; $CFC5 - Backup of song playing (during song interruption)
+
+audioPauseControl: ds 1 ; $CFC7 - Audio pause control
+;{
+    def audioPauseControl_pause equ 1 ; Pause (play pause sound effect, stop other music)
+    def audioPauseControl_unpause equ 2 ; Unpause (play unpause sound effect)
+;}
+audioPauseSoundEffectTimer: ds 1 ; $CFC8 - Audio pause sound effect timer
+songSweepBackup_square1: ds 1 ; $CFC9 - Backup of tone/sweep channel sweep (during song interruption)
+
+sfxVariableFrequency_square1: ds 1 ; $CFD1 - Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
+
+sfxRequest_lowHealthBeep: ; $CFE5 - Low health beep / wave channel sound effect request
+sfxRequest_wave: ds 1 ; $CFE5 - Low health beep / wave channel sound effect request
+sfxPlaying_lowHealthBeep: ; $CFE6 - Low health beep / wave channel sound effect playing
+sfxPlaying_wave: ds 1 ; $CFE6 - Low health beep / wave channel sound effect playing
+;    {
+;        0: Samus' health >= 50
+;        1: Samus' health < 10
+;        2: Samus' health < 20
+;        3: Samus' health < 30
+;        4: Samus' health < 40
+;        5: Samus' health < 50
+;    }
+sfxPlayingBackup_lowHealthBeep: ds 1 ; $CFE7 - Backup of low health beep sound effect playing (during song interruption)
+sfxTimer_wave: ds 1 ; $CFE8 - Wave channel sound effect timer
+sfxLength_wave: ds 1 ; $CFE9 - Wave channel sound effect length
+audioChannelOutputStereoFlags: ds 1 ; $CFEC - Audio channel output stereo flags
+audioChannelOutputStereoFlagsBackup: ds 1 ; $CFED - Backup of audio channel output stereo flags (during song interruption)
+loudLowHealthBeepTimer: ds 1 ; $CFEE - Loud low health beep timer
+;}
+
 ;$CEC0..CFFF: Audio data
 ;    ; Song / sound effect is requested by writing directly to $CEDC/$CEC0/$CEC7/$CFE5/$CED5/$CEDE
 ;    ; Audio is paused/unpaused by writing directly to $CFC7
@@ -653,190 +835,6 @@ sfxActive_square2: ds 1 ; $CEE5 - Tone channel sound effect is playing flag (che
 sfxActive_wave: ds 1 ; $CEE6 - Wave channel sound effect is playing flag (checked by song handler)
 sfxActive_noise: ds 1 ; $CEE7 - Noise channel sound effect is playing flag (checked by song handler)
 resumeScrewAttackSoundEffectFlag: ds 1 ; $CEE8 - Resume screw attack sound effect flag
-
-section "WRAM Bank 0 - Audio RAM 2", wram0[$CF00] 
-songProcessingState: ; $CF00..60: Song processing state
-;    {
-songTranspose: ds 1 ; $CF00 - Transpose
-songInstructionTimerArrayPointer: ds 2 ; $CF01 - Instruction timer array pointer
-
-workingSoundChannel: ds 1 ; $CF03 - Working sound channel (1/2/3/4)
-songChannelEnable_square1: ds 1 ; $CF04 - Song tone/sweep channel enable. Set to 1 if [$CF38] != 0 in $48A0
-songChannelEnable_square2: ds 1 ; $CF05 - Song tone channel enable. Set to 2 if [$CF41] != 0 in $48A0
-songChannelEnable_wave: ds 1 ; $CF06 - Song wave channel enable. Set to 3 if [$CF4A] != 0 in $48A0
-songChannelEnable_noise: ds 1 ; $CF07 - Song noise channel enable. Set to 4 if [$CF53] != 0 in $48A0
-songOptionsSetFlag_working: ds 1 ; $CF08 - Working sound channel options set flag. Set by song instruction F1h. Checked to update channel sweep and sound length / wave pattern duty for tone(/sweep) channels
-songWavePatternDataPointer: ds 2 ; $CF09 - Song wave pattern data pointer. 10h bytes
-
-songSweep_working: ; $CF0B - Working sound channel sweep / enable
-songEnable_working: ds 1 ; $CF0B - Working sound channel sweep / enable
-
-songSoundLength_working: ds 1 ; $CF0C - Working sound channel sound length / wave pattern duty
-
-songEnvelope_working: ; $CF0D - Working sound channel envelope / volume
-songVolume_working: ds 1 ; $CF0D - Working sound channel envelope / volume
-
-songFrequency_working: ; $CF0E - Working sound channel frequency / noise channel polynomial counter
-songPolynomialCounter_working: ds 1 ; $CF0E - Working sound channel frequency / noise channel polynomial counter
-
-songCounterControl_working: ds 1 ; $CF0F - Working noise channel counter control (upper byte of working sound channel frequency)
-
-; Apparently some code in bank 4 expects address range of these variables ($CF10..23)
-;  to align with the address range of the registers it corresponds to ($FF10..23)
-ALIGN 8, $10
-audioChannelOptions: ; $CF10..CF23 - Audio channel options (low bytes of addresses correspond with $FF10..23, and code exploits this fact)
-;        {
-songSweep_square1: ds 1 ; $CF10 - Tone/sweep channel sweep
-songSoundLength_square1: ds 1 ; $CF11 - Tone/sweep channel sound length / wave pattern duty
-songEnvelope_square1: ds 1 ; $CF12 - Tone/sweep channel envelope
-songFrequency_square1: ds 2 ; $CF13 - Tone/sweep channel frequency
-ds 1 ; $CF15 - Unused
-
-songSoundLength_square2: ds 1 ; $CF16 - Tone channel sound length / wave pattern duty
-songEnvelope_square2: ds 1 ; $CF17 - Tone channel envelope
-songFrequency_square2: ds 2 ; $CF18 - Tone channel frequency
-
-songEnableOption_wave: ds 1 ; $CF1A - Wave channel enable
-songSoundLength_wave: ds 1 ; $CF1B - Wave channel sound length
-songVolume_wave: ds 1 ; $CF1C - Wave channel volume (0 = mute, 20h = 100%, 40h = 50%, 60h = 25%)
-songFrequency_wave: ds 2 ; $CF1D - Wave channel frequency
-ds 1 ; $CF1F - Unused
-
-songSoundLength_noise: ds 1 ; $CF20 - Noise channel sound length
-songEnvelope_noise: ds 1 ; $CF21 - Noise channel envelope
-songPolynomialCounter_noise: ds 1 ; $CF22 - Noise channel polynomial counter
-songCounterControl_noise: ds 1 ; $CF23 - Noise channel counter control
-;        }
-
-
-songChannelInstructionPointer_square1: ds 2 ; $CF26 - Song tone/sweep channel instruction pointer
-songChannelInstructionPointer_square2: ds 2 ; $CF28 - Song tone channel instruction pointer
-songChannelInstructionPointer_wave: ds 2 ; $CF2A - Song wave channel instruction pointer
-songChannelInstructionPointer_noise: ds 2 ; $CF2C - Song noise channel instruction pointer
-;        {
-;            Instruction format:
-;                00:          End of instruction list
-;                ii:          For 9Fh <= ii <= F0h (only A0h..ACh is usable). Instruction timer = [[$CF01] + (ii & ~A0h)]
-;                F1 ee ss ll: For non-wave channels.
-;                                 Working sound channel envelope = ee
-;                                 Working sound channel sweep = ss
-;                                 Working sound channel wave pattern duty = ll & C0h
-;                                 Working sound channel effect index / sound length = ll & ~C0h
-;                F1 pppp vv:  For the wave channel.
-;                                 Pointer to wave pattern data = pppp
-;                                 Working sound channel volume = vv & 60h
-;                                 Working sound channel effect index = vv & ~60h
-;                F2 pppp:     Set tempo: $CF01 = pppp
-;                F3 oo:       Set transpose: $CF00 = oo. (Add oo to any played music notes)
-;                F4 nn:       Repeat from after this instruction nn times |: (sets $CF31/$CF33)
-;                F5:          Repeat :| (decrements $CF31)
-;                ii:          For ii >= F6h. Clear sound effects and song
-;                ii:          For 00 < ii < 9Fh:
-;                    01:      Rest. Mute working sound channel
-;                    03:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
-;                    05:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
-;                    ii:      Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
-;                    ii:      Otherwise. For the noise channel:
-;                                 Working sound channel sound length       = [$41BB + ii]
-;                                 Working sound channel envelope           = [$41BB + ii + 1]
-;                                 Working sound channel polynomial counter = [$41BB + ii + 2]
-;                                 Working sound channel counter control    = [$41BB + ii + 3]
-;        }
-songSoundChannelEffectTimer: ds 1 ; $CF2E - Song sound channel effect timer. 11h frame timer (bug?) for indexing table at $4263/$4273/$4283. Shared across all sound channels(!)
-
-songProcessingStates: ; $CF2F
-;        {
-;            $CF2F: Section pointer. Big endian(!). A 'section pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list
-;            $CF31: Repeat count
-;            $CF33: Repeat point
-;            $CF34: Instruction length
-;            $CF35: Sound envelope / volume
-;            $CF36: Instruction timer
-;            $CF37: Effect index (non-noise) / sound length (noise)
-;            {
-;                ; Effect indices
-;                2: World's most negligible effect
-;                3: Vibrato
-;                4: Chorus
-;                6: Slide up - slow
-;                7: Slide up - fast
-;                8: Slide down
-;                9: Tiny pitch up
-;                Ah: Small pitch up
-;            }
-;        }
-;        $CF38..40: Tone/sweep channel song processing state
-;        $CF41..49: Tone channel song processing state
-;        $CF4A..52: Wave channel song processing state
-;        $CF53..5B: Noise channel song processing state
-
-; Macro for defining several similar segments of memory
-macro makeChannelSongProcessingState ; [label suffix]
-    songChannelSongProcessingState_\1:
-    songSectionPointer_\1: ds 2
-    songRepeatCount_\1: ds 2
-    songRepeatPoint_\1: ds 1
-    songInstructionLength_\1: ds 1
-    songNoteEnvelope_\1:
-    songNoteVolume_\1: ds 1
-    songInstructionTimer_\1: ds 1
-    songEffectIndex_\1: ds 1
-endm
-
-    makeChannelSongProcessingState working ; $CF2F
-    makeChannelSongProcessingState square1 ; $CF38
-    makeChannelSongProcessingState square2 ; $CF41
-    makeChannelSongProcessingState wave    ; $CF4A
-    makeChannelSongProcessingState noise   ; $CF53
-
-songFadeoutTimer: ds 1 ; $CF5C - Song fadeout timer. Set to D0h when initiating fading out music
-;        {
-;            0: Song play = song interruption request = 0, disable sound channels
-;            10h: Sound envelope / volume = 13h
-;            30h: Sound envelope / volume = 25h
-;            70h: Sound envelope / volume = 45h. Disable noise channel. Wave channel volume = 60h
-;            A0h: Sound envelope / volume = 65h
-;        }
-songFrequencyTweak_square2: ds 1 ; $CF60 - Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
-;    }
-songProcessingStateBackup: ds songProcessingStateBackup - songProcessingStates ; $CF61..C1: Backup of song processing state (during song interruption)
-
-
-songPlayingBackup: ds 2 ; $CFC5 - Backup of song playing (during song interruption)
-
-audioPauseControl: ds 1 ; $CFC7 - Audio pause control
-;{
-    def audioPauseControl_pause equ 1 ; Pause (play pause sound effect, stop other music)
-    def audioPauseControl_unpause equ 2 ; Unpause (play unpause sound effect)
-;}
-audioPauseSoundEffectTimer: ds 1 ; $CFC8 - Audio pause sound effect timer
-songSweepBackup_square1: ds 1 ; $CFC9 - Backup of tone/sweep channel sweep (during song interruption)
-
-sfxVariableFrequency_square1: ds 1 ; $CFD1 - Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
-
-sfxRequest_lowHealthBeep: ; $CFE5 - Low health beep / wave channel sound effect request
-sfxRequest_wave: ds 1 ; $CFE5 - Low health beep / wave channel sound effect request
-sfxPlaying_lowHealthBeep: ; $CFE6 - Low health beep / wave channel sound effect playing
-sfxPlaying_wave: ds 1 ; $CFE6 - Low health beep / wave channel sound effect playing
-;    {
-;        0: Samus' health >= 50
-;        1: Samus' health < 10
-;        2: Samus' health < 20
-;        3: Samus' health < 30
-;        4: Samus' health < 40
-;        5: Samus' health < 50
-;    }
-sfxPlayingBackup_lowHealthBeep: ds 1 ; $CFE7 - Backup of low health beep sound effect playing (during song interruption)
-sfxTimer_wave: ds 1 ; $CFE8 - Wave channel sound effect timer
-sfxLength_wave: ds 1 ; $CFE9 - Wave channel sound effect length
-audioChannelOutputStereoFlags: ds 1 ; $CFEC - Audio channel output stereo flags
-audioChannelOutputStereoFlagsBackup: ds 1 ; $CFED - Backup of audio channel output stereo flags (during song interruption)
-loudLowHealthBeepTimer: ds 1 ; $CFEE - Loud low health beep timer
-;}
-
-; $CFEF..$CFFF - Unused?
-
-;}
 
 
 ;;;; $D000..DFFF: WRAM bank 1 ;;; {

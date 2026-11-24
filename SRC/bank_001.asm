@@ -359,8 +359,7 @@ debug_drawNumber: ;{ 01:4AFC
 .oneDigit: ; 01:4B09 - Display a one-sprite number
     and $0f
     add $a0 ; Adjust value for display
-    call .drawSprite
-ret
+    ; fallthrough
 
 .drawSprite: ; 01:4B11
     ; Save sprite tile to temp
@@ -432,8 +431,8 @@ drawHudMetroid:: ;{ 01:4B2C
     add SPRITE_SAMUS_HUD_METROID_1
     ldh [hSpriteId], a
     ; Draw the sprite
-    call drawSamusSprite
-ret ;}
+    ;jp drawSamusSprite
+;}
 
 ; Draws a sprite from Samus's sprite bank
 drawSamusSprite: ;{ 01:4B62
@@ -444,15 +443,13 @@ drawSamusSprite: ;{ 01:4B62
     ldh a, [hSpriteId]
     ld d, $00
     ld e, a
-    sla e
-    rl d
     ld hl, samusSpritePointerTable
+    add hl, de
     add hl, de
     ; Load pointer from table
     ld a, [hl+]
     ld e, a
-    ld a, [hl]
-    ld d, a
+    ld d, [hl]
     
     ; Prep HL
     ld h, HIGH(wram_oamBuffer) ; $C0
@@ -490,12 +487,9 @@ drawSamusSprite: ;{ 01:4B62
         ; Set PAL1 bit or leave it alone
         ldh a, [hSpriteAttr]
         and a
-        jr z, .else_A
-            ld a, [de]
+        ld a, [de]
+        jr z, .endIf_A
             set B_OAM_PAL1, a
-            jr .endIf_A
-        .else_A:
-            ld a, [de]
         .endIf_A:
         
         ; Adjust priority depending on screen
@@ -604,16 +598,13 @@ drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
     ; Multiply facing direction by 4
     ld a, [samusFacingDirection]
     and $01
-    sla a
-    sla a
-    ld b, a
+    ld e, a
     ; Get animation frame
     ld a, [samus_spinAnimationTimer]
     and %00001100 ; $0C
-    srl a
-    srl a
+    rlca
     ; Index into table
-    add b
+    add e
     ld e, a
     ld d, $00
     ; Load sprite ID
@@ -624,15 +615,13 @@ drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
 jp drawSamus_common
 
 .spiderTable: ; 02:4C8C
-    ; Left
     db SPRITE_SAMUS_SPIDER_LEFT_1
-    db SPRITE_SAMUS_SPIDER_LEFT_2
-    db SPRITE_SAMUS_SPIDER_LEFT_3
-    db SPRITE_SAMUS_SPIDER_LEFT_4
-    ; Right
     db SPRITE_SAMUS_SPIDER_RIGHT_1
+    db SPRITE_SAMUS_SPIDER_LEFT_2
     db SPRITE_SAMUS_SPIDER_RIGHT_2
+    db SPRITE_SAMUS_SPIDER_LEFT_3
     db SPRITE_SAMUS_SPIDER_RIGHT_3
+    db SPRITE_SAMUS_SPIDER_LEFT_4
     db SPRITE_SAMUS_SPIDER_RIGHT_4
 ;}
 
@@ -640,15 +629,12 @@ drawSamus_morph: ;{ 01:4C94 - Morph poses
     ; Get sub-table depending on facing direction
     ld a, [samusFacingDirection]
     and $01
-    sla a
-    sla a
-    ld b, a
+    ld e, a
     ; Get index into table
     ld a, [samus_spinAnimationTimer]
     and %00001100 ; $0C
-    srl a
-    srl a
-    add b
+    rrca
+    add e
     ld e, a
     ld d, $00
     ; Load sprite index from table
@@ -659,29 +645,15 @@ drawSamus_morph: ;{ 01:4C94 - Morph poses
 jp drawSamus_common
 
 .morphTable: ; 01:4CB5
-    ; Left
     db SPRITE_SAMUS_MORPH_LEFT_1
-    db SPRITE_SAMUS_MORPH_LEFT_2
-    db SPRITE_SAMUS_MORPH_LEFT_3
-    db SPRITE_SAMUS_MORPH_LEFT_4
-    ; Right
     db SPRITE_SAMUS_MORPH_RIGHT_1
+    db SPRITE_SAMUS_MORPH_LEFT_2
     db SPRITE_SAMUS_MORPH_RIGHT_2
+    db SPRITE_SAMUS_MORPH_LEFT_3
     db SPRITE_SAMUS_MORPH_RIGHT_3
+    db SPRITE_SAMUS_MORPH_LEFT_4
     db SPRITE_SAMUS_MORPH_RIGHT_4
 ;}
-
-drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
-    ; Index into table using input + facing direction
-    ld d, $00
-    ldh a, [hTemp.a]
-    ld e, a
-    ld hl, jumpSpriteTable
-    add hl, de
-    ; Get sprite ID
-    ld a, [hl]
-    ldh [hSpriteId], a
-jp drawSamus_common ;}
 
 drawSamus_jumpStart: ;{ 01:4CCC - $09, $0A: Jump Start
     ld a, SPRITE_SAMUS_RUN_RIGHT_1 ; Right
@@ -693,7 +665,19 @@ drawSamus_jumpStart: ;{ 01:4CCC - $09, $0A: Jump Start
     ldh [hSpriteId], a
 jp drawSamus_common ;}
 
-jumpSpriteTable: ; 01:4CDE
+drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
+    ; Index into table using input + facing direction
+    ld d, $00
+    ldh a, [hTemp.a]
+    ld e, a
+    ld hl, .jumpSpriteTable
+    add hl, de
+    ; Get sprite ID
+    ld a, [hl]
+    ldh [hSpriteId], a
+jp drawSamus_common ;}
+
+.jumpSpriteTable: ; 01:4CDE
 ; Value read is based on input and facing direction
     ; no vertical input
     db $00 ; no facing direction (impossible)
@@ -717,71 +701,53 @@ jumpSpriteTable: ; 01:4CDE
     db $00 ; x
 
 drawSamus_spinJump: ;{ 01:4CEE - $02: Spin jump
+    ld hl, .spinTable
     ld a, [samusFacingDirection]
-    and a
-    jp z, .else
-        ld hl, .spinRightTable
-        jp .endIf
-    .else:
-        ld hl, .spinLeftTable
-    .endIf:
+    and $01
+    ld e, a
 
     ; Spin fast if we have either space jump or screw attack
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
+    ; Get index into table
+    ld a, [samus_spinAnimationTimer]
     jr nz, .spinFast
         ; Slow spin
         ; Get index into table
-        ld a, [samus_spinAnimationTimer]
-        srl a
-        and %00001100
-        srl a
-        srl a
-        ld e, a
-        ld d, $00
-        add hl, de
-        ; Load sprite ID
-        ld a, [hl]
-        ldh [hSpriteId], a
-        jp drawSamus_common
+        rrca
+        rrca
     .spinFast:
-        ; Get index into table
-        ld a, [samus_spinAnimationTimer]
-        srl a
-        and %00000011
-        ld e, a
-        ld d, $00
-        add hl, de
-        ; Load sprite ID
-        ld a, [hl]
-        ldh [hSpriteId], a
-        jp drawSamus_common
+    and %00000110
+    add e
+    ld e, a
+    ld d, $00
+    add hl, de
+    ; Load sprite ID
+    ld a, [hl]
+    ldh [hSpriteId], a
+    jp drawSamus_common
 
 ; Spin tables
-.spinRightTable: ; 01:4D2B
+.spinTable: ; 01:4D2B
     ; Right
-    db SPRITE_SAMUS_JUMP_RIGHT_1
-    db SPRITE_SAMUS_JUMP_RIGHT_2
-    db SPRITE_SAMUS_JUMP_RIGHT_3
-    db SPRITE_SAMUS_JUMP_RIGHT_4
-.spinLeftTable: ; 01:4D2F
-    ; Left
     db SPRITE_SAMUS_JUMP_LEFT_1
+    db SPRITE_SAMUS_JUMP_RIGHT_1
     db SPRITE_SAMUS_JUMP_LEFT_2
+    db SPRITE_SAMUS_JUMP_RIGHT_2
     db SPRITE_SAMUS_JUMP_LEFT_3
+    db SPRITE_SAMUS_JUMP_RIGHT_3
     db SPRITE_SAMUS_JUMP_LEFT_4
+    db SPRITE_SAMUS_JUMP_RIGHT_4
 ;}
 
 drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
     ; Fade-in logic
+    ; Skip rendering 1 out of 4 frames
     ld a, [countdownTimerLow]
-    and a
-    jr z, .endIf
-        ; Skip rendering 1 out of 4 frames
-        ldh a, [hFrameCounter]
-        and $03
-        ret z
-    .endIf:
+    and $03
+    inc a
+    ret z
+
     ; Load sprite ID
     ld a, SPRITE_SAMUS_FACE_SCREEN
     ldh [hSpriteId], a
@@ -823,8 +789,6 @@ jp drawSamus_common
     db $00 ; x
 ;}
 
-db $00 ; unused
-
 drawSamus_crouch: ;{ $04 - Crouching
     ld a, SPRITE_SAMUS_CROUCH_RIGHT ; Right
     ldh [hSpriteId], a
@@ -860,14 +824,13 @@ drawSamus_run: ;{ 01:4D77 - $03: Running
     ;  Multiply facing direction by 4 to get the pertinent sub-table
     ld a, [samusFacingDirection]
     and $01
-    sla a
-    sla a
-    ld b, a
+    ld e, a
     ; Convert run animation timer to table index
     ld a, [samus_animationTimer]
     and $30
     swap a
-    add b
+    rlca
+    add e
     ld e, a
     ld d, $00
 
@@ -893,38 +856,26 @@ jp drawSamus_common
 
 ; The fourth frame in these tables is just padding
 .runningTableNormal: ; 01:4DC7 - Normal
-    ; Left
     db SPRITE_SAMUS_RUN_LEFT_1
-    db SPRITE_SAMUS_RUN_LEFT_2
-    db SPRITE_SAMUS_RUN_LEFT_3
-    db $00
-    ; Right
     db SPRITE_SAMUS_RUN_RIGHT_1
+    db SPRITE_SAMUS_RUN_LEFT_2
     db SPRITE_SAMUS_RUN_RIGHT_2
+    db SPRITE_SAMUS_RUN_LEFT_3
     db SPRITE_SAMUS_RUN_RIGHT_3
-    db $00
 .runningTableShooting: ; 01:4DCF - Firing forwards
-    ; Left
     db SPRITE_SAMUS_RUN_LEFT_SHOOTING_1
-    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_2
-    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_3
-    db $00
-    ; Right
     db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_1
+    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_2
     db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_2
+    db SPRITE_SAMUS_RUN_LEFT_SHOOTING_3
     db SPRITE_SAMUS_RUN_RIGHT_SHOOTING_3
-    db $00
 .runningTableAimingUp: ; 01:4DD7 - Aiming up
-    ; Left
     db SPRITE_SAMUS_RUN_LEFT_AIM_UP_1
-    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_2
-    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_3
-    db $00
-    ; Right
     db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_1
+    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_2
     db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_2
+    db SPRITE_SAMUS_RUN_LEFT_AIM_UP_3
     db SPRITE_SAMUS_RUN_RIGHT_AIM_UP_3
-    db $00
 ;}
 
 ; All the above drawSamus procedures jump here
@@ -1015,9 +966,8 @@ loadSaveFile: ;{ 01:4E33
     
     ; HL = saveData_baseAddr + activeSaveSlot*64
     ld a, [activeSaveSlot]
-    sla a
-    sla a
-    swap a
+    rrca
+    rrca
     add $08
     ld l, a
     ld h, HIGH(saveData_baseAddr)
@@ -1113,8 +1063,7 @@ samusShoot: ;{ 01:4E8A
         ld e, a
         ld d, $00
         add hl, de
-        ld a, [hl]
-        ld c, a
+        ld c, [hl]
     .endIf_B:
     ; Save firing direction to temp
     ld a, c
@@ -1127,12 +1076,10 @@ samusShoot: ;{ 01:4E8A
     ld e, a
     ld d, $00
     add hl, de
-    ld a, [hl]
-    ld b, a
+    ld b, [hl]
     ; Load the Y offset of the cannon for her current aiming direction
     ld hl, samus_cannonYOffsetByAimDirection
-    ld a, c
-    ld e, a
+    ld e, c
     ld d, $00
     add hl, de
     ld a, [hl]
@@ -1499,15 +1446,14 @@ jp .commonBranch
         ret z
     ; Check if 1st or 3rd beam
     cp LOW(projectileArray.slotA) ; $00
+    ldh a, [hTemp.b]
     jr nz, .else_D
         ; First beam moves up
-        ldh a, [hTemp.b]
         sub $02
         ldh [hTemp.b], a
         ret
     .else_D:
         ; Third beam moves down
-        ldh a, [hTemp.b]
         add $02
         ldh [hTemp.b], a
         ret
@@ -1525,15 +1471,14 @@ jp .commonBranch
         ret z
     ; Check if 1st or 3rd beam
     cp LOW(projectileArray.slotA) ; $00
+    ldh a, [hTemp.c]
     jr nz, .else_E
         ; First beam moves left
-        ldh a, [hTemp.c]
         sub $02
         ldh [hTemp.c], a
         ret
     .else_E:
         ; Third beam moves right
-        ldh a, [hTemp.c]
         add $02
         ldh [hTemp.c], a
         ret
@@ -1574,9 +1519,9 @@ jp .commonBranch
         ; Check direction
         ldh a, [hTemp.a]
         bit 1, a
+        ldh a, [hTemp.c]
         jr nz, .else_G
             ; Move right
-            ldh a, [hTemp.c]
             add $02
             ld hl, camera_speedRight ; Adjust for camera velocity
             add [hl]
@@ -1584,7 +1529,6 @@ jp .commonBranch
             jr .endIf_F
         .else_G:
             ; Move left
-            ldh a, [hTemp.c]
             sub $02
             ld hl, camera_speedLeft ; Adjust for camera velocity
             sub [hl]
@@ -1604,9 +1548,9 @@ jp .commonBranch
         ; Check direction
         ldh a, [hTemp.a]
         bit 2, a
+        ldh a, [hTemp.b]
         jr nz, .else_H
             ; Move down
-            ldh a, [hTemp.b]
             add $02
             ld hl, camera_speedDown ; Adjust for camera velocity
             add [hl]
@@ -1614,7 +1558,6 @@ jp .commonBranch
             jr .endIf_F
         .else_H:
             ; Move up
-            ldh a, [hTemp.b]
             sub $02
             ld hl, camera_speedUp ; Adjust for camera velocity
             sub [hl]
@@ -1647,8 +1590,8 @@ jp .commonBranch
     
     ; Only check background collision every other frame
     ldh a, [hFrameCounter]
-    and $01
-        jp z, .checkEnemies
+    rrca
+        jp nc, .checkEnemies
     
     ; Check background collision
     call getTileIndex.projectile
@@ -1669,18 +1612,13 @@ jp .commonBranch
         ld l, a
         ld a, [hl]
         bit blockType_shot, a
-        jp z, .nextProjectile
-            ld a, $ff ; Unnecessarily setting the tile to write
-            call destroyBlock
+            call nz, destroyBlock
         jp .nextProjectile
 ; end case
 
 .waveSpeedTable: ; 01:5183 - Wave speed table (transverse velocity)
     db $00, $07, $05, $02, $00, $fe, $fb, $f9, $00, $f9, $fb, $fe, $00, $02, $05, $07
     db $80
-
-.waveSpeedTable_alt: ; 01:5194 - Unused (alternate wave table -- motion blur makes it looks very spazer-like)
-    db $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $80
 ;}
 
 .missileSpeedTable: ; 01:51A1 - Missile speed table (first value in array is unused)
@@ -1879,9 +1817,7 @@ jp .commonBranch
                 ld l, a
                 ld a, [hl]
                 bit blockType_shot, a
-                jp z, .endIf_R
-                    ld a, $ff ; Unnecessarily setting the tile to write
-                    call destroyBlock
+                call nz, destroyBlock
             .endIf_R:
             
             ; Special cases for different beam types
@@ -2392,119 +2328,51 @@ bombs_samusAndBGCollision: ;{ 01:54D7
     ld [tileY], a
     ld a, [bomb_mapXPixel]
     ld [tileX], a
-    ; Perform collision check
-    call getTileIndex.projectile
-    cp $04
-    jr nc, .else_C
-        ; Note: Tiles $00-$03 default to respawning blocks
-        call destroyRespawningBlock
-        jr .endIf_C
-    .else_C:
-        ; Check if tile type is bombable
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_bomb, a
-        jp z, .endIf_D
-            ld a, $ff ; Unnecessarily setting the tile to write
-            call destroyBlock
-        .endIf_D:
-    .endIf_C:
-
-    ; Set coordinates for center tile
-    ld a, [bomb_mapYPixel]
-    ld [tileY], a
-    ; Perform collision check
-    call getTileIndex.projectile
-    cp $04
-    jr nc, .else_E
-        call destroyRespawningBlock
-        jr .endIf_E
-    .else_E:
-        ; Check if tile type is bombable
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_bomb, a
-        jp z, .endIf_F
-            ld a, $ff
-            call destroyBlock
-        .endIf_F:
-    .endIf_E:
+    call .BGCollisionCheck
 
     ; Set coordinates for bottom tile
     ld a, [bomb_mapYPixel]
     add $10
     ld [tileY], a
-    ; Perform collision check
-    call getTileIndex.projectile
-    cp $04
-    jr nc, .else_G
-        call destroyRespawningBlock
-        jr .endIf_G
-    .else_G:
-        ; Check if tile type is bombable
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_bomb, a
-        jp z, .endIf_H
-            ld a, $ff
-            call destroyBlock
-        .endIf_H:
-    .endIf_G:
+    call .BGCollisionCheck
 
-    ; Set coordinates for right tile
+    ; Set coordinates for center tile
     ld a, [bomb_mapYPixel]
     ld [tileY], a
+    call .BGCollisionCheck
+
+    ; Set coordinates for right tile
     ld a, [bomb_mapXPixel]
     add $10
     ld [tileX], a
-    ; Perform collision check
-    call getTileIndex.projectile
-    cp $04
-    jr nc, .else_I
-        call destroyRespawningBlock
-        jr .endIf_I
-    .else_I:
-        ; Check if tile type is bombable
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_bomb, a
-        jp z, .endIf_J
-            ld a, $ff
-            call destroyBlock
-        .endIf_J:
-    .endIf_I:
+    call .BGCollisionCheck
 
     ; Set coordinates for left tile
     ld a, [bomb_mapXPixel]
     sub $10
     ld [tileX], a
-    ; Perform collision check
-    call getTileIndex.projectile
-    cp $04
-    jr nc, .else_K
-        call destroyRespawningBlock
-        jr .endIf_K
-    .else_K:
-        ; Check if tile type is bombable
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_bomb, a
-        jp z, .endIf_L
-            ld a, $ff
-            call destroyBlock
-        .endIf_L:
-    .endIf_K:
+    call .BGCollisionCheck
     
     ; Restore registers
     pop hl
     pop de
     pop bc
 ret ;}
+
+.BGCollisionCheck:
+    ; Perform collision check
+    call getTileIndex.projectile
+    cp $04
+    ; Note: Tiles $00-$03 default to respawning blocks
+    jp c, destroyRespawningBlock
+
+    ; Check if tile type is bombable
+    ld h, HIGH(collisionArray)
+    ld l, a
+    ld a, [hl]
+    bit blockType_bomb, a
+    jp nz, destroyBlock
+ret
 
 samus_bombPoseTable: ;{ 01:55DD - Samus-bombed pose transition table
     ; Table Generated from samus/samus.csv
@@ -3111,15 +2979,13 @@ drawEnemySprite: ;{ 01:5A3F
     ld a, [drawEnemy_sprite]
     ld d, $00
     ld e, a
-    sla e
-    rl d
     ld hl, enemySpritePointerTable ;$5ab1
+    add hl, de
     add hl, de
     ; Load sprite pointer to DE
     ld a, [hl+]
     ld e, a
-    ld a, [hl]
-    ld d, a
+    ld d, [hl]
 
     ; Set HL to current OAM buffer position
     ld h, HIGH(wram_oamBuffer) ; $C0
@@ -3141,14 +3007,11 @@ drawEnemySprite: ;{ 01:5A3F
         ; Check if vertically flipped
         ld a, [drawEnemy_attr]
         bit B_OAM_YFLIP, a
-        jr z, .else_A
+        ld a, [de]
+        jr z, .endIf_A
             ; Flip vertically
-            ld a, [de]
             cpl
             sub $07
-            jr .endIf_A
-        .else_A:
-            ld a, [de]
         .endIf_A:
         ; Add enemy Y position to sprite Y position, write to OAM buffer
         add b
@@ -3159,14 +3022,11 @@ drawEnemySprite: ;{ 01:5A3F
         inc de
         ld a, [drawEnemy_attr]
         bit B_OAM_XFLIP, a
-        jr z, .else_B
+        ld a, [de]
+        jr z, .endIf_B
             ; Flip horizontally
-            ld a, [de]
             cpl
             sub $07
-            jr .endIf_B
-        .else_B:
-            ld a, [de]
         .endIf_B:
         ; Add enemy X position to sprite X position, write to OAM buffer
         add c
@@ -3227,18 +3087,13 @@ enemySpritePointerTable:
 
 ; Alpha and Gamma Metroid chasing routines {
 
-; Alpha Metroid - get angle based on relative positions
-alpha_getAngle: ;{ 01:70BA - called from bank 2
-    call metroid_getDistanceAndDirection
-    call alpha_getAngleFromTable
-ret ;}
+
 
 ; Saves the absolute value of the distance between Samus and the metroid
 ;  and the direction Samus is relative to the metroid, for each axis, to WRAM
 metroid_getDistanceAndDirection: ;{ 01:70C1
     ; samusYpos - (enemy.yPos + $10)
-    ld hl, hEnemy.yPos
-    ld a, [hl]
+    ldh a, [hEnemy.yPos]
     add $10
     ld b, a
     ld a, [samus_onscreenYPos]
@@ -3266,8 +3121,7 @@ metroid_getDistanceAndDirection: ;{ 01:70C1
     ld [metroid_samusYDir], a
     
     ; samusXpos - (enemy.xPos + $10)
-    inc l
-    ld a, [hl]
+    ldh a, [hEnemy.xPos]
     add $10
     ld b, a
     ld a, [samus_onscreenXPos]
@@ -3294,6 +3148,11 @@ metroid_getDistanceAndDirection: ;{ 01:70C1
     ld a, b
     ld [metroid_samusXDir], a
 ret ;}
+
+; Alpha Metroid - get angle based on relative positions
+alpha_getAngle: ;{ 01:70BA - called from bank 2
+    call metroid_getDistanceAndDirection
+    ; fallthrough
 
 alpha_getAngleFromTable: ;{ 01:70FE
     ; If vertically aligned, picked a vertical direction
@@ -3756,12 +3615,10 @@ math_divide_HL_by_C: ; { 01:73CC
         sbc $00
         jr c, .endIf
             ; If so, then DE = DE - C
+            ld d, a
             ld a, e
             sub c
             ld e, a
-            ld a, d
-            sbc $00
-            ld d, a
         .endIf:
         ccf ; Invert the carry flag
         ; If (DE >= C) then (DEHL << 1) & 1
@@ -3783,15 +3640,13 @@ drawNonGameSprite: ;{ 01:73F7
     ldh a, [hSpriteId]
     ld d, $00
     ld e, a
-    sla e
-    rl d
     ld hl, creditsSpritePointerTable
+    add hl, de
     add hl, de
     ; Load pointer from table
     ld a, [hl+]
     ld e, a
-    ld a, [hl]
-    ld d, a
+    ld d, [hl]
     ; Prep HL
     ld h, HIGH(wram_oamBuffer)
     ldh a, [hOamBufferIndex]
@@ -3810,14 +3665,11 @@ drawNonGameSprite: ;{ 01:73F7
         ; Handle y flipping
         ldh a, [hSpriteAttr]
         bit B_OAM_YFLIP, a
-        jr z, .else_A
+        ld a, [de]
+        jr z, .endIf_A
             ; Flip vertically
-            ld a, [de]
             cpl
             sub $07
-            jr .endIf_A
-        .else_A:
-            ld a, [de]
         .endIf_A:
         ; Add y offset and store
         add b
@@ -3827,14 +3679,11 @@ drawNonGameSprite: ;{ 01:73F7
         inc de
         ldh a, [hSpriteAttr]
         bit B_OAM_XFLIP, a
-        jr z, .else_B
+        ld a, [de]
+        jr z, .endIf_B
             ; Flip horizontally
-            ld a, [de]
             cpl
             sub $07
-            jr .endIf_B
-        .else_B:
-            ld a, [de]
         .endIf_B:
         ; Add x offset and store
         add c
@@ -3885,8 +3734,8 @@ earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
 
     ; Decrement earthquake timer every two frames
     ldh a, [hFrameCounter]
-    and $01
-        ret nz
+    rrca
+        ret c
     ld a, [earthquakeTimer]
     dec a
     ld [earthquakeTimer], a
@@ -3930,7 +3779,7 @@ drawSamus_earthquakeAdjustment: ;{ 01:7A34
         ret z
     ; Alternate between +1 and -1 pixel based on timer (every 4 frames)
     and %00000100 ; $04
-    srl a
+    rrca
     dec a
     ld b, a
     ; Add adjustment
@@ -4093,9 +3942,8 @@ saveFileToSRAM: ;{ 01:7ADF
     ; Set destination pointer
     ; DE = save base address + saveSlot*0x40
     ld a, [activeSaveSlot]
-    sla a
-    sla a
-    swap a
+    rrca
+    rrca
     ld e, a
     ld d, HIGH(saveData_baseAddr)
     ; Set loop counter
@@ -4112,9 +3960,8 @@ saveFileToSRAM: ;{ 01:7ADF
     ; Get destination address
     ; HL = save base address + saveSlot*0x40
     ld a, [activeSaveSlot]
-    sla a
-    sla a
-    swap a
+    rrca
+    rrca
     add $08
     ld l, a
     ld h, HIGH(saveData_baseAddr)

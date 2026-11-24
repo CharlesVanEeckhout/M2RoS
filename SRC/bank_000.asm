@@ -22,8 +22,9 @@ RST_20::
 SECTION "ROM Bank $000 - RST_28", ROM0[$0028]
 RST_28:: ; Jump table routine (index = a)
     ; HL = PC + A*2
-    add a
     pop hl ; Grab the program counter from the stack
+.HLSet:
+    add a
     ld e, a
     ld d, $00
     add hl, de
@@ -392,6 +393,29 @@ waitForNextFrame: ;{ 00:031C
 ret
 ;}
 
+; lag frame
+waitOneFrame: ;{ 00:2C5E
+    ; Handle audio
+    push hl
+    callFar handleAudio
+    pop hl
+    halt
+    ; Wait for VBlank to finish
+    .vBlankNotDone:
+        ldh a, [hVBlankDoneFlag]
+        and a
+    jr z, .vBlankNotDone
+    ; Increment frame counter
+    ldh a, [hFrameCounter]
+    inc a
+    ldh [hFrameCounter], a
+    ; Clear VBlank flag
+    xor a
+    ldh [hVBlankDoneFlag], a
+    ; Reset OAM buffer index
+    ldh [hOamBufferIndex], a
+ret ;}
+
 OAMClear:
     xor a
     ldh [hOamBufferIndex], a
@@ -440,6 +464,14 @@ copyToVram: ;{ 00:038A
         ld a, b
         or c
     jr nz, .loop
+ret
+
+    .small:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .small
 ret
 ;}
 
@@ -6488,12 +6520,11 @@ door_loadTiletable: ;{ 00:282A
         ld a, [hl+]
         ld [saveBuf_tiletableSrcLow], a
         ld b, a
-        ld a, [hl+]
+        ld a, [hl]
         ld [saveBuf_tiletableSrcHigh], a
         ; Load pointer to HL
         ld h, a
-        ld a, b
-        ld l, a
+        ld l, b
         ; Copy to fill range $DA00-$DBFF
         ld de, tiletableArray
         .loop:
@@ -6523,12 +6554,11 @@ door_loadCollision: ;{ 00:2859
         ld a, [hl+]
         ld [saveBuf_collisionSrcLow], a
         ld b, a
-        ld a, [hl+]
+        ld a, [hl]
         ld [saveBuf_collisionSrcHigh], a
         ; Load pointer to HL
         ld h, a
-        ld a, b
-        ld l, a
+        ld l, b
         ; Copy to fill range $DC00-$DCFF
         ld de, collisionArray
         .loop:
@@ -6951,9 +6981,7 @@ VBlank_updateMapDuringTransition: ;{ 00:2B8F
     ; Exit if no map update pending
     ld a, [mapUpdateFlag]
     and a
-        jr z, VBlank_vramDataTransfer.exit
-    ; Update map
-    call VBlank_updateMap
+    call nz, VBlank_updateMap
 jr VBlank_vramDataTransfer.exit ;}
 
 VBlank_vramDataTransfer: ;{ 00:2BA3
@@ -7101,27 +7129,7 @@ VBlank_variaAnimation: ;{ 00:2BF4
     pop af
 reti ;}
 
-waitOneFrame: ;{ 00:2C5E
-    ; Handle audio
-    push hl
-    callFar handleAudio
-    pop hl
-    halt
-    ; Wait for VBlank to finish
-    .vBlankNotDone:
-        ldh a, [hVBlankDoneFlag]
-        and a
-    jr z, .vBlankNotDone
-    ; Increment frame counter
-    ldh a, [hFrameCounter]
-    inc a
-    ldh [hFrameCounter], a
-    ; Clear VBlank flag
-    xor a
-    ldh [hVBlankDoneFlag], a
-    ; Reset OAM buffer index
-    ldh [hOamBufferIndex], a
-ret ;}
+
 
 tryPausing: ;{ 00:2C79
     ; Don't try pausing unless start is pressed
@@ -7694,8 +7702,7 @@ VBlank_deathSequence: ;{ 00:2FE1
         ld e, a
         ld d, $00
         add hl, de
-        ld a, [hl]
-        ld l, a
+        ld l, [hl]
         ld h, $80
         ; Increment value
         ld de, $0020
@@ -7722,11 +7729,6 @@ VBlank_deathSequence: ;{ 00:2FE1
             ldh [hGameMode], a
     .endIf:
 
-    ; Set scroll values
-    ld a, [scrollY]
-    ldh [rSCY], a
-    ld a, [scrollX]
-    ldh [rSCX], a
     ; DMA sprites
     call OAM_DMA
 
@@ -8952,7 +8954,7 @@ handleItemPickup: ;{ 00:372F
         .else_B:
             ; Refill branch
             ; Do not play jingle
-            ld a, $00
+            xor a
             ld [songInterruptionRequest], a
             ; No delay
             ld [countdownTimerHigh], a
@@ -8969,7 +8971,7 @@ handleItemPickup: ;{ 00:372F
     ld a, [songInterruptionPlaying]
     cp $0e
     jr nz, .endIf_C
-        ld a, $00
+        xor a
         ld [songInterruptionRequest], a
     .endIf_C:
 

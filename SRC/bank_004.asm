@@ -5,22 +5,6 @@
 
 SECTION "ROM Bank $004", ROMX[$4000], BANK[$4]
 
-externalHandleAudio:
-    jp handleAudio
-
-externalSilenceAudio:
-    jp silenceAudio
-
-externalInitializeAudio:
-    jp initializeAudio
-
-; Song processing state size constants
-;{
-    channelAllSongProcessingStateSizes:
-    db $2d ; Size of all channel song processing states ($CF5C - $CF2F)
-
-;}
-
 musicNotes:
 ;{
     dw $8000 ; Off-key 64Hz "tone"
@@ -72,12 +56,6 @@ wavePatterns:
 
 .wave1: ; $4123
     db $cc, $cc, $82, $c3, $c0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
-; Unused data
-    db $77, $77, $51, $a2, $80, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $fe, $dc, $ba, $98, $8a, $a8, $32, $10, $fe, $ed, $db, $a9, $87, $65, $31, $00
-    db $99, $aa, $bb, $cc, $bb, $aa, $77, $33, $11, $34, $67, $89, $aa, $a7, $87, $78
-    db $ab, $ef, $fe, $da, $97, $43, $11, $31
 
 .wave2: ; $416B
     db $EE, $EE, $EE, $00, $00, $00, $EE, $EE, $EE, $00, $00, $00, $EE, $00, $EE, $00
@@ -143,8 +121,6 @@ songNoiseChannelOptionSets:
 .noiseD:  db $00,$77,$6B,$80
 .noiseE:  db $00,$57,$6B,$80
 .noiseF:  db $00,$37,$6B,$80
-.noise10: db $00,$80,$6D,$80 ; unused
-.noise11: db $00,$40,$4D,$80 ; unused
 .noise12: db $00,$1F,$47,$80
 .noise13: db $00,$40,$47,$80
 .noise14: db $00,$40,$46,$80
@@ -155,20 +131,13 @@ songNoiseChannelOptionSets:
 .noise19: db $00,$40,$41,$80
 .noise1A: db $00,$1B,$37,$80
 .noise1B: db $00,$A5,$27,$80
-.noise1C: db $00,$1F,$37,$80 ; unused
 .noise1D: db $00,$27,$46,$80
 .noise1E: db $00,$27,$45,$80
 .noise1F: db $00,$1B,$6B,$80
 .noise20: db $00,$1A,$6B,$80
 .noise21: db $00,$19,$6B,$80
-.noise22: db $00,$1F,$37,$80 ; unused
-.noise23: db $00,$1C,$6C,$80 ; unused
 .noise24: db $00,$51,$4D,$80
 .noise25: db $30,$F1,$6F,$C0
-.noise26: db $38,$A1,$3B,$C0 ; unused
-.noise27: db $38,$A1,$3A,$C0 ; unused
-.noise28: db $00,$F4,$7A,$80 ; unused
-.noise29: db $00,$F4,$7B,$80 ; unused
 ;}
 
 ; Song sound channel effect tables
@@ -310,18 +279,10 @@ playSongInterruption:
     ld a, [songSweep_square1]
     ld [songSweepBackup_square1], a
 
-    ld hl, songProcessingStateBackup
-    ld de, songProcessingState
-    ld b, songProcessingStateBackup - songProcessingStates
-
-    .copyLoop:
-        ld a, [de]
-        ld [hl+], a
-        inc de
-        dec b
-        ld a, b
-        and a
-    jr nz, .copyLoop
+    ld hl, songProcessingState
+    ld de, songProcessingStateBackup
+    ld b, songProcessingStateBackup - songProcessingState
+    call copyToVram.small
 
     call muteSoundChannels
     ld [songInterruptionRequest], a
@@ -337,28 +298,18 @@ startEndingSongInterruption:
 ;{
     dec a
     ld [songInterruptionPlaying], a
-    ld hl, songProcessingState
-    ld de, songProcessingStateBackup
-    ld b, songProcessingStateBackup - songProcessingStates
-
-    .copyStateLoop:
-        ld a, [de]
-        ld [hl+], a
-        inc de
-        dec b
-        ld a, b
-        and a
-    jr nz, .copyStateLoop
+    ld hl, songProcessingStateBackup
+    ld de, songProcessingState
+    ld b, songProcessingStateBackup - songProcessingState
+    call copyToVram.small
 
     ld hl, audioChannelOptions
-    ld de, rAUD1SWEEP
-
+    ld bc, ((AUDRAM_SIZE*4) << 8) + LOW(rAUD1SWEEP)
     .copyOptionsLoop:
         ld a, [hl+]
-        ld [de], a
-        inc e
-        ld a, e
-        cp LOW(rAUD1SWEEP + AUDRAM_SIZE*4) ; Low byte of end of audio channel options ($FF24 & $FF)
+        ldh [c], a
+        inc c
+        dec b
     jr nz, .copyOptionsLoop
 
     xor a
@@ -469,7 +420,7 @@ handleChannelSoundEffect_square1:
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearChannelSoundEffect_square1
+        jp z, clearChannelSoundEffect_square1
 
     cp $1f
         jr nc, .endif_sfxRequested
@@ -483,8 +434,7 @@ handleChannelSoundEffect_square1:
 
         ld a, [sfxRequest_square1]
         ld hl, square1Sfx_initPointers
-        call loadPointerFromTable
-        jp hl
+        jr handleChannelSoundEffect_square2.jumpToPointerFromTable
     .endif_sfxRequested:
 
 .playing:
@@ -495,8 +445,7 @@ handleChannelSoundEffect_square1:
     cp $1f
     jr nc, .endif_sfxPlaying
         ld hl, square1Sfx_playbackPointers
-        call loadPointerFromTable
-        jp hl
+        jr handleChannelSoundEffect_square2.jumpToPointerFromTable
     .endif_sfxPlaying:
 
     xor a
@@ -511,14 +460,13 @@ handleChannelSoundEffect_square2:
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearChannelSoundEffect_square2
+        jp z, clearChannelSoundEffect_square2
 
     cp $08
         jr nc, .endif_sfxRequested
 
     ld hl, songSoundEffectInitialisationFunctionPointers_square2
-    call loadPointerFromTable
-    jp hl
+    jr .jumpToPointerFromTable
     .endif_sfxRequested:
 
     ld a, [sfxPlaying_square2]
@@ -528,8 +476,12 @@ handleChannelSoundEffect_square2:
     cp $08
     jr nc, .endif_sfxPlaying
         ld hl, songSoundEffectPlaybackFunctionPointers_square2
-        call loadPointerFromTable
-        jp hl
+    .jumpToPointerFromTable:
+        ;{
+        ; hl = [[hl] + ([a] - 1) * 2]
+            dec a
+            jp RST_28.HLSet
+        ;}
     .endif_sfxPlaying:
 
     xor a
@@ -544,7 +496,7 @@ handleChannelSoundEffect_noise:
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearChannelSoundEffect_noise
+        jp z, clearChannelSoundEffect_noise
 
     cp $1b
         jr nc, .endif_sfxRequested
@@ -565,8 +517,7 @@ handleChannelSoundEffect_noise:
 
         ld a, [sfxRequest_noise]
         ld hl, songSoundEffectInitialisationFunctionPointers_noise
-        call loadPointerFromTable
-        jp hl
+        jr handleChannelSoundEffect_square2.jumpToPointerFromTable
     .endif_sfxRequested:
 
 .playing:
@@ -577,12 +528,11 @@ handleChannelSoundEffect_noise:
     cp $1b
     jr nc, .endif_sfxPlaying
         ld hl, songSoundEffectPlaybackFunctionPointers_noise
-        call loadPointerFromTable
-        jp hl
+        jr handleChannelSoundEffect_square2.jumpToPointerFromTable
     .endif_sfxPlaying:
 
     xor a
-    ld [.playing], a ; Bug, should be sfxPlaying_noise. This branch is never taken anyway though
+    ld [sfxPlaying_noise], a
     ret
 ;}
 
@@ -602,8 +552,7 @@ handleChannelSoundEffect_wave:
     ld [sfxActive_wave], a
     ld [sfxPlaying_wave], a
     ld hl, songSoundEffectInitialisationFunctionPointers_wave
-    call loadPointerFromTable
-    jp hl
+    jr handleChannelSoundEffect_square2.jumpToPointerFromTable
 
 .soundEffect0:
     ld a, [sfxPlaying_wave]
@@ -613,8 +562,7 @@ handleChannelSoundEffect_wave:
     cp $06
     jr nc, .endif_sfxPlaying
         ld hl, songSoundEffectPlaybackFunctionPointers_wave
-        call loadPointerFromTable
-        jp hl
+        jr handleChannelSoundEffect_square2.jumpToPointerFromTable
     .endif_sfxPlaying:
 
     xor a
@@ -680,7 +628,14 @@ handleSong:
     ldh [rNR51], a
     ld a, [songRequest]
     ld hl, songDataTable
-    call loadPointerFromTable
+    dec a
+    add a
+    ld c, a
+    ld b, $00
+    add hl, bc
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
     jp loadSongHeader
 ;}
 
@@ -859,76 +814,38 @@ handleSongPlaying:
     ret
 ;}
 
-loadPointerFromTable:
-;{
-; hl = [[hl] + ([a] - 1) * 2]
-    dec a
-    add a
-    ld b, $00
-    ld c, a
-    add hl, bc
-    ld c, [hl]
-    inc hl
-    ld b, [hl]
-    ld l, c
-    ld h, b
-    ret
-;}
+
 
 decrementChannelSoundEffectTimer_square1:
 ;{
     ld a, [sfxTimer_square1]
     and a
-        jr z, gotoClearChannelSoundEffect_square1
+        jr z, clearChannelSoundEffect_square1
 
     dec a
     ld [sfxTimer_square1], a
     ret
 ;}
 
-gotoClearChannelSoundEffect_square1:
-;{
-    jr clearChannelSoundEffect_square1
-;}
-
 decrementChannelSoundEffectTimer_square2:
 ;{
     ld a, [sfxTimer_square2]
     and a
-        jr z, gotoClearChannelSoundEffect_square2
+        jr z, clearChannelSoundEffect_square2
 
     dec a
     ld [sfxTimer_square2], a
     ret
 ;}
 
-gotoClearChannelSoundEffect_square2:
-;{
-    jr clearChannelSoundEffect_square2
-;}
-
 decrementChannelSoundEffectTimer_noise:
 ;{
     ld a, [sfxTimer_noise]
     and a
-        jr z, gotoClearChannelSoundEffect_noise
+        jr z, clearChannelSoundEffect_noise
 
     dec a
     ld [sfxTimer_noise], a
-    ret
-;}
-
-gotoClearChannelSoundEffect_noise:
-;{
-    jr clearChannelSoundEffect_noise
-;}
-
-; Dead code
-;{
-    and a
-        jr z, silenceAudio
-
-    dec a
     ret
 ;}
 
@@ -976,7 +893,6 @@ disableChannel_wave:
 ;{
     xor a
     ldh [rAUD3ENA], a
-    xor a
     ret
 ;}
 
@@ -1318,7 +1234,6 @@ loadSongHeader:
     ld h, a
     ld a, [songSectionPointer_square1+1]
     ld l, a
-    ld a, l
     or h
     jr nz, .else_square1
         xor a
@@ -1341,7 +1256,6 @@ loadSongHeader:
     ld h, a
     ld a, [songSectionPointer_square2+1]
     ld l, a
-    ld a, l
     or h
     jr nz, .else_square2
         xor a
@@ -1364,7 +1278,6 @@ loadSongHeader:
     ld h, a
     ld a, [songSectionPointer_wave+1]
     ld l, a
-    ld a, l
     or h
     jr nz, .else_wave
         xor a
@@ -1385,7 +1298,6 @@ loadSongHeader:
     ld h, a
     ld a, [songSectionPointer_noise+1]
     ld l, a
-    ld a, l
     or h
     jr nz, .else_noise
         xor a
@@ -1410,8 +1322,8 @@ loadSongHeader:
 
 handleSong_loadNextChannelSound_square1:
 ;{
-    ld de, songChannelSongProcessingState_square1
-    ld hl, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_square1
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songChannelInstructionPointer_square1]
     ld h, a
@@ -1428,8 +1340,8 @@ handleSong_loadNextChannelSound_square1:
     ld [songChannelInstructionPointer_square1], a
     ld a, l
     ld [songChannelInstructionPointer_square1+1], a
-    ld hl, songChannelSongProcessingState_square1
-    ld de, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_working
+    ld de, songChannelSongProcessingState_square1
     call copyChannelSongProcessingState
     ld a, [songOptionsSetFlag_working]
     cp $01
@@ -1465,8 +1377,8 @@ handleSong_loadNextChannelSound_square1:
 
 handleSong_loadNextChannelSound_square2:
 ;{
-    ld de, songChannelSongProcessingState_square2
-    ld hl, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_square2
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songChannelInstructionPointer_square2]
     ld h, a
@@ -1483,8 +1395,8 @@ handleSong_loadNextChannelSound_square2:
     ld [songChannelInstructionPointer_square2], a
     ld a, l
     ld [songChannelInstructionPointer_square2+1], a
-    ld hl, songChannelSongProcessingState_square2
-    ld de, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_working
+    ld de, songChannelSongProcessingState_square2
     call copyChannelSongProcessingState
     ld a, [songOptionsSetFlag_working]
     cp $02
@@ -1538,8 +1450,8 @@ handleSong_loadNextChannelSound_square2:
 
 handleSong_loadNextChannelSound_wave:
 ;{
-    ld de, songChannelSongProcessingState_wave
-    ld hl, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_wave
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songChannelInstructionPointer_wave]
     ld h, a
@@ -1556,8 +1468,8 @@ handleSong_loadNextChannelSound_wave:
     ld [songChannelInstructionPointer_wave], a
     ld a, l
     ld [songChannelInstructionPointer_wave+1], a
-    ld hl, songChannelSongProcessingState_wave
-    ld de, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_working
+    ld de, songChannelSongProcessingState_wave
     call copyChannelSongProcessingState
     ld a, [songEnable_working]
     ld [songEnableOption_wave], a
@@ -1590,8 +1502,8 @@ handleSong_loadNextChannelSound_wave:
 
 handleSong_loadNextChannelSound_noise:
 ;{
-    ld de, songChannelSongProcessingState_noise
-    ld hl, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_noise
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songChannelInstructionPointer_noise]
     ld h, a
@@ -1608,8 +1520,8 @@ handleSong_loadNextChannelSound_noise:
     ld [songChannelInstructionPointer_noise], a
     ld a, l
     ld [songChannelInstructionPointer_noise+1], a
-    ld hl, songChannelSongProcessingState_noise
-    ld de, songChannelSongProcessingState_working
+    ld hl, songChannelSongProcessingState_working
+    ld de, songChannelSongProcessingState_noise
     call copyChannelSongProcessingState
     ld a, [sfxActive_noise]
     and a
@@ -2006,15 +1918,7 @@ songInstruction_repeat:
 copyChannelSongProcessingState:
 ;{
     ld b, songChannelSongProcessingState_square1 - songChannelSongProcessingState_working
-
-    .loopCopy:
-        ld a, [de]
-        ld [hl+], a
-        inc de
-        dec b
-    jr nz, .loopCopy
-
-    ret
+    jp copyToVram.small
 ;}
 
 handleSongSoundChannelEffect:
@@ -2049,15 +1953,11 @@ handleSongSoundChannelEffect:
     dec a
     ld [songSoundChannelEffectTimer], a
     ld e, a
-    xor a
-    ld d, a
+    ld d, $00
     add hl, de
-    ld a, [hl]
-    ld e, a
-    ld a, c
-    ld l, a
-    ld a, b
-    ld h, a
+    ld e, [hl]
+    ld l, c
+    ld h, b
     add hl, de
     ld a, l
     ld [songFrequency_working], a
@@ -2087,8 +1987,21 @@ handleSongSoundChannelEffect:
     ld hl, songSoundChannelEffectTable_indexA
     jr .merge
 
+.effectIndex8:
+    dec bc
+    dec bc
+    dec bc
+    jr .effectIndexCommon
+
+.effectIndex7:
+    inc bc
+    inc bc
+    inc bc
+    ; fallthrough
+
 .effectIndex6:
     inc bc
+.effectIndexCommon:
     ld a, c
     ld [songFrequency_working], a
     ld a, b
@@ -2096,7 +2009,6 @@ handleSongSoundChannelEffect:
     res 6, a
     ld [songFrequency_working+1], a
 
-.setFrequency:
     ld a, [workingSoundChannel]
     cp $01
     jr nz, .endIf_square1
@@ -2125,31 +2037,6 @@ handleSongSoundChannelEffect:
     res 7, a
     ld [songFrequency_wave+1], a
     ret
-
-.effectIndex7:
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld a, c
-    ld [songFrequency_working], a
-    ld a, b
-    res 7, a
-    res 6, a
-    ld [songFrequency_working+1], a
-    jr .setFrequency
-
-.effectIndex8:
-    dec bc
-    dec bc
-    dec bc
-    ld a, c
-    ld [songFrequency_working], a
-    ld a, b
-    res 7, a
-    res 6, a
-    ld [songFrequency_working+1], a
-    jr .setFrequency
 ;}
 
 resetChannelOptions_square1:
@@ -2182,7 +2069,6 @@ resetChannelOptions_wave:
 ;{
     xor a
     ld [songChannelEnable_wave], a
-    xor a
     ldh [rAUD3ENA], a
     ld [songEnableOption_wave], a
     jp handleSongPlaying.endWave
@@ -2205,15 +2091,12 @@ resetSongSoundChannelOptions:
 ;{
     push hl
     ld hl, songProcessingStates
-    ld a, [channelAllSongProcessingStateSizes]
-    ld b, a
+    ld b, songProcessingStatesEnd - songProcessingStates
 
     .loop:
         ld [hl], $00
         inc hl
         dec b
-        ld a, b
-        and a
     jr nz, .loop
 
     pop hl
@@ -2306,20 +2189,7 @@ square1Sfx_playbackPointers:
     dw square1Sfx_playback_1E ; 1Eh: Unpaused
 ;}
 
-playShortJumpSound:
-;{
-    ld a, $0b
-    ld de, optionSets_square1.jumping_0
-    jp playSquare1Sfx
-;}
 
-playingShortJumpSound:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $09
-        jr z, square1Sfx_playback_1.set1
-    ret
-;}
 
 square1Sfx_init_1:
 ;{
@@ -2335,18 +2205,22 @@ square1Sfx_init_1:
 
     ld a, [songPlaying]
     cp song_chozoRuins
-        jr z, playShortJumpSound
+    jr z, .playShortJumpSound
+        ld a, $32
+        ld de, optionSets_square1.jumping_0
+        jp playSquare1Sfx
 
-    ld a, $32
-    ld de, optionSets_square1.jumping_0
-    jp playSquare1Sfx
+    .playShortJumpSound:
+        ld a, $0b
+        ld de, optionSets_square1.jumping_0
+        jp playSquare1Sfx
 ;}
 
 square1Sfx_playback_1:
 ;{
     ld a, [songPlaying]
     cp song_chozoRuins
-        jr z, playingShortJumpSound
+        jr z, .playingShortJumpSound
 
     call decrementChannelSoundEffectTimer_square1
     cp $2d
@@ -2361,6 +2235,11 @@ square1Sfx_playback_1:
         jr z, .set5
     ret
 
+.playingShortJumpSound:
+    call decrementChannelSoundEffectTimer_square1
+    cp $09
+    ret nz
+    ; fallthrough
 .set1:
     ld de, optionSets_square1.jumping_1
     jp setChannelOptionSet.square1
@@ -2382,22 +2261,6 @@ square1Sfx_playback_1:
     jp setChannelOptionSet.square1
 ;}
 
-playShortHiJumpSound:
-;{
-    ld a, $09
-    ld de, optionSets_square1.hijumping_0
-    jp playSquare1Sfx
-;}
-
-playingShortHiJumpSound:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $08
-        jr z, square1Sfx_playback_2.set1
-
-    ret
-;}
-
 square1Sfx_init_2:
 ;{
     ld a, [sfxPlaying_square1]
@@ -2412,18 +2275,24 @@ square1Sfx_init_2:
 
     ld a, [songPlaying]
     cp song_chozoRuins
-        jr z, playShortHiJumpSound
+    jr z, .playShortHiJumpSound
+        ld a, $43
+        ld de, optionSets_square1.hijumping_0
+        jp playSquare1Sfx
 
-    ld a, $43
-    ld de, optionSets_square1.hijumping_0
-    jp playSquare1Sfx
+    .playShortHiJumpSound:
+        ld a, $09
+        ld de, optionSets_square1.hijumping_0
+        jp playSquare1Sfx
 ;}
+
+
 
 square1Sfx_playback_2:
 ;{
     ld a, [songPlaying]
     cp song_chozoRuins
-        jr z, playingShortHiJumpSound
+        jr z, .playingShortHiJumpSound
 
     call decrementChannelSoundEffectTimer_square1
     cp $41
@@ -2442,10 +2311,11 @@ square1Sfx_playback_2:
         jr z, .set7
     ret
 
-.set0:
-    ld de, optionSets_square1.hijumping_0
-    jp setChannelOptionSet.square1
-
+.playingShortHiJumpSound:
+    call decrementChannelSoundEffectTimer_square1
+    cp $08
+    ret nz
+    ; fallthrough
 .set1:
     ld de, optionSets_square1.hijumping_1
     jp setChannelOptionSet.square1
@@ -3039,10 +2909,8 @@ square1Sfx_playback_14:
 ;{
     call decrementChannelSoundEffectTimer_square1
     cp $06
-        jr z, .set1
-    ret
+    ret nz
 
-.set1:
     ld de, optionSets_square1.pipeBugSpawnerStop_1
     jp setChannelOptionSet.square1
 ;}
@@ -3058,10 +2926,8 @@ square1Sfx_playback_15:
 ;{
     call decrementChannelSoundEffectTimer_square1
     cp $02
-        jr z, .set1
-    ret
+    ret nz
 
-.set1:
     ld de, optionSets_square1.optionMissileSelect_1
     jp setChannelOptionSet.square1
 ;}
@@ -3155,7 +3021,7 @@ square1Sfx_init_18:
 ;{
     ld a, [samusHealthChangedOptionSetIndex]
     and a
-        call nz, .endIf ; Vanilla bug: call instead of jr
+    jr nz, .endIf
         ld a, $02
         ld [samusHealthChangedOptionSetIndex], a
     .endIf:
@@ -3378,120 +3244,6 @@ square1Sfx_playback_1E:
     ld de, optionSets_square1.unpaused_2
     jp setChannelOptionSet.square1
 ;}
-
-
-; All these following "examples" are completely unused
-square1Sfx_init_exampleA:
-;{
-    ld a, $50
-    ld de, optionSets_square1.exampleA
-    jp playSquare1Sfx
-;}
-
-square1Sfx_playback_exampleA:
-;{
-    ld de, optionSets_square1.exampleA
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_init_exampleB:
-;{
-    ld a, $50
-    ld de, optionSets_square1.exampleB
-    jp playSquare1Sfx
-;}
-
-setOptionSet_exampleB:
-;{
-    ld de, optionSets_square1.exampleB
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_playback_exampleB:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $40
-        ret nz
-
-    ld de, optionSets_square1.exampleB
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_init_exampleC:
-;{
-    ld a, $50
-    ld de, optionSets_square1.exampleC
-    jp playSquare1Sfx
-;}
-
-setOptionSet_exampleC:
-;{
-    ld de, optionSets_square1.exampleC
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_playback_exampleC:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $40
-        jr z, setOptionSet_exampleC
-    cp $30
-        jr z, setOptionSet_exampleC
-    ret
-;}
-
-square1Sfx_init_exampleD:
-;{
-    ld a, $50
-    ld de, optionSets_square1.exampleD
-    jp playSquare1Sfx
-;}
-
-setOptionSet_exampleD:
-;{
-    ld de, optionSets_square1.exampleD
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_playback_exampleD:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $40
-        jr z, setOptionSet_exampleD
-    cp $30
-        jr z, setOptionSet_exampleD
-    cp $20
-        jr z, setOptionSet_exampleD
-    ret
-;}
-
-square1Sfx_init_exampleE:
-;{
-    ld a, $50
-    ld de, optionSets_square1.exampleE
-    jp playSquare1Sfx
-;}
-
-setOptionSet_exampleE:
-;{
-    ld de, optionSets_square1.exampleE
-    jp setChannelOptionSet.square1
-;}
-
-square1Sfx_playback_exampleE:
-;{
-    call decrementChannelSoundEffectTimer_square1
-    cp $40
-        jr z, setOptionSet_exampleE
-    cp $30
-        jr z, setOptionSet_exampleE
-    cp $20
-        jr z, setOptionSet_exampleE
-    cp $10
-        jr z, setOptionSet_exampleE
-    ret
-;}
-
 
 rememberIfScrewAttackingSfxIsPlaying:
 ;{
@@ -10182,15 +9934,6 @@ song_killedMetroid_square1:
     dw $0000
 ;}
 
-; $6FB9
-unused6FB9:
-;{
-    dw unused6FB9_section0 ; $6FC5
-    dw unused6FB9_section1 ; $6FD2
-    dw unused6FB9_section2 ; $6FF6
-    dw $0000
-;}
-
 ; $6FC1
 song_killedMetroid_wave:
 ;{
@@ -10199,7 +9942,6 @@ song_killedMetroid_wave:
 ;}
 
 ; $6FC5
-unused6FB9_section0:
 song_killedMetroid_square1_section0:
 ;{
     SongOptions
@@ -10218,7 +9960,6 @@ song_killedMetroid_square1_section0:
 ;}
 
 ; $6FD2
-unused6FB9_section1:
 song_killedMetroid_square1_section2:
 ;{
     SongOptions
@@ -10267,7 +10008,6 @@ song_metroidHive_withIntro_square1_section3:
 
 ; $6FF6
 song_killedMetroid_square1_section3:
-unused6FB9_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $C
@@ -13859,47 +13599,11 @@ song_babyMetroid_square1_section7:
     SongEnd
 ;}
 
-; $7D51
-unused7D51_section0:
-;{
-    SongOptions
-        DescendingEnvelopeOptions 5, $8
-        AscendingSweepOptions 0, 0
-        LengthDutyOptions $0, 1
-    SongEnd
-;}
-
-; $7D56
-unused7D56_section0:
-;{
-    SongOptions
-        DescendingEnvelopeOptions 5, $A
-        AscendingSweepOptions 0, 0
-        LengthDutyOptions $0, 1
-    SongEnd
-;}
-
 ; $7D5B
 song_babyMetroid_wave_section3:
 ;{
     SongOptions
         WaveOptions wavePatterns.wave3, 3, $0
-    SongEnd
-;}
-
-; $7D60
-unused7D60_section0:
-;{
-    SongOptions
-        WaveOptions wavePatterns.wave3, 2, $0
-    SongEnd
-;}
-
-; $7D65
-unused7D65_section0:
-;{
-    SongOptions
-        WaveOptions wavePatterns.wave3, 1, $0
     SongEnd
 ;}
 
@@ -14230,4 +13934,4 @@ song_babyMetroid_noise_section1:
 ;}
 ;}
 
-; Freespace - 04:7E2B (filled with $00)
+bank4_freespace: ; Freespace - 04:7E2B (filled with $00)
