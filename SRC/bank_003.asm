@@ -4167,7 +4167,7 @@ LCDCInterruptHandler: ;{ 03:7C7F
         ; case 4 (default) ; Draw status bar
             push hl
                 ld hl, rLCDC
-                res 5, [hl] ; Disable window
+                res B_LCDC_WINDOW, [hl] ; Disable window
             pop hl
             ; Set scroll for status bar
             xor a
@@ -4180,7 +4180,7 @@ LCDCInterruptHandler: ;{ 03:7C7F
         .case_3: ; Disable window
             push hl
             ld hl, rLCDC
-            res 5, [hl]
+            res B_LCDC_WINDOW, [hl]
             pop hl
         jr .nextToken
         
@@ -4377,7 +4377,7 @@ VBlank_drawQueen: ;{ 03:7CF0
     ld [queen_pInterruptListHigh], a
     ; Enable window display
     ld hl, rLCDC
-    set 5, [hl]
+    set B_LCDC_WINDOW, [hl]
 ret ;}
 
 bank3_freespace: ; 3:7DAD -- Freespace filled with $00 (nop)

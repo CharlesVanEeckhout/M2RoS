@@ -199,7 +199,7 @@ bootRoutine: ;{ 00:01FB
     ldh [rSTAT], a
     ldh [rSB], a
     ldh [rSC], a
-    ld a, $80
+    ld a, LCDC_ON
     ldh [rLCDC], a
     
     ; Wait for rendering to be off
@@ -208,7 +208,7 @@ bootRoutine: ;{ 00:01FB
         cp $94
     jr nz, .waitLoop
     ; Init LCD parameters
-    ld a, $03
+    ld a, LCDC_OFF | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ld a, $93
     ld [bg_palette], a
@@ -302,7 +302,7 @@ bootRoutine: ;{ 00:01FB
     ldh [rIE], a
     ld a, $07
     ldh [rWX], a
-    ld a, $80
+    ld a, LCDC_ON
     ldh [rLCDC], a
     ei
     xor a
@@ -503,7 +503,7 @@ disableLCD: ;{ 00:039C
     jr nz, .waitLoop
     ; Disable LCD
     ldh a, [rLCDC]
-    and $7f
+    and LOW(~LCDC_ON)
     ldh [rLCDC], a
     ; Restore interrupt status
     ldh a, [hTemp.b]
@@ -674,7 +674,7 @@ gameMode_LoadB: ;{ 00:0464
     ld [scrollX], a
 
     ; Enable LCD
-    ld a, $e3
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_ON | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     xor a
     ld [unused_D011], a
@@ -6820,7 +6820,7 @@ door_queen: ;{ 00:2887
         sub b
         add SCREEN_HEIGHT_PX / 2 + OAM_Y_OFS + samusOriginY_toCenter
         ld [samus_onscreenYPos], a
-        ld a, $e3
+        ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_ON | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
         ldh [rLCDC], a
         ; Clear variables
         xor a
@@ -9543,8 +9543,8 @@ gameMode_dead: ;{ 00:36B0
     ld [scrollX], a
     ldh [rSCY], a
     ldh [rSCX], a
-    ; Re-enable LCD
-    ld a, $c3
+    ; Re-enable LCD (window disabled)
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ld [gameOver_LCDC_copy], a
     ldh [rLCDC], a
     
@@ -10139,8 +10139,8 @@ gameMode_unusedA: ;{ 00:3ACE
     xor a
     ld [scrollY], a
     ld [scrollX], a
-    ; Enable LCD
-    ld a, $c3
+    ; Enable LCD (window disabled)
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Set countdown timer
     ld a, $a0
@@ -10213,8 +10213,8 @@ gameMode_unusedC: ;{ 00:3B43
     xor a
     ld [scrollY], a
     ld [scrollX], a
-    ; Enable LCD
-    ld a, $c3
+    ; Enable LCD (window disabled)
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Set timer and game mode
     ld a, $ff
