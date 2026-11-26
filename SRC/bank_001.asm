@@ -137,7 +137,7 @@ VBlank_updateStatusBar: ;{ 01:493E
 ; Draw Metroid counter in corner {
     ; Check if paused
     ldh a, [hGameMode]
-    cp $08
+    cp _id_gameMode_Paused
     jr z, .else_C
         ld a, [metroidCountShuffleTimer]
         and a

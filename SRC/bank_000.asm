@@ -5610,9 +5610,8 @@ main_readInput: ;{ 00:2287
     ; Read d-pad
     ldh a, [rP1]
     ldh a, [rP1]
-    ; Invert, swap to other nybble, store in B
-    cpl
-    and JOYP_INPUTS
+    ; store in B inverted d-pad
+    or LOW(~JOYP_INPUTS)
     swap a
     ld b, a
     
@@ -5628,11 +5627,12 @@ main_readInput: ;{ 00:2287
     ldh a, [rP1]
     ldh a, [rP1]
     ldh a, [rP1]
-    ; Invert, mask out upper bits, and OR with B
+    ; AND is the same as OR for inverted values
+    or LOW(~JOYP_INPUTS)
+    and b
+    ; invert both d-pad and buttons at once
     cpl
-    and JOYP_INPUTS
-    or b
-    ; Store in C as temp
+    ; Store in B as temp
     ld b, a
 
     ; Deselect reading both input types
@@ -5658,19 +5658,24 @@ getTilemapAddress: ;{ 00:22BC
     ; HL = $9800 + (tileY-$10)/8*$20
     ld a, [tileY]
     sub OAM_Y_OFS
-    ld b, OAM_X_OFS ; code assumes that OAM_X_OFS is one tile long
-    ld de, $0020
-    ld hl, $9800 - $20 ;$97E0
-    .loop:
-        add hl, de ; Add one row of bytes to the pointer per loop
-        sub b ; Subtract one row of pixels from A per loop
-    jr nc, .loop
+    rlca
+    rlca
+    ld l, a
+
+    and $03
+    add $98
+    ld h, a
+
+    ld a, l
+    and $e0
+    ld l, a
+
     ; HL += (tileX-8)/8
     ld a, [tileX]
-    sub b
-    srl a
-    srl a
-    srl a
+    sub OAM_X_OFS
+    swap a
+    rlca
+    and $1f
     add l
     ; Save HL to pTilemapDest
     ld l, a

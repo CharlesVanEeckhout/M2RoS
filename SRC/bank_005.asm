@@ -8,7 +8,6 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
 titleCreditsBank:
 
 ;------------------------------------------------------------------------------
-; called by gameMode_boot
 loadTitleScreen: ;{ 05:408F
     ld bc, $1000
     ld hl, gfx_titleScreen
@@ -27,13 +26,8 @@ loadTitleScreen: ;{ 05:408F
     ; Load title tilemap
     ld de, TILEMAP0
     ld hl, titleTilemap
-    .titleTilemapLoop:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        ld a, d
-        cp $9c
-    jr nz, .titleTilemapLoop
+    ld bc, (SCREEN_HEIGHT-1) * TILEMAP_WIDTH + SCREEN_WIDTH
+    call copyData
 
     ; Initialize window position
     ld a, $07
@@ -69,8 +63,6 @@ saveTextTilemap: ; 05:4104
 ;------------------------------------------------------------------------------
 titleScreenRoutine: ;{ 05:4118
 ;{ Title display logic
-    call OAMClear
-
 ; Handle flashing
     ; Set default palette
     ld a, $93
@@ -334,9 +326,8 @@ titleScreenRoutine: ;{ 05:4118
     ; Get base address of save slot
     ; de = $A000 + (activeSaveSlot * $40)
     ld a, [activeSaveSlot]
-    sla a
-    sla a
-    swap a
+    rrca
+    rrca
     ld e, a
     ld d, HIGH(saveData_baseAddr) ;$A0
     ; Loop until we find a mismatch between the magic number in ROM and the save slot
