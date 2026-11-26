@@ -2788,10 +2788,10 @@ miscIngameTasks: ;{ 01:57F2
     jr z, .endIf_B
         ; Check if window is active
         ldh a, [rLCDC]
-        bit 5, a
+        bit B_LCDC_WINDOW, a
         jr nz, .endIf_C
             ; If not active, re-enable window
-            set 5, a
+            set B_LCDC_WINDOW, a
             ldh [rLCDC], a
         .endIf_C:
         

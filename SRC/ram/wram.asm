@@ -606,8 +606,8 @@ songProcessingStates: ; $CF2F
 macro makeChannelSongProcessingState ; [label suffix]
     songChannelSongProcessingState_\1:
     songSectionPointer_\1: ds 2
-    songRepeatCount_\1: ds 2
-    songRepeatPoint_\1: ds 1
+    songRepeatPoint_\1: ds 2
+    songRepeatCount_\1: ds 1
     songInstructionLength_\1: ds 1
     songNoteEnvelope_\1:
     songNoteVolume_\1: ds 1

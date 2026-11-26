@@ -54,7 +54,7 @@ loadTitleScreen: ;{ 05:408F
     xor a
     ld [scrollY], a
     ; Enable rendering (window disabled)
-    ld a, $c3
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Play title music
     ld a, $11
@@ -1037,7 +1037,7 @@ prepareCredits: ;{ 05:587F
     .endIf_A:
 
     ; Disable LCD
-    ld a, $03
+    ld a, LCDC_OFF | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Reset palette
     ld a, $93
@@ -1102,8 +1102,8 @@ prepareCredits: ;{ 05:587F
     ld [scrollY], a
     ld [scrollX], a
 
-    ; Reactivate display
-    ld a, $c3
+    ; Reactivate display (window disabled)
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
 
     ; Set timer for initial animation state (standing still in suit)

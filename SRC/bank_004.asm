@@ -1892,25 +1892,25 @@ songInstruction_markRepeatPoint:
 ;{
     inc hl
     ld a, [hl+]
-    ld [songRepeatPoint_working], a
-    ld a, h
     ld [songRepeatCount_working], a
+    ld a, h
+    ld [songRepeatPoint_working], a
     ld a, l
-    ld [songRepeatCount_working+1], a
+    ld [songRepeatPoint_working+1], a
     jr endSongInstruction
 ;}
 
 songInstruction_repeat:
 ;{
-    ld a, [songRepeatPoint_working]
+    ld a, [songRepeatCount_working]
     dec a
-    ld [songRepeatPoint_working], a
+    ld [songRepeatCount_working], a
     and a
         jr z, endSongInstructionWithParameter
 
-    ld a, [songRepeatCount_working]
+    ld a, [songRepeatPoint_working]
     ld h, a
-    ld a, [songRepeatCount_working+1]
+    ld a, [songRepeatPoint_working+1]
     ld l, a
     jr endSongInstruction
 ;}

@@ -93,7 +93,7 @@ bootRoutine: ;{ 00:01FB
     ldh [rSTAT], a
     ldh [rSB], a
     ldh [rSC], a
-    ld a, $80
+    ld a, LCDC_ON
     ldh [rLCDC], a
     
     ; Wait for rendering to be off
@@ -102,7 +102,7 @@ bootRoutine: ;{ 00:01FB
         cp $94
     jr nz, .waitLoop
     ; disable screen
-    ld a, $03
+    ld a, LCDC_OFF | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     
     callFar initializeAudio
@@ -178,7 +178,7 @@ bootRoutine: ;{ 00:01FB
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
-    ld a, $80
+    ld a, LCDC_ON
     ldh [rLCDC], a
     ei
     xor a
@@ -488,7 +488,7 @@ disableLCD: ;{ 00:039C
     jr nz, .waitLoop
     ; Disable LCD
     ldh a, [rLCDC]
-    and $7f
+    and LOW(~LCDC_ON)
     ldh [rLCDC], a
     ; Restore interrupt status
     ldh a, [hTemp.b]
@@ -656,7 +656,7 @@ gameMode_LoadB: ;{ 00:0464
     ld [scrollX], a
 
     ; Enable LCD
-    ld a, $e3
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_ON | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Increment game mode to main
     ld a, _id_gameMode_Main
@@ -6624,7 +6624,7 @@ door_queen: ;{ 00:2887
         sub b
         add SCREEN_HEIGHT_PX / 2 + OAM_Y_OFS + samusOriginY_toCenter
         ld [samus_onscreenYPos], a
-        ld a, $e3
+        ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_ON | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
         ldh [rLCDC], a
         ; Clear variables
         xor a
@@ -8879,8 +8879,8 @@ gameMode_dead: ;{ 00:36B0
     ld [scrollX], a
     ldh [rSCY], a
     ldh [rSCX], a
-    ; Re-enable LCD
-    ld a, $c3
+    ; Re-enable LCD (window disabled)
+    ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     
     ; Set timer for Game Over screen
