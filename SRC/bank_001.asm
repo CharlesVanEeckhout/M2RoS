@@ -558,17 +558,16 @@ drawSamus: ;{ 01:4BD9 Draw Samus
     jr z, .else_D
         ; Load dummy input to temp
         ld a, b
-        ldh [hTemp.a], a
         jr .endIf_D
     .else_D:
         ; Load input into temp variable
         ldh a, [hInputPressed]
-        and PAD_CTRL_PAD ;$f0
+        and PAD_DOWN | PAD_UP
         swap a ; Swap nybbles for array-indexing purposes
         ; OR the dummy input into the temp variable as well
         or b
-        ldh [hTemp.a], a
     .endIf_D:
+    ldh [hTemp.a], a
     
     ; Jump to the appropriate draw routine
     ld a, [samusPose]
@@ -577,22 +576,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
         include "samus/samus_drawJumpTable.asm"
 ;}
 
-drawSamus_knockback: ;{ 01:4C59 - $0F, $11: Knockback
-    ; Index = facing direction
-    ld d, $00
-    ld a, [samusFacingDirection]
-    ld e, a
-    ld hl, .knockbackTable
-    add hl, de
-    ; Load sprite
-    ld a, [hl]
-    ldh [hSpriteId], a
-jp drawSamus_common
 
-.knockbackTable: ; 02:4C69
-    db SPRITE_SAMUS_JUMP_LEFT
-    db SPRITE_SAMUS_JUMP_RIGHT
-;}
 
 drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
     ; Multiply facing direction by 4
@@ -665,6 +649,13 @@ drawSamus_jumpStart: ;{ 01:4CCC - $09, $0A: Jump Start
     ldh [hSpriteId], a
 jp drawSamus_common ;}
 
+drawSamus_knockback: ;{ 01:4C59 - $0F, $11: Knockback
+    ; Index = facing direction
+    ldh a, [hTemp.a]
+    and $03
+    ldh [hTemp.a], a
+    ; fallthrough
+;}
 drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
     ; Index into table using input + facing direction
     ld d, $00
@@ -693,11 +684,6 @@ jp drawSamus_common ;}
     db $00 ; x
     db SPRITE_SAMUS_JUMP_RIGHT_AIM_DOWN ; face right
     db SPRITE_SAMUS_JUMP_LEFT_AIM_DOWN ; face left
-    db $00 ; x
-    ; input both up and down (impossible)
-    db $00 ; x
-    db $00 ; x
-    db $00 ; x
     db $00 ; x
 
 drawSamus_spinJump: ;{ 01:4CEE - $02: Spin jump
@@ -744,8 +730,8 @@ drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
     ; Fade-in logic
     ; Skip rendering 1 out of 4 frames
     ld a, [countdownTimerLow]
-    and $03
     inc a
+    and $03
     ret z
 
     ; Load sprite ID
@@ -781,11 +767,6 @@ jp drawSamus_common
     db $00 ; x
     db SPRITE_SAMUS_STAND_RIGHT ; face right
     db SPRITE_SAMUS_STAND_LEFT ; face left
-    db $00 ; x
-    ; input both up and down (impossible)
-    db $00 ; x
-    db $00 ; x
-    db $00 ; x
     db $00 ; x
 ;}
 

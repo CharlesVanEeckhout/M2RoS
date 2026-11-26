@@ -40,7 +40,7 @@ def main():
     print('Success\n')
 
     print('Writing header')
-    run_or_exit("rgbfix -Weverything -v -t METROID2 -l 0x01 -m MBC1+RAM+BATTERY -r 0x02 -p 0x00 -j out/M2RoS.gb", "RGBFIX Error.")
+    run_or_exit("rgbfix -Weverything -v -t METROID2 -l 0x01 -m MBC1+RAM+BATTERY -r 0x02 -j out/M2RoS.gb", "RGBFIX Error.")
     print('Done\n')
 
     with open("out/M2RoS.sym", "r") as f:

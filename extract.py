@@ -8,6 +8,10 @@ MODULES = [importlib.import_module("scripts." + m) for m in [
     "extract_enemyData",
     "extract_tileset",
 ]]
+OPTIMIZE_MODULES = [importlib.import_module("scripts." + m) for m in [
+    "optimize_credits",
+    "optimize_doors",
+]]
 
 VANILLA_ROM_PATH = "./Metroid2.gb"
 
@@ -23,6 +27,11 @@ def main():
         exit()
     for module in MODULES:
         module.extract(VANILLA_ROM_PATH)
+    print('Success\n')
+    
+    print('Optimizing extracted resources')
+    for optimize_module in OPTIMIZE_MODULES:
+        optimize_module.main()
     print('Success')
 
 

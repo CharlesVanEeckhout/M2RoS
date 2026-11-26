@@ -170,6 +170,7 @@ handleAudio:
     ld a, [audioPauseSoundEffectTimer]
     and a
         jp nz, handleAudio_paused
+    ; fallthrough
 ;}
 
 handleAudio_handleSongInterruptionRequest:
@@ -210,6 +211,7 @@ handleAudio_handleSongInterruptionPlaying:
 
     cp songInterruption_fadeOutMusic
         jp z, handleAudio_handleFadingOutMusic
+    ; fallthrough
 ;}
 
 handleSongAndSoundEffects:
@@ -282,7 +284,7 @@ playSongInterruption:
     ld hl, songProcessingState
     ld de, songProcessingStateBackup
     ld b, songProcessingStateBackup - songProcessingState
-    call copyToVram.small
+    call copyData.small
 
     call muteSoundChannels
     ld [songInterruptionRequest], a
@@ -301,7 +303,7 @@ startEndingSongInterruption:
     ld hl, songProcessingStateBackup
     ld de, songProcessingState
     ld b, songProcessingStateBackup - songProcessingState
-    call copyToVram.small
+    call copyData.small
 
     ld hl, audioChannelOptions
     ld bc, ((AUDRAM_SIZE*4) << 8) + LOW(rAUD1SWEEP)
@@ -1803,11 +1805,6 @@ songInstruction_setWorkingSoundChannelOptions:
     res 7, a
 
 .effectIndex:
-    and a
-    jr nz, .endIf_badCode
-        xor a
-    .endIf_badCode:
-
     ld [songEffectIndex_working], a
 ;}
 
@@ -1918,7 +1915,7 @@ songInstruction_repeat:
 copyChannelSongProcessingState:
 ;{
     ld b, songChannelSongProcessingState_square1 - songChannelSongProcessingState_working
-    jp copyToVram.small
+    jp copyData.small
 ;}
 
 handleSongSoundChannelEffect:
@@ -1933,13 +1930,13 @@ handleSongSoundChannelEffect:
     cp $06
         jr z, .effectIndex6
     cp $07
-        jp z, .effectIndex7
+        jr z, .effectIndex7
     cp $08
-        jp z, .effectIndex8
+        jr z, .effectIndex8
     cp $09
-        jp z, .effectIndex9
+        jr z, .effectIndex9
     cp $0a
-        jp z, .effectIndexA
+        jr z, .effectIndexA
     ret
 
 .merge:
@@ -13884,15 +13881,9 @@ song_babyMetroid_wave_section2:
 ;{
     SongOptions
         WaveOptions wavePatterns.wave2, 3, $0
-    SongNoteLength_Crochet
-    SongRest
-    SongEnd
-;}
-
-; $7E17
+    ; fallthrough
 song_title_noise_section0:
 song_babyMetroid_noise_section2:
-;{
     SongNoteLength_Crochet
     SongRest
     SongEnd
@@ -13919,19 +13910,12 @@ song_babyMetroid_wave_section1:
 ;{
     SongOptions
         WaveOptions wavePatterns.wave2, 3, $0
-    SongNoteLength_Minum
-    SongRest
-    SongEnd
-;}
-
-; $7E28
+    ; fallthrough
 song_babyMetroid_noise_section0:
 song_babyMetroid_noise_section1:
-;{
     SongNoteLength_Minum
     SongRest
     SongEnd
-;}
 ;}
 
 bank4_freespace: ; Freespace - 04:7E2B (filled with $00)

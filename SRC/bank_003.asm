@@ -1207,29 +1207,6 @@ queen_deactivateActors: ;{ 03:6E12
     jr nz, .clearLoop
 ret ;}
 
-; Adjust the wall sprites pertaining to the head to match y position
-queen_adjustWallSpriteToHead: ;{ 03:6E22
-    ; Get base address of OAM scratchpad for wall sprites pertaining to the head
-    ld hl, queen_wallOAM_head ; $C354
-    ; Set loop counter
-    ld b, $05
-    ; Get Y position and adjust
-    ld a, [queen_headY]
-    add $10
-    .loop:
-        ; Set Y position
-        ld [hl+], a
-        ; Skip X position, tile, and attributes
-        inc l
-        inc l
-        inc l
-        ; Increment Y position
-        add $08
-        ; Exit once loop is done
-        dec b
-    jr nz, .loop
-ret ;}
-
 queenHandler: ;{ 03:6E36
     ; Limit actions if Samus is dying
     ld a, [deathFlag]
@@ -1953,7 +1930,29 @@ queen_adjustSpritesForCamera: ;{ 03:71CF
     jr nz, .loop_D
 
     ; Adjust the wall sprites to match the queen's head
-    call queen_adjustWallSpriteToHead
+    ; fallthrough
+
+; Adjust the wall sprites pertaining to the head to match y position
+queen_adjustWallSpriteToHead: ;{ 03:6E22
+    ; Get base address of OAM scratchpad for wall sprites pertaining to the head
+    ld hl, queen_wallOAM_head ; $C354
+    ; Set loop counter
+    ld b, $05
+    ; Get Y position and adjust
+    ld a, [queen_headY]
+    add $10
+    .loop:
+        ; Set Y position
+        ld [hl+], a
+        ; Skip X position, tile, and attributes
+        inc l
+        inc l
+        inc l
+        ; Increment Y position
+        add $08
+        ; Exit once loop is done
+        dec b
+    jr nz, .loop
 ret ;}
 
 ; Single camera adjustment
@@ -2023,7 +2022,6 @@ queen_drawNeck: ;{ 03:7230
         ld b, a
         ; Write X position
         ld a, [queen_headX]
-        sub $00 ; ??
         ld [hl+], a
         ; Save X position
         ld c, a
@@ -2431,7 +2429,29 @@ queen_missileHurt: ;{ 03:7436
     call queen_deactivateActors.arbitrary
     
     ; Close the bottom exit
-    call queen_closeFloor
+    ; fallthrough
+
+; Seals the bottom exit upon death
+queen_closeFloor: ;{ 03:7AA8
+    ; Get address to write. (X,Y) = (14,24)
+    ld hl, vramDest_queenCloseFloor
+    
+    ; Wait for HBlank
+    .waitLoop_A:
+        ld a, [rSTAT]
+        and STAT_MODE
+    jr nz, .waitLoop_A
+    ; Write tile
+    ld [hl], $5d
+    
+    inc l ; Iterate to next tile
+    ; Wait for HBlank
+    .waitLoop_B:
+        ld a, [rSTAT]
+        and STAT_MODE
+    jr nz, .waitLoop_B
+    ; Write tile
+    ld [hl], $5e
 ret ;}
 
 ; Load pointer to HL
@@ -3783,29 +3803,6 @@ queen_killFromStomach: ;{ 03:7A4D Kill Queen from stomach
     inc hl
 jp queen_moveNeck.saveNeckPointer ;}
 
-; Seals the bottom exit upon death
-queen_closeFloor: ;{ 03:7AA8
-    ; Get address to write. (X,Y) = (14,24)
-    ld hl, vramDest_queenCloseFloor
-    
-    ; Wait for HBlank
-    .waitLoop_A:
-        ld a, [rSTAT]
-        and STAT_MODE
-    jr nz, .waitLoop_A
-    ; Write tile
-    ld [hl], $5d
-    
-    inc l ; Iterate to next tile
-    ; Wait for HBlank
-    .waitLoop_B:
-        ld a, [rSTAT]
-        and STAT_MODE
-    jr nz, .waitLoop_B
-    ; Write tile
-    ld [hl], $5e
-ret ;}
-
 queenStateFunc_prepDeath: ;{ 03:7ABF - State $11: Prep Death
     ; Wait for head to finish falling
     ld a, [queen_neckStatus]
@@ -4185,7 +4182,7 @@ LCDCInterruptHandler: ;{ 03:7C7F
         .case_2: ; Set scroll X and palette to room's
             ld a, [scrollX]
             ld [rSCX], a
-            ld a, $93 ; FIXME: Causes palette issues if pausing is enabled
+            ld a, [bg_palette]
             ld [rBGP], a
         ; end case
     

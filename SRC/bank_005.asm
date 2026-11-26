@@ -13,27 +13,17 @@ loadTitleScreen: ;{ 05:408F
     ld bc, $1000
     ld hl, gfx_titleScreen
     ld de, vramDest_titleChr
-    call copyToVram
+    call copyData
     ; Load HUD
     ld hl, hudBaseTilemap
     ld de, vramDest_statusBar
     ld b, $14
-    .hudLoop:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .hudLoop
+    call copyData.small
     ; Load "Save" text
     ld hl, saveTextTilemap
     ld de, vramDest_itemText
     ld b, $14
-    .saveTextLoop:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .saveTextLoop
+    call copyData.small
     ; Load title tilemap
     ld de, TILEMAP0
     ld hl, titleTilemap
@@ -52,29 +42,20 @@ loadTitleScreen: ;{ 05:408F
     ldh [rWY], a
     ; Reset scroll
     xor a
+    ld [scrollX], a
     ld [scrollY], a
+    ld [title_clearSelected], a
+    ; Set countdown timer to max for flashing effect
+    dec a
+    ld [countdownTimerHigh], a
+    ld [countdownTimerLow], a
     ; Enable rendering (window disabled)
     ld a, LCDC_ON | LCDC_WIN_9C00 | LCDC_WIN_OFF | LCDC_BLOCK21 | LCDC_BG_9800 | LCDC_OBJ_8 | LCDC_OBJ_ON | LCDC_BG_ON
     ldh [rLCDC], a
     ; Play title music
     ld a, $11
     ld [songRequest], a
-    ; Clear variables
-    xor a
-    ld [title_clearSelected], a
-    
-    ; If loading from a file, have the Clear option be selected? Odd.
-    ld a, [loadingFromFile]
-    and a
-    jr z, .endIf
-        ld a, $01
-        ld [title_clearSelected], a
-    .endIf:
 
-    ; Set countdown timer to max for flashing effect
-    ld a, $ff
-    ld [countdownTimerHigh], a
-    ld [countdownTimerLow], a
     ; Set game mode to title
     ld a, _id_gameMode_Title
     ldh [hGameMode], a
@@ -120,10 +101,8 @@ titleScreenRoutine: ;{ 05:4118
         ld [titleStarX], a
         ; Move down
         ld a, [titleStarY]
-        add $01
+        inc a
         ld [titleStarY], a
-        ; Pointless jump (evidence of a commented out else branch?)
-        jr .endIf_B
     .endIf_B:
 
     ; Try respawning the title star
@@ -134,8 +113,8 @@ titleScreenRoutine: ;{ 05:4118
     cp b
     jr nz, .endIf_C
         ; If frame is odd, skip ahead
-        and $01
-        jr nz, .endIf_C
+        rrca
+        jr c, .endIf_C
             ; Reset position of star
             ; Y position is essentially random
             ld a, b
@@ -157,7 +136,7 @@ titleScreenRoutine: ;{ 05:4118
     ;  Perhaps the original intent was to have the sprite flicker between sprites $06 and $05
     ldh a, [hFrameCounter]
     and %00000010
-    srl a
+    rrca
     ldh [hSpriteAttr], a
     call drawNonGameSprite_longCall
 
@@ -182,8 +161,8 @@ titleScreenRoutine: ;{ 05:4118
     ;  Animate every 4 frames using two bits from the frame counter
     ldh a, [hFrameCounter]
     and %00001100
-    rlca
-    rlca
+    rrca
+    rrca
     ld e, a
     ld d, $00
     ld hl, titleCursorTable
@@ -234,7 +213,7 @@ titleScreenRoutine: ;{ 05:4118
         ld [sfxRequest_square1], a
         ; Toggle flag
         ld a, [title_showClearOption]
-        xor $ff
+        cpl
         ld [title_showClearOption], a
     .endIf_F:
     
@@ -250,9 +229,9 @@ titleScreenRoutine: ;{ 05:4118
         inc a
         ld [activeSaveSlot], a
         ; Wrap back to zero
-        cp $03
+        sub $03
         jr nz, .endIf_G
-            xor a
+            ; a is zero
             ld [activeSaveSlot], a
     .endIf_G:
 
@@ -265,13 +244,12 @@ titleScreenRoutine: ;{ 05:4118
         ld [sfxRequest_square1], a
         ; Decrement slot number
         ld a, [activeSaveSlot]
-        dec a
-        ld [activeSaveSlot], a
+        sub $01
         ; Wrap around to slot 3
-        cp $ff
-        jr nz, .endIf_H
+        jr nc, .endIf_H2
             ld a, $02
-            ld [activeSaveSlot], a
+        .endIf_H2:
+        ld [activeSaveSlot], a
     .endIf_H:
     
     ; You must hold down for clear to be selected
@@ -403,9 +381,8 @@ ret
     ; Get base address of save slot
     ; de = $A000 + (activeSaveSlot * $40)
     ld a, [activeSaveSlot]
-    sla a
-    sla a
-    swap a
+    rrca
+    rrca
     ld l, a
     ld h, HIGH(saveData_baseAddr) ; $A0
     ; Enable SRAM
@@ -526,31 +503,29 @@ credits_moveStars: ;{ 05:55DC - Move the stars during the credits
         jr nz, .endIf_A
             ; move down one pixel
             ld a, [hl]
-            add $01
-            ld [hl], a
+            inc a
             ; Loop stars back to the top
             cp $a0
-            jr c, .endIf_A
+            jr c, .endIf_A2
                 ld a, $10
-                ld [hl], a
+            .endIf_A2:
+            ld [hl], a
         .endIf_A:
         
         ; Get x coordinate
         inc hl
         ; Move left every frame
         ld a, [hl]
-        sub $01
-        ld [hl], a
+        dec a
         ; Once the stars reach the left edge
         cp $f8
         jr c, .endIf_B
             ; Warp them back to the right edge
             ld a, $a8
-            ld [hl], a
         .endIf_B:
+        ld [hl+], a
         
         ; Get y coordinate of next star
-        inc hl
         ; Check loop counter
         dec b
     jr nz, .starLoop
@@ -1013,9 +988,9 @@ prepareCredits: ;{ 05:587F
     jr z, .endIf_A
         ; Use upper 3 bits of countdownTimer to index into credits_paletteFade
         ; - Iterates through the list from end to beginning
-        and $f0
+        and $e0
         swap a
-        srl a
+        rrca
         ld e, a
         ld d, $00
         add hl, de
@@ -1047,38 +1022,28 @@ prepareCredits: ;{ 05:587F
     ld [ob_palette1], a
 
     call clearTilemaps
-    ; Clear OAM buffer
-    ld hl, wram_oamBuffer + $FF ; $C0FF
-    ld a, $ff
-    ld c, $01
-    ld b, $00
-    .loop_A:
-            ld [hl-], a
-            dec b
-        jr nz, .loop_A
-        dec c
-    jr nz, .loop_A
+    call OAMClear
 
     ; Load various graphics
     ld bc, $0200
     ld hl, gfx_creditsFont
     ld de, vramDest_creditsFont
-    call copyToVram
+    call copyData
     
     ld bc, $1000
     ld hl, gfx_creditsSprTiles
     ld de, vramDest_creditsSpriteChr
-    call copyToVram
+    call copyData
     
     ld bc, $0100
     ld hl, gfx_theEnd
     ld de, vramDest_theEnd
-    call copyToVram
+    call copyData
     
     ld bc, $0100
     ld hl, gfx_creditsNumbers
     ld de, vramDest_creditsNumbers
-    call copyToVram
+    call copyData
     
     ; Initialize credits text pointer
     ld a, LOW(creditsText)
@@ -1152,7 +1117,6 @@ credits_scrollHandler: ;{ 05:593E
         inc a
         ld [scrollY], a
         ; Exit unless we're on an 8-pixel boundary
-        ld a, [scrollY]
         and $07
             ret nz
         ; Adjust cursor position
@@ -1161,22 +1125,24 @@ credits_scrollHandler: ;{ 05:593E
         ld [tileY], a
         ld a, $08 ; Set X cursor position to near the left edge
         ld [tileX], a
+        push hl
         call getTilemapAddress
         ; Queue up the next line to draw
         ld a, BANK(creditsText)
         ld [vramTransfer_srcBank], a
-        ld a, [pTilemapDestLow]
+        ld a, l
         ldh [hVramTransfer.destAddrLow], a
-        ld a, [pTilemapDestHigh]
+        ld a, h
         ldh [hVramTransfer.destAddrHigh], a
         ld a, $14
         ldh [hVramTransfer.sizeLow], a
         xor a
         ldh [hVramTransfer.sizeHigh], a
         ; check if newline
+        pop hl
         ld a, [hl]
         cp $f1
-        jr .isNewline
+        jr z, .isNewline
             ld a, l
             ldh [hVramTransfer.srcAddrLow], a
             ld a, h
@@ -1200,7 +1166,7 @@ credits_scrollHandler: ;{ 05:593E
         ld [vramTransferFlag], a
         ret
 .newline:
-    ds 14
+    ds $14, $ff
 ;} end proc
 
 ;------------------------------------------------------------------------------

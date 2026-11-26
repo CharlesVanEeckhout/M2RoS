@@ -102,7 +102,7 @@ bootRoutine: ;{ 00:01FB
         cp $94
     jr nz, .waitLoop
     ; disable screen
-    ld a, LCDC_OFF | LCDC_OBJ_ON | LCDC_BG_ON
+    ld a, LCDC_OFF
     ldh [rLCDC], a
     
     callFar initializeAudio
@@ -171,27 +171,22 @@ bootRoutine: ;{ 00:01FB
     ; Init video registers for use
     ld a, $01
     ldh [rIE], a
-    ld a, $07
-    ldh [rWX], a
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
-    ld a, LCDC_ON
-    ldh [rLCDC], a
-    ei
     xor a
-    ldh [rIF], a
-    ldh [rWY], a
     ldh [rTMA], a
+    ldh [rIF], a
+    ei
 
-    ; Enable SRAM
-    ld a, RAMG_SRAM_ENABLE
-    ld [rRAMG], a
     ; Set active save slot based on SRAM
     xor a
     ld [activeSaveSlot], a
+    ; Enable SRAM
+    ld a, RAMG_SRAM_ENABLE
+    ld [rRAMG], a
     ld a, [saveLastSlot]
     cp $03
     jr nc, .endIf
@@ -201,7 +196,6 @@ bootRoutine: ;{ 00:01FB
     ld a, RAMG_SRAM_DISABLE
     ld [rRAMG], a
 
-    call disableLCD
     call OAMClear
     callFar silenceAudio
     callFar loadTitleScreen
@@ -455,7 +449,7 @@ ret
 ;}
 
 ; hl: source, de: destination, bc: length
-copyToVram: ;{ 00:038A
+copyData: ;{ 00:038A
     .loop:
         ld a, [hl+]
         ld [de], a
@@ -815,13 +809,13 @@ loadGame_loadGraphics: ;{ 00:05FD
     ld bc, $0100
     ld hl, gfx_commonItems
     ld de, vramDest_commonItems
-    call copyToVram
+    call copyData
     ; Load default power suit and common sprite/HUD tiles
     switchBank gfx_samusPowerSuit
     ld bc, $0b00
     ld hl, gfx_samusPowerSuit
     ld de, vramDest_samus
-    call copyToVram
+    call copyData
     ; Load enemy graphics page
     switchBank gfx_enemiesA ; Unforunately, save files don't save the bank they load enemy graphics from
     ld bc, $0400
@@ -830,7 +824,7 @@ loadGame_loadGraphics: ;{ 00:05FD
     ld a, [saveBuf_enGfxSrcHigh]
     ld h, a
     ld de, vramDest_enemies
-    call copyToVram
+    call copyData
     ; Load font if loading from file
     ld a, [loadingFromFile]
     and a
@@ -839,7 +833,7 @@ loadGame_loadGraphics: ;{ 00:05FD
         ld bc, $0200
         ld hl, gfx_itemFont
         ld de, vramDest_itemFont
-        call copyToVram
+        call copyData
     .endIf:
     ; Load BG graphic tiles
     switchBankVar [saveBuf_bgGfxSrcBank]
@@ -849,7 +843,7 @@ loadGame_loadGraphics: ;{ 00:05FD
     ld a, [saveBuf_bgGfxSrcHigh]
     ld h, a
     ld de, vramDest_bgTiles
-    call copyToVram
+    call copyData
 ret
 ;}
 
@@ -6373,17 +6367,7 @@ loadGraphics: ;{ 00:2753
     ldh [hVramTransfer.srcAddrLow], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
-    ; Load destination address
-    ld a, [hl+]
-    ldh [hVramTransfer.destAddrLow], a
-    ld a, [hl+]
-    ldh [hVramTransfer.destAddrHigh], a
-    ; Load block size
-    ld a, [hl+]
-    ldh [hVramTransfer.sizeLow], a
-    ld a, [hl+]
-    ldh [hVramTransfer.sizeHigh], a
-jr beginGraphicsTransfer
+jr .common
 
 ; Case from door_copyData
 .background: ;{ 00:2771
@@ -6400,17 +6384,7 @@ jr beginGraphicsTransfer
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_bgGfxSrcHigh], a
-    ; Load destination address
-    ld a, [hl+]
-    ldh [hVramTransfer.destAddrLow], a
-    ld a, [hl+]
-    ldh [hVramTransfer.destAddrHigh], a
-    ; Load block size
-    ld a, [hl+]
-    ldh [hVramTransfer.sizeLow], a
-    ld a, [hl+]
-    ldh [hVramTransfer.sizeHigh], a
-jr beginGraphicsTransfer ;}
+jr .common ;}
 
 ; Case from door_copyData
 .enemy: ;{ 00:2798
@@ -6426,6 +6400,7 @@ jr beginGraphicsTransfer ;}
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_enGfxSrcHigh], a
+.common:
     ; Load destination address
     ld a, [hl+]
     ldh [hVramTransfer.destAddrLow], a
@@ -6664,20 +6639,13 @@ door_warp: ;{ 00:28FB
     call waitOneFrame
 
 .rerender: ; Rerender screen ahead of Samus
-    ; Right
     ld a, [doorScrollDirection]
     cp $01
         jr z, .right
-    ; Left
-    ld a, [doorScrollDirection]
     cp $02
         jp z, .left
-    ; Up
-    ld a, [doorScrollDirection]
     cp $04
         jp z, .up
-    ; Down
-    ld a, [doorScrollDirection]
     cp $08
         jp z, .down
     ; None
@@ -7062,44 +7030,29 @@ VBlank_variaAnimation: ;{ 00:2BF4
         ldh a, [hVramTransfer.destAddrHigh]
         ld h, a
         .loop:
-            ; Update DE
+            ; Load GFX from ROM to VRAM
             push hl
                 ld de, gfx_samusVariaSuit - vramDest_samus ; $CE20 = ($4E20 - $8000)
                 add hl, de
-                ld e, l
-                ld d, h
+                ld a, [hl]
             pop hl
-            ; Load GFX from ROM to VRAM
-            ld a, [de]
             ld [hl], a
             ; Increment to same row in next tile
             ld a, l
             add $10
             ld l, a
-            ld a, h
-            adc $00
-            ld h, a
             ; Exit loop if L = $0x (row is complete
-            ld a, l
             and $F0
         jr nz, .loop
-        ; HL = HL - $00FF (get first byte of next pixel row)
-        ld a, l
-        sub $ff
-        ld l, a
-        ld a, h
-        sbc $00
-        ld h, a
+        ; get first byte of next pixel row
+        inc l
         ; Check if we passed the last pixel row of a tile
         ld a, l
-        cp $10
+        add $f0
         jr nz, .endIf_B
             ; If so, HL = HL + $00F0 (move to first pixel row of the next tile row)
-            add $f0
             ld l, a
-            ld a, h
-            adc $00
-            ld h, a
+            inc h
         .endIf_B:
         ; Save VRAM transfer parameters
         ld a, l
@@ -7114,10 +7067,6 @@ VBlank_variaAnimation: ;{ 00:2BF4
         .endIf_C:
     .endIf_A:
     ; Exit VBlank
-    ld a, [scrollY]
-    ldh [rSCY], a
-    ld a, [scrollX]
-    ldh [rSCX], a
     call OAM_DMA
     ld a, [bankRegMirror]
     ld [rROM2B], a
@@ -7184,36 +7133,29 @@ tryPausing: ;{ 00:2C79
     
     ; Set HL to align with sprite tile byte
     ld hl, wram_oamBuffer + $2
+    ld de, $0004
     
     ; Attempt to find the first sprite that uses the HUD Metroid sprite tiles ($9A and $9B)
-    ; Note that the following hex values would all be detected by this loop:
-    ;  9A, 9B, 9E, 9F, BA, BB, BE, BF, DA, DB, DE, DF, FA, FB, FE, FF
-    ; The HUD Metroid is rendered after Samus and the beams, which means that they
-    ;  should not use tiles with those values. (Enemy sprites are not a concern here.)
     .loop:
         ld a, [hl]
-        and $9a
+        and $fe
         cp $9a
             jr z, .break
-        ld a, l
         ; Iterate to next sprite
-        add $04
-        ld l, a
+        add hl, de
+        ld a, l
         cp OAM_SIZE ; $A0
     jr c, .loop
     jr .exit
 
 .break:
     ; Draw the L counter sprite
-    ld de, $0004
     ; Write blank tile
-    ld a, $36
-    ld [hl], a
+    ld [hl], $36
     ; Iterate to next sprite
     add hl, de
     ; Write L tile
-    ld a, $0f
-    ld [hl], a
+    ld [hl], $0f
 
 .exit:
     ; Play pause sound and stop music
@@ -7510,14 +7452,11 @@ debugPauseMenu: ;{ 00:2D39
 ;} End display logic
 
 ; Save if pressing select and standing or morphing
-    ldh a, [hInputRisingEdge]
-    cp PAD_SELECT
-        ret nz
     ldh a, [hInputPressed]
     cp PAD_SELECT
         ret nz
     ld a, [samusPose]
-    and a ; equivalent to "cp pose_standing"
+    cp pose_standing
         jr z, .save
     cp pose_morph
         ret nz
@@ -7527,232 +7466,6 @@ debugPauseMenu: ;{ 00:2D39
     ldh [hGameMode], a
 ret ;}
 
-hurtSamus: ;{ 00:2EE3
-    ; Exit if hurt flag is not set
-    ld a, [samus_hurtFlag]
-    cp $01
-        ret nz
-    ; Clear hurt flag
-    xor a
-    ld [samus_hurtFlag], a
-
-    ; Exit if i-frames are active
-    ld a, [samusInvulnerableTimer]
-    and a
-        ret nz
-
-    ; Apply damage value to Samus
-    ld a, [samus_damageValue]
-    call applyDamage.enemySpike
-    ; Give Samus i-frames
-    ld a, $33
-    ld [samusInvulnerableTimer], a
-
-    ; Use table to force Samus into the appropriate knockback pose
-    ld a, [samusPose]
-    res 7, a ; Force Samus out of turnaround animation
-    ld e, a
-    ld d, $00
-    ld hl, samus_damagePoseTransitionTable
-    add hl, de
-    ld a, [hl]
-    ld [samusPose], a
-
-    ; Set travel direction to damage boost direction
-    ld a, [samus_damageBoostDirection]
-    ld [samusAirDirection], a
-    ; Force damage boost to right if in Queen's room
-    ld a, [queen_roomFlag]
-    cp $11
-    jr nz, .endIf
-        ld a, $01
-        ld [samusAirDirection], a
-    .endIf:
-
-    ; Set jump arc counter to base
-    ld a, samus_jumpArrayBaseOffset
-    ld [samus_jumpArcCounter], a
-    xor a
-    ld [samus_unmorphJumpTimer], a
-ret ;}
-
-applyDamage: ;{ This procedure has multiple entry points
-    .queenStomach: ; 00:2F29
-        ; Apply queen stomach damage
-        ; Make noise once every 8 frames
-        ldh a, [hFrameCounter]
-        and $07
-            ret nz
-        ld a, sfx_noise_acidDamage
-        ld [sfxRequest_noise], a
-        ; Damage once every 16 frames
-        ldh a, [hFrameCounter]
-        and $0f
-            ret nz
-        ; Set damage to 2
-        ld b, $02
-        jr .apply
-        
-    .larvaMetroid: ; 00:2F3C
-        ; Any enemies with a damage value of $FE inflicts continuous contact damage.
-        ; In the game, this only applies to the larva metroids.
-        ; Set damage to 3
-        ld b, $03
-        ; Damage once every 8 frames
-        ldh a, [hFrameCounter]
-        and $07
-            ret nz
-        ; Make noise
-        ld a, sfx_noise_acidDamage
-        ld [sfxRequest_noise], a
-        jr .apply
-        
-    .acid: ; 00:2F4A
-        ; Damage is set by caller
-        ld b, a
-        ; Damage once every 16 frames
-        ldh a, [hFrameCounter]
-        and $0f
-            ret nz
-        ; Make noise
-        ld a, sfx_noise_acidDamage
-        ld [sfxRequest_noise], a
-        jr .apply
-        
-    .enemySpike: ; 00:2F57
-        ; Apply damage from enemies, spikes, and respawning blocks
-        ld b, a
-        ; Arbitrarily limit damage to 60 units (remember Samus' health is BCD)
-        cp $60
-            ret nc
-        ; Play sound
-        ld a, sfx_noise_samusHurt
-        ld [sfxRequest_noise], a
-        ; Fallthrough to .apply
-        
-.apply: ; Apply damage
-    ; Half damage with varia
-    ; (note this results in unintuitive results for higher damage values thanks to health being BCD)
-    ld a, [samusItems]
-    bit itemBit_varia, a
-    jr z, .endIf_A
-        srl b
-    .endIf_A:
-    ; Take health
-    ld a, [samusCurHealthLow]
-    sub b
-    daa
-    ld [samusCurHealthLow], a
-    ld a, [samusCurHealthHigh]
-    sbc $00
-    daa
-    ld [samusCurHealthHigh], a
-    ; Clamp to zero health minimum
-    cp $99
-    jr nz, .endIf_B
-        xor a
-        ld [samusCurHealthLow], a
-        ld [samusCurHealthHigh], a
-    .endIf_B:
-ret ;}
-
-gameMode_dying: ;{ 00:2F86
-    ; Do some things, only during the queen fight
-    ld a, [queen_roomFlag]
-    cp $11
-    jr nz, .endIf
-        call drawSamus_longJump ; Draw Samus
-        call drawHudMetroid_longJump
-        callFar queenHandler
-        call OAMClear.unused
-    .endIf:
-ret ;}
-
-; Tasks to do once Samus's displayed health reaches zero
-killSamus: ;{ 00:2FA2
-    ; Silence audio
-    callFar silenceAudio
-    ; Play noise
-    ld a, sfx_noise_samusKilled
-    ld [sfxRequest_noise], a
-    ; Delay a frame
-    call waitOneFrame
-    ; Draw Samus regardless of i-frames
-    call drawSamus_ignoreDamageFrames_longJump
-    ; Set timer
-    ld a, $20
-    ld [deathAnimTimer], a
-    ld a, $01
-    ld [deathFlag], a
-    ld a, _id_gameMode_dying
-    ldh [hGameMode], a
-ret ;}
-
-; Vblank routine for death
-VBlank_deathSequence: ;{ 00:2FE1
-    ; Animate once every 4 frames
-    ldh a, [hFrameCounter]
-    and $03
-    jr nz, .endIf
-    
-        ; Get starting offset for the erase loop
-        ld hl, deathAnimationTable
-        ld a, [deathAnimTimer]
-        dec a
-        ld e, a
-        ld d, $00
-        add hl, de
-        ld l, [hl]
-        ld h, $80
-        ; Increment value
-        ld de, $0020
-    
-        ; Erase one byte of every two tiles for the first 8 rows of VRAM
-        .eraseLoop:
-            xor a
-            ld [hl], a
-            add hl, de
-            ld a, h
-            cp $88
-        jr nz, .eraseLoop
-    
-        ; Decrement death timer
-        ld a, [deathAnimTimer]
-        dec a
-        ld [deathAnimTimer], a
-    
-        jr nz, .endIf
-            ; Officially dead
-            ld a, $ff
-            ld [deathFlag], a
-            ld a, _id_gameMode_dead
-            ldh [hGameMode], a
-    .endIf:
-
-    ; DMA sprites
-    call OAM_DMA
-
-    ; Queen vblank handler if necessary
-    ld a, BANK(VBlank_drawQueen)
-    ld [rROM2B], a
-    ld a, [queen_roomFlag]
-    cp $11
-        call z, VBlank_drawQueen
-
-    ; Return from interrupt
-    ld a, [bankRegMirror]
-    ld [rROM2B], a
-    ld a, $01
-    ldh [hVBlankDoneFlag], a
-    pop hl
-    pop de
-    pop bc
-    pop af
-reti ;}
-
-deathAnimationTable:: ; 00:3042
-    db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
-    db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
 ; Sprite-sprite collision routines {
 
@@ -8394,10 +8107,6 @@ collision_samusOneEnemy: ;{ 00:3324
     cp c
         jp nc, .exit_noHit
     
-    ; Set default damage boost direction (right)
-    ld a, $01
-    ld [samus_damageBoostDirection], a
-    
     ; Samus X - Left
     ldh a, [hCollision_enLeft]
     ld b, a
@@ -8419,11 +8128,13 @@ collision_samusOneEnemy: ;{ 00:3324
     ; (checks if (Samus X - Left < half the width of the hitbox)
     ld a, d
     cp c
+    ; Set default damage boost direction (right)
+    ld a, $01
     jr c, .endIf_C
         ; If so, change the damage boost value to the left
         ld a, $ff
-        ld [samus_damageBoostDirection], a
     .endIf_C:
+    ld [samus_damageBoostDirection], a
 
     ; Check if screw attack is active
     ld a, [samusItems]
@@ -8432,7 +8143,6 @@ collision_samusOneEnemy: ;{ 00:3324
     ld a, [samusPose]
     cp pose_spinJump
         jr z, .screwCase
-    ld a, [samusPose]
     cp pose_spinStart
         jr nz, .iceCase
 
@@ -8458,9 +8168,6 @@ collision_samusOneEnemy: ;{ 00:3324
         jr z, .solidCase
     
     ; Screw attack the enemy
-    ; Save the damage value (unnecessary)
-    ld [samus_damageValue], a
-    ; Hurt flag is not set here, so Samus will not be damaged by this
     
     ; pop the enemy base address off the stack
     pop hl
@@ -8590,15 +8297,15 @@ collision_samusEnemiesDown: ;{ 00:348D
     ; Exit if being eaten
     ld a, [samusPose]
     cp pose_beingEaten ; $18
-        jp nc, collision_exitNoHit
+        jr nc, collision_exitNoHit
     ; Exit if dying
     ld a, [deathFlag]
     and a
-        jp nz, collision_exitNoHit
+        jr nz, collision_exitNoHit
     ; Exit if in i-frames
     ld a, [samusInvulnerableTimer]
     and a
-        jp nz, collision_exitNoHit
+        jr nz, collision_exitNoHit
 
     ; Set tempY based on Samus' onscreen Y position
     ld a, [samus_onscreenYPos]
@@ -8667,15 +8374,15 @@ collision_samusEnemiesUp: ;{ 00:34EF
     ; Exit if being eaten
     ld a, [samusPose]
     cp pose_beingEaten ; $18
-        jp nc, collision_exitNoHit
+        jr nc, collision_exitNoHit
     ; Exit if dying
     ld a, [deathFlag]
     and a
-        jp nz, collision_exitNoHit
+        jr nz, collision_exitNoHit
     ; Exit if in i-frames
     ld a, [samusInvulnerableTimer]
     and a
-        jp nz, collision_exitNoHit
+        jr nz, collision_exitNoHit
 
     ; Load top offset for Samus' hitbox
     ld a, [samusPose]
@@ -8829,6 +8536,233 @@ collision_samusSpriteHitboxTopTable: ;{ 00:369B - Offset for the top of Samus's 
     ;}
 ;} end of sprite-sprite collision routines
 
+hurtSamus: ;{ 00:2EE3
+    ; Exit if hurt flag is not set
+    ld a, [samus_hurtFlag]
+    cp $01
+        ret nz
+    ; Clear hurt flag
+    xor a
+    ld [samus_hurtFlag], a
+
+    ; Exit if i-frames are active
+    ld a, [samusInvulnerableTimer]
+    and a
+        ret nz
+
+    ; Apply damage value to Samus
+    ld a, [samus_damageValue]
+    call applyDamage.enemySpike
+    ; Give Samus i-frames
+    ld a, $33
+    ld [samusInvulnerableTimer], a
+
+    ; Use table to force Samus into the appropriate knockback pose
+    ld a, [samusPose]
+    res 7, a ; Force Samus out of turnaround animation
+    ld e, a
+    ld d, $00
+    ld hl, samus_damagePoseTransitionTable
+    add hl, de
+    ld a, [hl]
+    ld [samusPose], a
+
+    ; Set travel direction to damage boost direction
+    ld a, [samus_damageBoostDirection]
+    ld [samusAirDirection], a
+    ; Force damage boost to right if in Queen's room
+    ld a, [queen_roomFlag]
+    cp $11
+    jr nz, .endIf
+        ld a, $01
+        ld [samusAirDirection], a
+    .endIf:
+
+    ; Set jump arc counter to base
+    ld a, samus_jumpArrayBaseOffset
+    ld [samus_jumpArcCounter], a
+    xor a
+    ld [samus_unmorphJumpTimer], a
+ret ;}
+
+applyDamage: ;{ This procedure has multiple entry points
+    .queenStomach: ; 00:2F29
+        ; Apply queen stomach damage
+        ; Make noise once every 8 frames
+        ldh a, [hFrameCounter]
+        and $07
+            ret nz
+        ld a, sfx_noise_acidDamage
+        ld [sfxRequest_noise], a
+        ; Damage once every 16 frames
+        ldh a, [hFrameCounter]
+        and $0f
+            ret nz
+        ; Set damage to 2
+        ld b, $02
+        jr .apply
+        
+    .larvaMetroid: ; 00:2F3C
+        ; Any enemies with a damage value of $FE inflicts continuous contact damage.
+        ; In the game, this only applies to the larva metroids.
+        ; Set damage to 3
+        ld b, $03
+        ; Damage once every 8 frames
+        ldh a, [hFrameCounter]
+        and $07
+            ret nz
+        ; Make noise
+        ld a, sfx_noise_acidDamage
+        ld [sfxRequest_noise], a
+        jr .apply
+        
+    .acid: ; 00:2F4A
+        ; Damage is set by caller
+        ld b, a
+        ; Damage once every 16 frames
+        ldh a, [hFrameCounter]
+        and $0f
+            ret nz
+        ; Make noise
+        ld a, sfx_noise_acidDamage
+        ld [sfxRequest_noise], a
+        jr .apply
+        
+    .enemySpike: ; 00:2F57
+        ; Apply damage from enemies, spikes, and respawning blocks
+        ld b, a
+        ; Arbitrarily limit damage to 60 units (remember Samus' health is BCD)
+        cp $60
+            ret nc
+        ; Play sound
+        ld a, sfx_noise_samusHurt
+        ld [sfxRequest_noise], a
+        ; Fallthrough to .apply
+        
+.apply: ; Apply damage
+    ; Half damage with varia
+    ; (note this results in unintuitive results for higher damage values thanks to health being BCD)
+    ld a, [samusItems]
+    bit itemBit_varia, a
+    jr z, .endIf_A
+        srl b
+    .endIf_A:
+    ; Take health
+    ld a, [samusCurHealthLow]
+    sub b
+    daa
+    ld [samusCurHealthLow], a
+    ld a, [samusCurHealthHigh]
+    sbc $00
+    daa
+    ld [samusCurHealthHigh], a
+    ; Clamp to zero health minimum
+    cp $99
+    jr nz, .endIf_B
+        xor a
+        ld [samusCurHealthLow], a
+        ld [samusCurHealthHigh], a
+    .endIf_B:
+ret ;}
+
+; Tasks to do once Samus's displayed health reaches zero
+killSamus: ;{ 00:2FA2
+    ; Silence audio
+    callFar silenceAudio
+    ; Play noise
+    ld a, sfx_noise_samusKilled
+    ld [sfxRequest_noise], a
+    ; Delay a frame
+    call waitOneFrame
+    ; Draw Samus regardless of i-frames
+    call drawSamus_ignoreDamageFrames_longJump
+    ; Set timer
+    ld a, $20
+    ld [deathAnimTimer], a
+    ld a, $01
+    ld [deathFlag], a
+    ld a, _id_gameMode_dying
+    ldh [hGameMode], a
+ret ;}
+
+; Vblank routine for death
+VBlank_deathSequence: ;{ 00:2FE1
+    ; Animate once every 4 frames
+    ldh a, [hFrameCounter]
+    and $03
+    jr nz, .endIf
+    
+        ; Get starting offset for the erase loop
+        ld hl, deathAnimationTable
+        ld a, [deathAnimTimer]
+        dec a
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld l, [hl]
+        ld h, $80
+        ; Increment value
+        ld de, $0020
+    
+        ; Erase one byte of every two tiles for the first 8 rows of VRAM
+        .eraseLoop:
+            xor a
+            ld [hl], a
+            add hl, de
+            ld a, h
+            cp $88
+        jr nz, .eraseLoop
+    
+        ; Decrement death timer
+        ld a, [deathAnimTimer]
+        dec a
+        ld [deathAnimTimer], a
+    
+        jr nz, .endIf
+            ; Officially dead
+            ld a, $ff
+            ld [deathFlag], a
+            ld a, _id_gameMode_dead
+            ldh [hGameMode], a
+    .endIf:
+
+    ; DMA sprites
+    call OAM_DMA
+
+    ; Queen vblank handler if necessary
+    ld a, BANK(VBlank_drawQueen)
+    ld [rROM2B], a
+    ld a, [queen_roomFlag]
+    cp $11
+        call z, VBlank_drawQueen
+
+    ; Return from interrupt
+    ld a, [bankRegMirror]
+    ld [rROM2B], a
+    ld a, $01
+    ldh [hVBlankDoneFlag], a
+    pop hl
+    pop de
+    pop bc
+    pop af
+reti ;}
+
+deathAnimationTable:: ; 00:3042
+    db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
+    db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
+
+gameMode_dying: ;{ 00:2F86
+    ; Do some things, only during the queen fight
+    ld a, [queen_roomFlag]
+    cp $11
+    jr nz, .endIf
+        call drawSamus_longJump ; Draw Samus
+        call drawHudMetroid_longJump
+        callFar queenHandler
+        call OAMClear.unused
+    .endIf:
+ret ;}
+
 gameMode_dead: ;{ 00:36B0
     ; Wait until the death sound ends
     .loopWaitSilence:
@@ -8852,14 +8786,7 @@ gameMode_dead: ;{ 00:36B0
     ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
-    .loadGfxLoop:
-        ld a, [hl+]
-        ld [de], a
-        inc de
-        dec bc
-        ld a, b
-        or c
-    jr nz, .loadGfxLoop
+    call copyData
 
     ; Load game over text ($80-terminated)
     ld hl, gameOverText
@@ -8998,19 +8925,17 @@ handleItemPickup: ;{ 00:372F
 
 ; Item Pick-up Sub-routines {
 pickup_plasmaBeam: ;{
-    ; Set beam
-    ld a, $04
-    ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_plasma
     call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-        jp z, handleItemPickup_end
+    ; Set beam
     ld a, $04
+    ld [samusBeam], a
+        jp z, handleItemPickup_end
     ld [samusActiveWeapon], a
-    ld [samusBeam], a ; Redundant write
 jp handleItemPickup_end ;}
 
 gfxInfo_spazer: ; Free label for an enterprising modder
@@ -9018,57 +8943,51 @@ gfxInfo_plasma: db BANK(gfx_beamPlasma)
     dw gfx_beamPlasma, vramDest_beam, $0020
 
 pickup_iceBeam: ;{
-    ; Set beam
-    ld a, $01
-    ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_ice
     call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-        jp z, handleItemPickup_end
+    ; Set beam
     ld a, $01
+    ld [samusBeam], a
+        jp z, handleItemPickup_end
     ld [samusActiveWeapon], a
-    ld [samusBeam], a ; Redundant write
 jp handleItemPickup_end ;}
 
 gfxInfo_ice: db BANK(gfx_beamIce)
     dw gfx_beamIce, vramDest_beam, $0020
 
 pickup_waveBeam: ;{
-    ; Set beam
-    ld a, $02
-    ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_wave
     call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-        jp z, handleItemPickup_end
+    ; Set beam
     ld a, $02
+    ld [samusBeam], a
+        jp z, handleItemPickup_end
     ld [samusActiveWeapon], a
-    ld [samusBeam], a ; Redundant write
 jp handleItemPickup_end ;}
 
 gfxInfo_wave: db BANK(gfx_beamWave)
     dw gfx_beamWave, vramDest_beam, $0020
 
 pickup_spazer: ;{
-    ; Set beam
-    ld a, $03
-    ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_spazer ;gfxInfo_plasma
     call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-        jp z, handleItemPickup_end
+    ; Set beam
     ld a, $03
+    ld [samusBeam], a
+        jp z, handleItemPickup_end
     ld [samusActiveWeapon], a
-    ld [samusBeam], a ; Redundant write
 jp handleItemPickup_end ;}
 
 pickup_bombs: ;{
@@ -9138,10 +9057,10 @@ pickup_variaSuit: ;{
             ldh [rWY], a
             call waitOneFrame
             ; Wait for countdown timer to expire
-            ld a, [countdownTimerHigh]
+            ld a, [countdownTimerLow]
             and a
         jr nz, .loop
-        ld a, [countdownTimerLow]
+        ld a, [countdownTimerHigh]
         and a
     jr nz, .loop
     
@@ -9243,11 +9162,7 @@ pickup_energyTank: ;{
         inc a
         ld [samusEnergyTanks], a
     .endIf:
-    ; Set current health to max
-    ld [samusCurHealthHigh], a
-    ld a, $99
-    ld [samusCurHealthLow], a
-jr handleItemPickup_end ;}
+    ; fallthrough
 
 pickup_energyRefill: ;{
     ; Set current health to max
@@ -9484,25 +9399,25 @@ loadGame_samusItemGraphics: ;{ 00:3BB4
         cp $01
         jr nz, .endIf_ice
             ld hl, gfxInfo_ice
-            jp loadGame_copyItemToVram
+            jr loadGame_copyItemToVram
         .endIf_ice:
     
         cp $03
         jr nz, .endIf_spazer
             ld hl, gfxInfo_spazer
-            jp loadGame_copyItemToVram
+            jr loadGame_copyItemToVram
         .endIf_spazer:
     
         cp $02
         jr nz, .endIf_wave
             ld hl, gfxInfo_wave
-            jp loadGame_copyItemToVram
+            jr loadGame_copyItemToVram
         .endIf_wave:
     
         cp $04
         jr nz, .endIf_plasma
             ld hl, gfxInfo_plasma
-            jp loadGame_copyItemToVram
+            jr loadGame_copyItemToVram
         .endIf_plasma:
 ret ;}
 
@@ -9532,7 +9447,7 @@ loadGame_copyItemToVram: ;{ 00:3C3F
     ld l, a
     ldh a, [hTemp.b]
     ld h, a
-    jp copyToVram
+    jp copyData
 ;}
 
 ; External Calls {
@@ -9670,9 +9585,8 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
     ; Get the address of the door transition index
     ld e, a
     ld d, $00
-    sla e
-    rl d
     ld hl, map_doorIndexes ; $4300 - Base address for door transition indexes
+    add hl, de
     add hl, de
     ; Load the high byte of the transition index
     inc hl
@@ -9680,8 +9594,8 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
     ; Rotate the relavent bit to the LSB and store it
     swap a
     rlca
+    inc a
     and $01
-    xor $01
     ld [samus_screenSpritePriority], a
     ; Return to the callee
     switchBank drawSamus
